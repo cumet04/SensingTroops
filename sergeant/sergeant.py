@@ -1,5 +1,6 @@
 from wsgiref.simple_server import make_server
 import datetime
+import json
 
 class Sergeant(object):
     
@@ -15,6 +16,7 @@ class Sergeant(object):
         path = environ['PATH_INFO']
         query = environ['QUERY_STRING']
         headers = [('Content-type', 'text/plain; charset=utf-8')]
+#TODO: text/plain -> json
 
         if path in self.path_functions:
             start_response('200 OK', headers)
@@ -29,15 +31,19 @@ class Sergeant(object):
         item = (timestamp, query_string)
         self.value_cache.append(item)
         return ""
+#TODO: json result
 
     def joinMember(self, query_string):
-        return "{id:1}"
+        result = {"id" : 1}
+        return json.dumps(result)
 
     def askOrder(self, query_string):
-        return "{order:setinterval, value:3}"
+        result = {"order" : "setinterval", "value", 3}
+        return json.dumps(result)
 
     def outputCache(self, query_string):
         return str(self.value_cache)
+#TODO: json result
 
 # entry point ------------------------------------------------------------------
 
