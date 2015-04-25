@@ -38,7 +38,7 @@ class Sergeant(object):
         return json.dumps(result)
 
     def askOrder(self, query_string):
-        result = {"order" : "setinterval", "value", 3}
+        result = {"order" : "setinterval", "value" : 3}
         return json.dumps(result)
 
     def outputCache(self, query_string):
