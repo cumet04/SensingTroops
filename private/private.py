@@ -24,17 +24,21 @@ class Private(object):
         order = response['order']
         if order in self.order_functions:
             result = self.order_functions[order](response)
+
         t = threading.Timer(self.beat_interval, self.askOrder)
         t.start()
 
     def putValue(self):
         value = "test_value"
         self.getJson(sergeant_address + 'pvt/put?' + value)
+
         t = threading.Timer(self.put_interval, self.putValue)
         t.start()
 
+    # order functions ----------------------------------------------------------
     def setInterval(self, values):
         self.put_interval = values['value']
+
 
     def getJson(self, url):
         res_raw = urlopen(url)
