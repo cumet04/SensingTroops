@@ -30,8 +30,8 @@ class Sergeant(object):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         item = (timestamp, query_string)
         self.value_cache.append(item)
-        return ""
-#TODO: json result
+        result = {"put": item}
+        return json.dumps(result)
 
     def joinMember(self, query_string):
         result = {"id" : 1}
@@ -42,8 +42,7 @@ class Sergeant(object):
         return json.dumps(result)
 
     def outputCache(self, query_string):
-        return str(self.value_cache)
-#TODO: json result
+        return json.dumps(self.value_cache)
 
 # entry point ------------------------------------------------------------------
 
