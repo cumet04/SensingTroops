@@ -1,8 +1,10 @@
 from wsgiref.simple_server import make_server
+from urllib.request import urlopen
 import datetime
 import json
+import threading
 
-superior_address = 'http://172.17.0.89/'
+superior_address = 'http://172.17.0.100/'
 
 class Sergeant(object):
     
@@ -18,7 +20,7 @@ class Sergeant(object):
         self.submit_interval = 1
 
         # join
-        response = self.getJson(superier_address + 'sgt/join')
+        response = self.getJson(superior_address + 'sgt/join')
         self.soldier_id = response['id']
         # job
         self.askJob()
@@ -26,7 +28,7 @@ class Sergeant(object):
         self.submitReport()
 
     def askJob(self):
-        response = self.getJson(superier_address + 'sgt/job')
+        response = self.getJson(superior_address + 'sgt/job')
         job = response['job']
         if job in self.job_functions:
             result = self.job_functions[job](response)
@@ -36,7 +38,7 @@ class Sergeant(object):
 
     def submitReport(self):
         value = json.dumps(self.value_cache)
-        self.getJson(superier_address + 'sgt/report?' + value)
+        res_raw = urlopen(superior_address + 'sgt/report', value.encode('utf-8'))
         self.value_cache.clear()
 
         t = threading.Timer(self.submit_interval, self.submitReport)

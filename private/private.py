@@ -2,7 +2,7 @@ from urllib.request import urlopen
 import json
 import threading
 
-sergeant_address = 'http://172.17.0.89/'
+sergeant_address = 'http://172.17.0.104/'
 
 class Private(object):
 
