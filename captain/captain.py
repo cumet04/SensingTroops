@@ -2,6 +2,7 @@ from wsgiref.simple_server import make_server
 import datetime
 import json
 import sys
+import signal
 
 class Captain(object):
     
@@ -50,6 +51,6 @@ class Captain(object):
 application = Captain()
 
 if __name__ == '__main__':
-
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     server = make_server('', 80, application)
     server.serve_forever()

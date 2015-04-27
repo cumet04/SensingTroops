@@ -3,8 +3,9 @@ from urllib.request import urlopen
 import datetime
 import json
 import threading
+import signal
 
-superior_address = 'http://172.17.0.100/'
+superior_address = 'http://172.17.0.105/'
 
 class Sergeant(object):
     
@@ -92,5 +93,6 @@ application = Sergeant()
 
 if __name__ == '__main__':
 
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     server = make_server('', 80, application)
     server.serve_forever()

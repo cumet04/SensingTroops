@@ -1,8 +1,9 @@
 from urllib.request import urlopen
 import json
 import threading
+import signal
 
-sergeant_address = 'http://172.17.0.104/'
+sergeant_address = 'http://172.17.0.106/'
 
 class Private(object):
 
@@ -47,4 +48,5 @@ class Private(object):
 
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     pvt = Private()
