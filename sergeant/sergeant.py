@@ -92,7 +92,7 @@ class Sergeant(object):
 application = Sergeant()
 
 if __name__ == '__main__':
-
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
     server = make_server('', 80, application)
-    server.serve_forever()
+    signal.signal(signal.SIGINT, lambda n,f : server.shutdown())
+    t = threading.Thread(target=server.serve_forever)
+    t.start()
