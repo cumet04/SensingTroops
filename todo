@@ -1,0 +1,5 @@
+// this file is just memo for owner of this project
+
+make child common; HTTP for pvt, sgt
+make parent common; server for sgt, cpt
+divide class
