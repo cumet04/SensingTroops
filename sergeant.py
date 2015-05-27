@@ -1,5 +1,6 @@
 from wsgiref.simple_server import make_server
 from urllib.request import urlopen
+import urllib.error
 import datetime
 import json
 import threading
@@ -28,16 +29,18 @@ class Sergeant(object):
         self.beat_interval = 2
         self.submit_interval = 1
 
-        # # join
-        # response = self.getJson(conf.cptaddr, conf.cptport, 'sgt/join')
-        # self.soldier_id = response['id']
-        # # job
-        # self.askJob()
-        # # submit
-        # self.submitReport()
+        # join
+        response = self.requestAPI_get(conf.cptaddr, conf.cptport, 'sgt/join')
+        if response == None: return
+        self.soldier_id = response['id']
+        # job
+        self.askJob()
+        # submit
+        self.submitReport()
 
     def askJob(self):
-        response = self.getJson(conf.cptaddr, conf.cptport, 'sgt/job')
+        response = self.requestAPI_get(conf.cptaddr, conf.cptport, 'sgt/job')
+        if response == None: return
         job = response['job']
         if job in self.job_functions:
             result = self.job_functions[job](response)
@@ -47,7 +50,9 @@ class Sergeant(object):
 
     def submitReport(self):
         value = json.dumps(self.value_cache)
-        res_raw = urlopen(superior_address + 'sgt/report', value.encode('utf-8'))
+        response = self.requestAPI_post(
+            conf.cptaddr, conf.cptport, 'sgt/job', value.encode('utf-8'))
+        if response == None: return
         self.value_cache.clear()
 
         t = threading.Timer(self.submit_interval, self.submitReport)
@@ -90,9 +95,22 @@ class Sergeant(object):
         return json.dumps(self.value_cache)
 
     # other functions
-    def getJson(self, host, port, api):
-        res_raw = urlopen("http://{0}:{1}/{2}".format(host, port, api))
-        res_str = res_raw.read().decode('utf-8')
+    def requestAPI_get(self, host, port, api):
+        try:
+            res_raw = urlopen("http://{0}:{1}/{2}".format(host, port, api))
+            res_str = res_raw.read().decode('utf-8')
+        except urllib.error.URLError as e:
+            logger.error("requestAPI_post failed : " + str(e.reason))
+            return None
+        return json.loads(res_str)
+
+    def requestAPI_post(self, host, port, api, data):
+        try:
+            res_raw = urlopen("http://{0}:{1}/{2}".format(host, port, api), data)
+            res_str = res_raw.read().decode('utf-8')
+        except urllib.error.URLError as e:
+            logger.error("requestAPI_post failed : " + str(e.reason))
+            return None
         return json.loads(res_str)
 
 
@@ -120,9 +138,8 @@ if __name__ == '__main__':
 
     # start server
     application = Sergeant()
-    logger.debug('a')
+    logger.debug('start server: port=' + str(conf.sgtport))
     server = make_server('', conf.sgtport, application)
-    logger.debug('b')
     signal.signal(signal.SIGINT, lambda n,f : server.shutdown())
     t = threading.Thread(target=server.serve_forever)
     t.start()
