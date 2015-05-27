@@ -3,9 +3,17 @@ from urllib.request import urlopen
 import datetime
 import json
 import threading
+import sys
 import signal
+import os
+import configfile
 
-superior_address = 'http://172.17.0.105/'
+from logging import getLogger,StreamHandler,DEBUG,NOTSET
+logger = getLogger(__name__)
+handler = StreamHandler()
+handler.setLevel(DEBUG)
+logger.setLevel(DEBUG)
+logger.addHandler(handler)
 
 class Sergeant(object):
     
@@ -20,16 +28,16 @@ class Sergeant(object):
         self.beat_interval = 2
         self.submit_interval = 1
 
-        # join
-        response = self.getJson(superior_address + 'sgt/join')
-        self.soldier_id = response['id']
-        # job
-        self.askJob()
-        # submit
-        self.submitReport()
+        # # join
+        # response = self.getJson(conf.cptaddr, conf.cptport, 'sgt/join')
+        # self.soldier_id = response['id']
+        # # job
+        # self.askJob()
+        # # submit
+        # self.submitReport()
 
     def askJob(self):
-        response = self.getJson(superior_address + 'sgt/job')
+        response = self.getJson(conf.cptaddr, conf.cptport, 'sgt/job')
         job = response['job']
         if job in self.job_functions:
             result = self.job_functions[job](response)
@@ -82,17 +90,39 @@ class Sergeant(object):
         return json.dumps(self.value_cache)
 
     # other functions
-    def getJson(self, url):
-        res_raw = urlopen(url)
+    def getJson(self, host, port, api):
+        res_raw = urlopen("http://{0}:{1}/{2}".format(host, port, api))
         res_str = res_raw.read().decode('utf-8')
         return json.loads(res_str)
 
+
 # entry point ------------------------------------------------------------------
 
-application = Sergeant()
+conf = configfile.Config()
 
 if __name__ == '__main__':
-    server = make_server('', 80, application)
+    # set config-file name
+    conf_name = ''
+    if len(sys.argv) == 2:
+        conf_name = sys.argv[1]
+    else:
+        script_path = os.path.abspath(os.path.dirname(__file__))
+        conf_name = script_path + '/conf/sergeant.conf'
+
+    # load and check config
+    if conf.loadfile(conf_name) == False: quit(1)
+    if hasattr(conf, 'cptaddr') and \
+       hasattr(conf, 'cptport') and \
+       hasattr(conf, 'sgtport'): pass
+    else:
+        print("error: load config file failed; lack of parameter.")
+        quit(1)
+
+    # start server
+    application = Sergeant()
+    logger.debug('a')
+    server = make_server('', conf.sgtport, application)
+    logger.debug('b')
     signal.signal(signal.SIGINT, lambda n,f : server.shutdown())
     t = threading.Thread(target=server.serve_forever)
     t.start()
