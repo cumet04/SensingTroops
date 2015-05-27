@@ -3,6 +3,7 @@ import json
 import threading
 import signal
 import os
+import sys
 import configfile
 
 
@@ -14,7 +15,7 @@ class Private(object):
         self.put_interval = 1
 
         # join
-        response = self.getJson(conf.sgtaddr, conf.stgport, 'pvt/join')
+        response = self.getJson(conf.sgtaddr, conf.sgtport, 'pvt/join')
         self.soldier_id = response['id']
         # order
         self.askOrder()
@@ -22,7 +23,7 @@ class Private(object):
         self.putValue()
 
     def askOrder(self):
-        response = self.getJson(conf.sgtaddr, conf.stgport, 'pvt/order')
+        response = self.getJson(conf.sgtaddr, conf.sgtport, 'pvt/order')
         order = response['order']
         if order in self.order_functions:
             result = self.order_functions[order](response)
@@ -43,11 +44,11 @@ class Private(object):
 
 
     def getJson(self, host, port, api):
-        res_raw = urlopen("http://${0}:${1}/${2}".format(host, port, api))
+        res_raw = urlopen("http://{0}:{1}/{2}".format(host, port, api))
         res_str = res_raw.read().decode('utf-8')
         return json.loads(res_str)
 
-# if __name__ == '__main__':
+
 conf = configfile.Config()
 
 if __name__ == '__main__':
@@ -60,8 +61,7 @@ if __name__ == '__main__':
         conf_name = script_path + '/conf/private.conf'
 
     # load and check config
-    conf.loadfile(conf_name)
-    if conf.loadconfig(conf_name) == False: quit(1)
+    if conf.loadfile(conf_name) == False: quit(1)
     if hasattr(conf, 'sgtaddr') and \
        hasattr(conf, 'sgtport'): pass
     else:
