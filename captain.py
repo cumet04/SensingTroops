@@ -2,8 +2,17 @@ from wsgiref.simple_server import make_server
 import datetime
 import json
 import sys
+import os
 import signal
 import threading
+import configfile
+
+from logging import getLogger,StreamHandler,DEBUG,NOTSET
+logger = getLogger(__name__)
+handler = StreamHandler()
+handler.setLevel(DEBUG)
+logger.setLevel(DEBUG)
+logger.addHandler(handler)
 
 class Captain(object):
     
@@ -47,12 +56,30 @@ class Captain(object):
         sys.stdout.flush()
         return json.dumps(result)
 
+
 # entry point ------------------------------------------------------------------
 
-application = Captain()
+conf = configfile.Config()
 
 if __name__ == '__main__':
-    server = make_server('', 80, application)
+    # set config-file name
+    conf_name = ''
+    if len(sys.argv) == 2:
+        conf_name = sys.argv[1]
+    else:
+        script_path = os.path.abspath(os.path.dirname(__file__))
+        conf_name = script_path + '/conf/captain.conf'
+
+    # load and check config
+    if conf.loadfile(conf_name) == False: quit(1)
+    if hasattr(conf, 'cptport'):pass
+    else:
+        print("error: load config file failed; lack of parameter.")
+        quit(1)
+
+    application = Captain()
+    logger.debug('start server: port=' + str(conf.sgtport))
+    server = make_server('', conf.cptport, application)
     signal.signal(signal.SIGINT, lambda n,f : server.shutdown())
     t = threading.Thread(target=server.serve_forever)
     t.start()
