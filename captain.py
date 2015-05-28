@@ -78,7 +78,7 @@ if __name__ == '__main__':
         quit(1)
 
     application = Captain()
-    logger.debug('start server: port=' + str(conf.sgtport))
+    logger.debug('start server: port=' + str(conf.cptport))
     server = make_server('', conf.cptport, application)
     signal.signal(signal.SIGINT, lambda n,f : server.shutdown())
     t = threading.Thread(target=server.serve_forever)
