@@ -7,6 +7,8 @@ import threading
 import sys
 import signal
 import os
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/module')
 import configfile
 from logger import Logger
 from logging import CRITICAL,ERROR,WARNING,INFO,DEBUG,NOTSET
