@@ -14,7 +14,7 @@ class Config(object):
             result += "\n - {0} : {1}".format(name, value)
         return result
 
-    def loadfile(self, conf_name):
+    def loadfile(self, conf_name, params):
         logger.debug('loadfile : ' + conf_name)
         try:
             conf_file = open(conf_name, 'r')
@@ -24,8 +24,12 @@ class Config(object):
             print("loadconfig failed : file open failed")
             return False
 
-        for name, value in conf_dict.items():
-            self.__dict__[name] = value
+        for name in params:
+            if name in conf_dict:
+                self.__dict__[name] = conf_dict[name]
+            else:
+                logger.error('Config.loadfile missing param: %s', name)
+                return False
         return True
 
     def savefile(self, conf_name):
