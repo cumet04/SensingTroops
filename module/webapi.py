@@ -52,8 +52,8 @@ class WebApiServer(object):
 
         method = None
         # eliminate path prefix from PATH_INFO.
-        if path.startswith('/' + conf.url_prefix):
-            method = path.partition(conf.url_prefix)[2]
+        if path.startswith('/' + self.url_prefix):
+            method = path.partition(self.url_prefix)[2]
 
         if path in ('', '/', '/help'):
             return [self.showHelp().getValue().encode('utf-8')]
