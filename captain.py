@@ -6,13 +6,9 @@ import os
 import signal
 import threading
 import configfile
+from logger import Logger
+from logging import CRITICAL,ERROR,WARNING,INFO,DEBUG,NOTSET
 
-from logging import getLogger,StreamHandler,DEBUG,NOTSET
-logger = getLogger(__name__)
-handler = StreamHandler()
-handler.setLevel(DEBUG)
-logger.setLevel(DEBUG)
-logger.addHandler(handler)
 
 class Captain(object):
     
@@ -60,6 +56,7 @@ class Captain(object):
 # entry point ------------------------------------------------------------------
 
 conf = configfile.Config()
+logger = Logger(__name__, DEBUG)
 
 if __name__ == '__main__':
     # set config-file name

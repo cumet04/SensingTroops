@@ -2,14 +2,10 @@ import json
 # import os
 # import sys
 import io
+from logger import Logger
+from logging import CRITICAL,ERROR,WARNING,INFO,DEBUG,NOTSET
 
-from logging import getLogger,StreamHandler,DEBUG,NOTSET
-logger = getLogger(__name__)
-handler = StreamHandler()
-handler.setLevel(DEBUG)
-logger.setLevel(DEBUG)
-logger.addHandler(handler)
-
+logger = Logger(__name__, DEBUG)
 
 class Config(object):
     def __str__(self):

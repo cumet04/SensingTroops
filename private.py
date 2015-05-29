@@ -6,13 +6,9 @@ import signal
 import os
 import sys
 import configfile
+from logger import Logger
+from logging import CRITICAL,ERROR,WARNING,INFO,DEBUG,NOTSET
 
-from logging import getLogger,StreamHandler,DEBUG,NOTSET
-logger = getLogger(__name__)
-handler = StreamHandler()
-handler.setLevel(DEBUG)
-logger.setLevel(DEBUG)
-logger.addHandler(handler)
 
 class Private(object):
 
@@ -53,8 +49,10 @@ class Private(object):
         self.put_interval = values['value']
 
     def requestAPI_get(self, host, port, api):
+        request_url = "http://{0}:{1}/{2}".format(host, port, api)
+        logger.debug('requestAPI_get url=%s', request_url)
         try:
-            res_raw = urlopen("http://{0}:{1}/{2}".format(host, port, api))
+            res_raw = urlopen(request_url)
             res_str = res_raw.read().decode('utf-8')
         except urllib.error.URLError as e:
             logger.error("requestAPI_post failed : " + str(e.reason))
@@ -62,8 +60,10 @@ class Private(object):
         return json.loads(res_str)
 
     def requestAPI_post(self, host, port, api, data):
+        request_url = "http://{0}:{1}/{2}".format(host, port, api)
+        logger.debug('requestAPI_get url=%s', request_url)
         try:
-            res_raw = urlopen("http://{0}:{1}/{2}".format(host, port, api), data)
+            res_raw = urlopen(request_url, data)
             res_str = res_raw.read().decode('utf-8')
         except urllib.error.URLError as e:
             logger.error("requestAPI_post failed : " + str(e.reason))
@@ -74,6 +74,7 @@ class Private(object):
 # entry point ------------------------------------------------------------------
 
 conf = configfile.Config()
+logger = Logger(__name__, DEBUG)
 
 if __name__ == '__main__':
     # set config-file name
