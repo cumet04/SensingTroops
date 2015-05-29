@@ -2,4 +2,5 @@
 
 make child common; HTTP for pvt, sgt
 make parent common; server for sgt, cpt
-divide class
+// divide class
+refactor api; /pvt/{id}/put, ...

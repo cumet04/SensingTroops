@@ -3,34 +3,20 @@ import datetime
 import json
 import sys
 import os
-import signal
-import threading
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/module')
 import configfile
 from logger import Logger
 from logging import CRITICAL,ERROR,WARNING,INFO,DEBUG,NOTSET
+from webapi import WebApiServer
 
 
 class Captain(object):
     
     def __init__(self):
-        self.path_functions = {'/sgt/join':  self.joinMember,
-                               '/sgt/job':   self.giveJob,
-                               '/sgt/report':self.receiveReport}
-
-    def __call__(self, environ, start_response):
-        path = environ['PATH_INFO']
-        query = environ['QUERY_STRING']
-        headers = [('Content-type', 'application/json; charset=utf-8')]
-
-        if path in self.path_functions:
-            start_response('200 OK', headers)
-            result = self.path_functions[path](query, environ)
-            return [result.encode('utf-8')]
-        else:
-            start_response('404 Not found', headers)
-            return ['404 Not found'.encode("utf-8")]
+        self.function_list = {'/sgt/join':  self.joinMember,
+                              '/sgt/job':   self.giveJob,
+                              '/sgt/report':self.receiveReport}
 
     def receiveReport(self, query_string, environ):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -43,16 +29,16 @@ class Captain(object):
 # push item to DB
 #
         result = {"receive": item}
-        return json.dumps(result)
+        return result
 
     def joinMember(self, query_string, environ):
         result = {"id" : 1}
-        return json.dumps(result)
+        return result
 
     def giveJob(self, query_string, environ):
         result = {"job" : "setinterval", "value" : 10}
         sys.stdout.flush()
-        return json.dumps(result)
+        return result
 
 
 # entry point ------------------------------------------------------------------
@@ -70,15 +56,10 @@ if __name__ == '__main__':
         conf_name = script_path + '/conf/captain.conf'
 
     # load and check config
-    if conf.loadfile(conf_name) == False: quit(1)
-    if hasattr(conf, 'cptport'):pass
-    else:
-        print("error: load config file failed; lack of parameter.")
-        quit(1)
+    config_params = ('cptport', 'url_prefix')
+    if conf.loadfile(conf_name, config_params) == False: quit(1)
 
-    application = Captain()
-    logger.debug('start server: port=' + str(conf.cptport))
-    server = make_server('', conf.cptport, application)
-    signal.signal(signal.SIGINT, lambda n,f : server.shutdown())
-    t = threading.Thread(target=server.serve_forever)
-    t.start()
+    # start server
+    app = Captain()
+    server = WebApiServer(app.function_list, conf.cptport, conf.url_prefix)
+    server.startServer()
