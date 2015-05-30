@@ -20,17 +20,17 @@ class Private(object):
         self.beat_interval = 2
         self.put_interval = 1
 
-        self.request = Request(conf.sgtaddr, conf.sgtport)
+        self.request = Request(conf.sgtaddr, conf.sgtport, 'SensorArmy/Sergeant')
 
         # join
-        response = self.request.executeGet('SensorArmy/Sergeant/' + 'pvt/join')
+        response = self.request.executeGet('pvt/join')
         if response == None: return
         self.soldier_id = response['id']
         self.askOrder()
         self.putValue()
 
     def askOrder(self):
-        response = self.request.executeGet('SensorArmy/Sergeant/'+ 'pvt/order')
+        response = self.request.executeGet('pvt/order')
         if response == None: return
         order = response['order']
         if order in self.order_functions:
@@ -41,7 +41,7 @@ class Private(object):
 
     def putValue(self):
         value = "test_value"
-        response = self.request.executeGet('SensorArmy/Sergeant/' + 'pvt/put?' + value)
+        response = self.request.executeGet('pvt/put?' + value)
         if response == None: return
 
         t = threading.Timer(self.put_interval, self.putValue)

@@ -28,10 +28,10 @@ class Sergeant(object):
         self.job_functions = {'setinterval': self.setInterval}
         self.beat_interval = 2
         self.submit_interval = 1
-        self.request = Request(conf.cptaddr, conf.cptport)
+        self.request = Request(conf.cptaddr, conf.cptport, 'SensorArmy/Captain')
 
         # join
-        response = self.request.executeGet('SensorArmy/Captain/' + 'sgt/join')
+        response = self.request.executeGet('sgt/join')
         if response == None: return
         self.soldier_id = response['id']
         # job
@@ -40,7 +40,7 @@ class Sergeant(object):
         self.submitReport()
 
     def askJob(self):
-        response = self.request.executeGet('SensorArmy/Captain/' + 'sgt/job')
+        response = self.request.executeGet('sgt/job')
         if response == None: return
         job = response['job']
         if job in self.job_functions:
@@ -51,7 +51,7 @@ class Sergeant(object):
 
     def submitReport(self):
         value = json.dumps(self.value_cache)
-        response = self.request.executePost('SensorArmy/Captain/' + 'sgt/report', value.encode('utf-8'))
+        response = self.request.executePost('sgt/report', value.encode('utf-8'))
         if response == None: return
         self.value_cache.clear()
 

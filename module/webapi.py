@@ -13,12 +13,11 @@ logger = Logger(__name__, DEBUG)
 
 
 class Request(object):
-    def __init__(self, host, port_num):
-        self.host = host
-        self.port_num = port_num
+    def __init__(self, host, port_num, url_prefix):
+        self.url_base = "http://{0}:{1}/{2}/".format(host, port_num, url_prefix)
 
     def executeGet(self, api):
-        request_url = "http://{0}:{1}/{2}".format(self.host, self.port_num, api)
+        request_url = self.url_base + api
         logger.debug('executeGet url=%s', request_url)
         try:
             res_raw = urlopen(request_url)
@@ -29,7 +28,7 @@ class Request(object):
         return json.loads(res_str)
 
     def executePost(self, api, data):
-        request_url = "http://{0}:{1}/{2}".format(self.host, self.port_num, api)
+        request_url = self.url_base + api
         logger.debug('executePost url=%s', request_url)
         try:
             res_raw = urlopen(request_url, data)
