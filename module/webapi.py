@@ -50,6 +50,7 @@ class WebApiServer(object):
         query = environ['QUERY_STRING']
         headers = [('Content-type', 'application/json; charset=utf-8')]
 
+        # shift_path_info ?
         method = None
         # eliminate path prefix from PATH_INFO.
         if path.startswith('/' + self.url_prefix):

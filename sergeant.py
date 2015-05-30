@@ -61,22 +61,22 @@ class Sergeant(object):
         self.submit_interval = values['value']
 
     # WebAPI functions
-    def putValue(self, query_string):
+    def putValue(self, query_string, environ):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         item = (timestamp, query_string)
         self.value_cache.append(item)
         result = {"put": item}
         return result
 
-    def joinMember(self, query_string):
+    def joinMember(self, query_string, environ):
         result = {"id" : 1}
         return result
 
-    def askOrder(self, query_string):
+    def askOrder(self, query_string, environ):
         result = {"order" : "setinterval", "value" : 3}
         return result
 
-    def outputCache(self, query_string):
+    def outputCache(self, query_string, environ):
         return self.value_cache
 
 
