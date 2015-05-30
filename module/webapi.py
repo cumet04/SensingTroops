@@ -4,6 +4,7 @@ import urllib.error
 import json
 import signal
 import threading
+import re
 
 import configfile
 from logger import Logger
@@ -41,6 +42,7 @@ class Request(object):
 
 class WebApiServer(object):
     def __init__(self, function_list, port_num, url_prefix):
+        function_list[r"|/|/help"] = self.showHelp
         self.function_list = function_list
         self.port_num = port_num
         self.url_prefix = url_prefix
@@ -56,17 +58,18 @@ class WebApiServer(object):
         if path.startswith('/' + self.url_prefix):
             method = path.partition(self.url_prefix)[2]
 
-        if path in ('', '/', '/help'):
-            return [self.showHelp().getValue().encode('utf-8')]
-        elif path in self.function_list:
-            start_response('200 OK', headers)
-            result = self.function_list[path](query, environ)
-            return [json.dumps(result).encode('utf-8')]
-        else:
-            start_response('404 Not found', headers)
-            return ['404 Not found'.encode("utf-8")]
+        for pattern in self.function_list:
+            r = re.compile(pattern)
+            m = r.fullmatch(method)
+            if m is not None:
+                start_response('200 OK', headers)
+                result = self.function_list[pattern](query, environ, m)
+                return [json.dumps(result).encode('utf-8')]
 
-    def showHelp(self, query_param):
+        start_response('404 Not found', headers)
+        return ['404 Not found'.encode("utf-8")]
+
+    def showHelp(self, query_param, environ, m):
         """
         show this help message.
         """

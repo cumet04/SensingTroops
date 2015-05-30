@@ -18,7 +18,7 @@ class Captain(object):
                               '/sgt/job':   self.giveJob,
                               '/sgt/report':self.receiveReport}
 
-    def receiveReport(self, query_string, environ):
+    def receiveReport(self, query_string, environ, m):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         wsgi_input = environ['wsgi.input']
         content_length = int(environ.get('CONTENT_LENGTH', 0))
@@ -31,11 +31,11 @@ class Captain(object):
         result = {"receive": item}
         return result
 
-    def joinMember(self, query_string, environ):
+    def joinMember(self, query_string, environ, m):
         result = {"id" : 1}
         return result
 
-    def giveJob(self, query_string, environ):
+    def giveJob(self, query_string, environ, m):
         result = {"job" : "setinterval", "value" : 10}
         sys.stdout.flush()
         return result

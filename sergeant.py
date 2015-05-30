@@ -6,6 +6,7 @@ import json
 import threading
 import sys
 import os
+import re
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/module')
 import configfile
@@ -30,7 +31,7 @@ class Sergeant(object):
         self.request = Request(conf.cptaddr, conf.cptport)
 
         # join
-        response = self.request.executeGet('sgt/join')
+        response = self.request.executeGet('SensorArmy/Captain/' + 'sgt/join')
         if response == None: return
         self.soldier_id = response['id']
         # job
@@ -39,7 +40,7 @@ class Sergeant(object):
         self.submitReport()
 
     def askJob(self):
-        response = self.request.executeGet('sgt/job')
+        response = self.request.executeGet('SensorArmy/Captain/' + 'sgt/job')
         if response == None: return
         job = response['job']
         if job in self.job_functions:
@@ -50,7 +51,7 @@ class Sergeant(object):
 
     def submitReport(self):
         value = json.dumps(self.value_cache)
-        response = self.request.executePost('sgt/report', value.encode('utf-8'))
+        response = self.request.executePost('SensorArmy/Captain/' + 'sgt/report', value.encode('utf-8'))
         if response == None: return
         self.value_cache.clear()
 
@@ -61,22 +62,22 @@ class Sergeant(object):
         self.submit_interval = values['value']
 
     # WebAPI functions
-    def putValue(self, query_string, environ):
+    def putValue(self, query_string, environ, m):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         item = (timestamp, query_string)
         self.value_cache.append(item)
         result = {"put": item}
         return result
 
-    def joinMember(self, query_string, environ):
+    def joinMember(self, query_string, environ, m):
         result = {"id" : 1}
         return result
 
-    def askOrder(self, query_string, environ):
+    def askOrder(self, query_string, environ, m):
         result = {"order" : "setinterval", "value" : 3}
         return result
 
-    def outputCache(self, query_string, environ):
+    def outputCache(self, query_string, environ, m):
         return self.value_cache
 
 
