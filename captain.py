@@ -14,9 +14,10 @@ from webapi import WebApiServer
 class Captain(object):
     
     def __init__(self):
-        self.function_list = {'/sgt/join':  self.joinMember,
-                              '/sgt/job':   self.giveJob,
-                              '/sgt/report':self.receiveReport}
+        self.function_list = {r'/sgt/join':  self.joinMember,
+                              r'/sgt/(\d)/job':   self.giveJob,
+                              r'/sgt/(\d)/report':self.receiveReport}
+        self.sgt_num = 0
 
     def receiveReport(self, query_string, environ, m):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -32,11 +33,12 @@ class Captain(object):
         return result
 
     def joinMember(self, query_string, environ, m):
-        result = {"id" : 1}
+        result = {"id" : self.sgt_num, "interval": 10, "heartbeat" : 3}
+        self.sgt_num += 1
         return result
 
     def giveJob(self, query_string, environ, m):
-        result = {"job" : "setinterval", "value" : 10}
+        result = {"interval": 10, "heartbeat" : 3}
         sys.stdout.flush()
         return result
 
@@ -63,3 +65,6 @@ if __name__ == '__main__':
     app = Captain()
     server = WebApiServer(app.function_list, conf.cptport, conf.url_prefix)
     server.startServer()
+
+    input('')
+    server.stopServer()

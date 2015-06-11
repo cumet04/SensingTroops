@@ -7,6 +7,7 @@ import threading
 import sys
 import os
 import re
+import time
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/module')
 import configfile
@@ -20,61 +21,76 @@ class Sergeant(object):
     
     def __init__(self):
         self.value_cache = []
-        self.function_list = {'/pvt/join': self.joinMember,
-                              '/pvt/put':  self.putValue,
-                              '/pvt/order':self.askOrder,
-                              '/pvt/cache':self.outputCache}
+        self.function_list = {r'/pvt/join': self.joinMember,
+                              r'/pvt/(\d)/put':  self.putValue,
+                              r'/pvt/(\d)/order':self.askOrder,
+                              r'/dev/cache':self.outputCache}
 
         self.job_functions = {'setinterval': self.setInterval}
-        self.beat_interval = 2
-        self.submit_interval = 1
         self.request = Request(conf.cptaddr, conf.cptport, 'SensorArmy/Captain')
+        self.pvt_num = 0
 
         # join
         response = self.request.executeGet('sgt/join')
         if response == None: return
         self.soldier_id = response['id']
+        self.submit_interval = response['interval']
+        self.beat_interval = response['heartbeat']
         # job
         self.askJob()
         # submit
         self.submitReport()
 
     def askJob(self):
-        response = self.request.executeGet('sgt/job')
+        uri = 'sgt/{0}/job'.format(self.soldier_id)
+        response = self.request.executeGet(uri)
         if response == None: return
-        job = response['job']
-        if job in self.job_functions:
-            result = self.job_functions[job](response)
 
-        t = threading.Timer(self.beat_interval, self.askJob)
-        t.start()
+        for (key, value) in response.items():
+            if key == 'interval':
+                self.submit_interval = value
+            elif key == 'heartbeat':
+                self.beat_interval = value
+
+        self.ask_thread = threading.Timer(self.beat_interval, self.askJob)
+        self.ask_thread.start()
 
     def submitReport(self):
         value = json.dumps(self.value_cache)
-        response = self.request.executePost('sgt/report', value.encode('utf-8'))
+        uri = 'sgt/{0}/report'.format(self.soldier_id)
+        response = self.request.executePost(uri, value.encode('utf-8'))
         if response == None: return
         self.value_cache.clear()
 
-        t = threading.Timer(self.submit_interval, self.submitReport)
-        t.start()
+        self.submit_thread = threading.Timer(self.submit_interval, self.submitReport)
+        self.submit_thread.start()
 
     def setInterval(self, values):
         self.submit_interval = values['value']
 
+    def stop(self):
+        try:
+            self.ask_thread.cancel()
+            self.submit_thread.cancel()
+        except:
+            pass
+
     # WebAPI functions
     def putValue(self, query_string, environ, m):
+        pvt_id = m[0]
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        item = (timestamp, query_string)
+        item = (pvt_id ,timestamp, query_string)
         self.value_cache.append(item)
         result = {"put": item}
         return result
 
     def joinMember(self, query_string, environ, m):
-        result = {"id" : 1}
+        result = {"id" : self.pvt_num, "interval": 4, "heartbeat" : 3}
+        self.pvt_num += 1
         return result
 
     def askOrder(self, query_string, environ, m):
-        result = {"order" : "setinterval", "value" : 3}
+        result = {}
         return result
 
     def outputCache(self, query_string, environ, m):
@@ -103,3 +119,7 @@ if __name__ == '__main__':
     app = Sergeant()
     server = WebApiServer(app.function_list, conf.sgtport, conf.url_prefix)
     server.startServer()
+
+    input('')
+    app.stop()
+    server.stopServer()

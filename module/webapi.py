@@ -62,7 +62,7 @@ class WebApiServer(object):
             m = r.fullmatch(method)
             if m is not None:
                 start_response('200 OK', headers)
-                result = self.function_list[pattern](query, environ, m)
+                result = self.function_list[pattern](query, environ, m.groups())
                 return [json.dumps(result).encode('utf-8')]
 
         start_response('404 Not found', headers)
@@ -82,7 +82,10 @@ class WebApiServer(object):
     def startServer(self):
         logger.debug('start server: port=' + str(self.port_num))
 
-        server = make_server('', self.port_num, self)
-        signal.signal(signal.SIGINT, lambda n,f : server.shutdown())
-        self.t = threading.Thread(target=server.serve_forever)
+        self.server = make_server('', self.port_num, self)
+        # signal.signal(signal.SIGINT, lambda n,f : server.shutdown())
+        self.t = threading.Thread(target=self.server.serve_forever)
         self.t.start()
+
+    def stopServer(self):
+        self.server.shutdown()
