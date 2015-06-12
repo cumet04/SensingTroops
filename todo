@@ -1,6 +1,4 @@
 // this file is just memo for owner of this project
 
 // divide class
-refactor api; /pvt/{id}/put, ...
-sergeant bug: it can't shutdown if captain exists
 make test script
