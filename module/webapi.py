@@ -2,7 +2,6 @@ from urllib.request import urlopen
 from wsgiref.simple_server import make_server
 import urllib.error
 import json
-import signal
 import threading
 import re
 
@@ -83,7 +82,6 @@ class WebApiServer(object):
         logger.debug('start server: port=' + str(self.port_num))
 
         self.server = make_server('', self.port_num, self)
-        # signal.signal(signal.SIGINT, lambda n,f : server.shutdown())
         self.t = threading.Thread(target=self.server.serve_forever)
         self.t.start()
 

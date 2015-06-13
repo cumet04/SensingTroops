@@ -7,6 +7,7 @@ import threading
 import sys
 import os
 import re
+import signal
 import time
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/module')
@@ -101,6 +102,7 @@ class Sergeant(object):
 
 conf = configfile.Config()
 logger = Logger(__name__, DEBUG)
+app = None
 
 if __name__ == '__main__':
     # set config-file name
@@ -120,6 +122,8 @@ if __name__ == '__main__':
     server = WebApiServer(app.function_list, conf.sgtport, conf.url_prefix)
     server.startServer()
 
-    input('')
+    signal.signal(signal.SIGINT, lambda n,f : shutdown())
+
+def shutdown():
     app.stop()
     server.stopServer()

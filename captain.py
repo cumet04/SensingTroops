@@ -1,6 +1,7 @@
 from wsgiref.simple_server import make_server
 import datetime
 import json
+import signal
 import sys
 import os
 
@@ -42,9 +43,13 @@ class Captain(object):
         sys.stdout.flush()
         return result
 
+    def stop(self):
+        pass
+
 
 # entry point ------------------------------------------------------------------
 
+app = None
 conf = configfile.Config()
 logger = Logger(__name__, DEBUG)
 
@@ -66,5 +71,8 @@ if __name__ == '__main__':
     server = WebApiServer(app.function_list, conf.cptport, conf.url_prefix)
     server.startServer()
 
-    input('')
+    signal.signal(signal.SIGINT, lambda n,f : shutdown())
+
+def shutdown():
+    app.stop()
     server.stopServer()
