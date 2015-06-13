@@ -18,14 +18,15 @@ from webapi import WebApiServer
 from webapi import Request
 
 
-class Sergeant(object):
+class Sergeant(WebApiServer):
     
     def __init__(self):
         self.value_cache = []
-        self.function_list = {r'/pvt/join': self.joinMember,
-                              r'/pvt/(\d)/put':  self.putValue,
-                              r'/pvt/(\d)/order':self.askOrder,
-                              r'/dev/cache':self.outputCache}
+        WebApiServer.__init__(self)
+        self.func_list[r'/pvt/join']       = self.joinMember
+        self.func_list[r'/pvt/(\d)/put']   = self.putValue
+        self.func_list[r'/pvt/(\d)/order'] = self.askOrder
+        self.func_list[r'/dev/cache']      = self.outputCache
 
         self.job_functions = {'setinterval': self.setInterval}
         self.request = Request(conf.cptaddr, conf.cptport, 'SensorArmy/Captain')
@@ -119,11 +120,7 @@ if __name__ == '__main__':
 
     # start server
     app = Sergeant()
-    server = WebApiServer(app.function_list, conf.sgtport, conf.url_prefix)
-    server.startServer()
-
-    signal.signal(signal.SIGINT, lambda n,f : shutdown())
-
-def shutdown():
-    app.stop()
-    server.stopServer()
+    try:
+        app.startServer(conf.sgtport, conf.url_prefix)
+    except KeyboardInterrupt:
+        pass

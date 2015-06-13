@@ -12,15 +12,19 @@ from logging import CRITICAL,ERROR,WARNING,INFO,DEBUG,NOTSET
 from webapi import WebApiServer
 
 
-class Captain(object):
+class Captain(WebApiServer):
     
     def __init__(self):
-        self.function_list = {r'/sgt/join':  self.joinMember,
-                              r'/sgt/(\d)/job':   self.giveJob,
-                              r'/sgt/(\d)/report':self.receiveReport}
+        WebApiServer.__init__(self)
+        self.func_list[r'/sgt/join']        = self.joinMember
+        self.func_list[r'/sgt/(\d)/job']    = self.giveJob
+        self.func_list[r'/sgt/(\d)/report'] = self.receiveReport
         self.sgt_num = 0
 
     def receiveReport(self, query_string, environ, m):
+        """
+        receiveReport
+        """
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         wsgi_input = environ['wsgi.input']
         content_length = int(environ.get('CONTENT_LENGTH', 0))
@@ -34,22 +38,24 @@ class Captain(object):
         return result
 
     def joinMember(self, query_string, environ, m):
+        """
+        joinMember
+        """
         result = {"id" : self.sgt_num, "interval": 10, "heartbeat" : 3}
         self.sgt_num += 1
         return result
 
     def giveJob(self, query_string, environ, m):
+        """
+        giveJob
+        """
         result = {"interval": 10, "heartbeat" : 3}
         sys.stdout.flush()
         return result
 
-    def stop(self):
-        pass
-
 
 # entry point ------------------------------------------------------------------
 
-app = None
 conf = configfile.Config()
 logger = Logger(__name__, DEBUG)
 
@@ -68,11 +74,7 @@ if __name__ == '__main__':
 
     # start server
     app = Captain()
-    server = WebApiServer(app.function_list, conf.cptport, conf.url_prefix)
-    server.startServer()
-
-    signal.signal(signal.SIGINT, lambda n,f : shutdown())
-
-def shutdown():
-    app.stop()
-    server.stopServer()
+    try:
+        app.startServer(conf.cptport, conf.url_prefix)
+    except KeyboardInterrupt:
+        pass
