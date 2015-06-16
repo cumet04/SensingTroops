@@ -1,10 +1,8 @@
-from urllib.request import urlopen
-import urllib.error
 import json
 import threading
-import signal
 import os
 import sys
+import time
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/module')
 import configfile
@@ -16,46 +14,52 @@ from webapi import Request
 class Private(object):
 
     def __init__(self):
-        self.order_functions = {'setinterval': self.setInterval}
-
         self.request = Request(conf.sgtaddr, conf.sgtport, 'SensorArmy/Sergeant')
+        self.thread_list = []
 
         # join
         response = self.request.executeGet('pvt/join')
-        if response == None: return
+        if response is None: return
         self.soldier_id = response['id']
         self.put_interval = response['interval']
         self.beat_interval = response['heartbeat']
 
-        self.askOrder()
-        self.putValue()
+        # start beat/put thread
+        beat_thread = threading.Thread(target=self.askOrder, daemon=True)
+        self.thread_list.append(beat_thread)
+        beat_thread.start()
+
+        put_thread = threading.Thread(target=self.putValue, daemon=True)
+        self.thread_list.append(put_thread)
+        put_thread.start()
 
     def askOrder(self):
-        uri = 'pvt/{0}/order'.format(self.soldier_id)
-        response = self.request.executeGet(uri)
-        if response == None: return
+        # This function must be executed as a thread
+        while True:
+            uri = 'pvt/{0}/order'.format(self.soldier_id)
+            response = self.request.executeGet(uri)
+            if response == None: return
 
-        for (key, value) in response.items():
-            if key == 'interval':
-                self.put_interval = value
-            elif key == 'heartbeat':
-                self.beat_interval = value
+            for (key, value) in response.items():
+                if key == 'interval':
+                    self.put_interval = value
+                elif key == 'heartbeat':
+                    self.beat_interval = value
 
-        t = threading.Timer(self.beat_interval, self.askOrder)
-        t.start()
+            time.sleep(self.beat_interval)
 
     def putValue(self):
-        uri = 'pvt/{0}/put?{1}'.format(self.soldier_id, "test")
-        response = self.request.executeGet(uri)
-        if response == None: return
+        # This function must be executed as a thread
+        while True:
+            uri = 'pvt/{0}/put?{1}'.format(self.soldier_id, "test")
+            response = self.request.executeGet(uri)
+            if response == None: return
 
-        t = threading.Timer(self.put_interval, self.putValue)
-        t.start()
+            time.sleep(self.put_interval)
 
-    # order functions ----------------------------------------------------------
-    def setInterval(self, values):
-        self.put_interval = values['value']
-
+    def shutdown(self):
+        for t in self.thread_list:
+            t.shutdown()
 
 # entry point ------------------------------------------------------------------
 
@@ -75,5 +79,10 @@ if __name__ == '__main__':
     config_params = ('sgtaddr', 'sgtport')
     if conf.loadfile(conf_name, config_params) == False: quit(1)
 
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    # run main loop
     pvt = Private()
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt:
+        pass
