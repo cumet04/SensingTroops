@@ -3,6 +3,7 @@ import threading
 import os
 import sys
 import time
+import random
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/module')
 import configfile
@@ -16,6 +17,7 @@ class Private(object):
     def __init__(self):
         self.request = Request(conf.sgtaddr, conf.sgtport, 'SensorArmy/Sergeant')
         self.thread_list = []
+        random.seed() # for getValue_random
 
         # join
         response = self.request.executeGet('pvt/join')
@@ -51,11 +53,16 @@ class Private(object):
     def putValue(self):
         # This function must be executed as a thread
         while True:
-            uri = 'pvt/{0}/put?{1}'.format(self.soldier_id, "test")
-            response = self.request.executeGet(uri)
+            value = json.dumps(self.getValue_random())
+            uri = 'pvt/{0}/put'.format(self.soldier_id)
+            response = self.request.executePost(uri, value.encode('utf-8'))
             if response == None: return
 
             time.sleep(self.put_interval)
+
+    # getValue
+    def getValue_random(self):
+        return {'randomvalue': random.random()}
 
     def shutdown(self):
         for t in self.thread_list:

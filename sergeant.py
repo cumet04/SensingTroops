@@ -78,8 +78,15 @@ class Sergeant(object):
     # WebAPI functions
     def putValue(self, query_string, environ, m):
         pvt_id = m[0]
+
+        # generate value from input
+        wsgi_input = environ['wsgi.input']
+        content_length = int(environ.get('CONTENT_LENGTH', 0))
+        value_raw = wsgi_input.read(content_length).decode('utf-8')
+        value_dict = json.loads(value_raw)
+
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        item = (pvt_id ,timestamp, query_string)
+        item = (pvt_id ,timestamp, value_dict)
         self.value_cache.append(item)
         result = {"put": item}
         return result
