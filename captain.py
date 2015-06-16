@@ -31,9 +31,7 @@ class Captain(WebApiServer):
         print(wsgi_input.read(content_length).decode('utf-8'))
 
         item = (timestamp, query_string)
-        print(item)
-# push item to DB
-#
+        self.pushData(item)
         result = {"receive": item}
         return result
 
@@ -52,6 +50,12 @@ class Captain(WebApiServer):
         result = {"interval": 10, "heartbeat" : 3}
         sys.stdout.flush()
         return result
+
+    def pushData(self, data):
+        """
+        push data to DB
+        """
+        print(item)
 
 
 # entry point ------------------------------------------------------------------
