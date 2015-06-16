@@ -20,6 +20,7 @@ from webapi import Request
 class Sergeant(object):
     
     def __init__(self):
+        self.thread_list = []
         self.value_cache = []
         self.function_list = {r'/pvt/join': self.joinMember,
                               r'/pvt/(\d)/put':  self.putValue,
@@ -36,34 +37,39 @@ class Sergeant(object):
         self.soldier_id = response['id']
         self.submit_interval = response['interval']
         self.beat_interval = response['heartbeat']
-        # job
-        self.askJob()
-        # submit
-        self.submitReport()
+
+        # start beat/submit thread
+        beat_thread = threading.Thread(target=self.askJob, daemon=True)
+        self.thread_list.append(beat_thread)
+        beat_thread.start()
+
+        submit_thread = threading.Thread(target=self.submitReport, daemon=True)
+        self.thread_list.append(submit_thread)
+        submit_thread.start()
 
     def askJob(self):
-        uri = 'sgt/{0}/job'.format(self.soldier_id)
-        response = self.request.executeGet(uri)
-        if response == None: return
+        while True:
+            uri = 'sgt/{0}/job'.format(self.soldier_id)
+            response = self.request.executeGet(uri)
+            if response == None: return
 
-        for (key, value) in response.items():
-            if key == 'interval':
-                self.submit_interval = value
-            elif key == 'heartbeat':
-                self.beat_interval = value
+            for (key, value) in response.items():
+                if key == 'interval':
+                    self.submit_interval = value
+                elif key == 'heartbeat':
+                    self.beat_interval = value
 
-        self.ask_thread = threading.Timer(self.beat_interval, self.askJob)
-        self.ask_thread.start()
+            time.sleep(self.beat_interval)
 
     def submitReport(self):
-        value = json.dumps(self.value_cache)
-        uri = 'sgt/{0}/report'.format(self.soldier_id)
-        response = self.request.executePost(uri, value.encode('utf-8'))
-        if response == None: return
-        self.value_cache.clear()
+        while True:
+            value = json.dumps(self.value_cache)
+            uri = 'sgt/{0}/report'.format(self.soldier_id)
+            response = self.request.executePost(uri, value.encode('utf-8'))
+            if response == None: return
+            self.value_cache.clear()
 
-        self.submit_thread = threading.Timer(self.submit_interval, self.submitReport)
-        self.submit_thread.start()
+            time.sleep(self.submit_interval)
 
     def setInterval(self, values):
         self.submit_interval = values['value']
@@ -125,8 +131,7 @@ if __name__ == '__main__':
     # start server
     app = Sergeant()
     server = WebApiServer(app.function_list, conf.sgtport, conf.url_prefix)
-    server.startServer()
-
-    input('')
-    app.stop()
-    server.stopServer()
+    try:
+        server.startServer()
+    except KeyboardInterrupt:
+        pass

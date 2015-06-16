@@ -64,7 +64,7 @@ if __name__ == '__main__':
     # start server
     app = Captain()
     server = WebApiServer(app.function_list, conf.cptport, conf.url_prefix)
-    server.startServer()
-
-    input('')
-    server.stopServer()
+    try:
+        server.startServer()
+    except KeyboardInterrupt:
+        pass
