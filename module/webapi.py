@@ -82,10 +82,5 @@ class WebApiServer(object):
     def startServer(self):
         logger.debug('start server: port=' + str(self.port_num))
 
-        self.server = make_server('', self.port_num, self)
-        # signal.signal(signal.SIGINT, lambda n,f : server.shutdown())
-        self.t = threading.Thread(target=self.server.serve_forever)
-        self.t.start()
-
-    def stopServer(self):
-        self.server.shutdown()
+        server = make_server('', self.port_num, self)
+        server.serve_forever()
