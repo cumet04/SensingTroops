@@ -4,6 +4,7 @@ import json
 import signal
 import sys
 import os
+import pymongo
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/module')
 import configfile
@@ -21,6 +22,9 @@ class Captain(WebApiServer):
         self.func_list[r'/sgt/(\d)/report'] = self.receiveReport
         self.sgt_num = 0
 
+        client = pymongo.MongoClient(host='192.168.0.21', port=27017)
+        self.coll = client.test.tmp
+
     def receiveReport(self, query_string, environ, m):
         """
         receiveReport
@@ -28,11 +32,11 @@ class Captain(WebApiServer):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         wsgi_input = environ['wsgi.input']
         content_length = int(environ.get('CONTENT_LENGTH', 0))
-        print(wsgi_input.read(content_length).decode('utf-8'))
+        content_json = wsgi_input.read(content_length).decode('utf-8')
+        content_dict = json.loads(content_json)
 
-        item = (timestamp, query_string)
-        self.pushData(item)
-        result = {"receive": item}
+        self.pushData(content_dict)
+        result = {"receive": content_json}
         return result
 
     def joinMember(self, query_string, environ, m):
@@ -55,7 +59,9 @@ class Captain(WebApiServer):
         """
         push data to DB
         """
-        print(item)
+        print(data)
+        self.coll.insert_many(data)
+
 
 
 # entry point ------------------------------------------------------------------
@@ -78,6 +84,8 @@ if __name__ == '__main__':
 
     # start server
     app = Captain()
+    # app.pushData({"testname": "aaa"})
+
     try:
         app.startServer(conf.cptport, conf.url_prefix)
     except KeyboardInterrupt:

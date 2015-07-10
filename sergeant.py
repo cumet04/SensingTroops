@@ -65,11 +65,12 @@ class Sergeant(WebApiServer):
 
     def submitReport(self):
         while True:
-            value = json.dumps(self.value_cache)
-            uri = 'sgt/{0}/report'.format(self.soldier_id)
-            response = self.request.executePost(uri, value.encode('utf-8'))
-            if response == None: return
-            self.value_cache.clear()
+            if len(self.value_cache) > 0:
+                value = json.dumps(self.value_cache)
+                uri = 'sgt/{0}/report'.format(self.soldier_id)
+                response = self.request.executePost(uri, value.encode('utf-8'))
+                if response == None: return
+                self.value_cache.clear()
 
             time.sleep(self.submit_interval)
 
@@ -94,7 +95,11 @@ class Sergeant(WebApiServer):
         value_dict = json.loads(value_raw)
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        item = (pvt_id ,timestamp, value_dict)
+        # item = (pvt_id ,timestamp, value_dict)
+        item = {"pvt_id": pvt_id,
+                "time": timestamp,
+                "value": value_dict
+                }
         self.value_cache.append(item)
         result = {"put": item}
         return result
