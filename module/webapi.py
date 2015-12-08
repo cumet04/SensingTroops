@@ -10,7 +10,7 @@ import textwrap
 import configfile
 from logger import Logger
 from logging import CRITICAL,ERROR,WARNING,INFO,DEBUG,NOTSET
-logger = Logger(__name__, DEBUG)
+logger = Logger(__name__, INFO)
 
 
 class Request(object):
