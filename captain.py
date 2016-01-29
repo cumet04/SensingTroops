@@ -22,8 +22,8 @@ class Captain(WebApiServer):
         self.func_list[r'/sgt/(\d)/report'] = self.receiveReport
         self.sgt_num = 0
 
-        client = pymongo.MongoClient(host='192.168.0.21', port=27017)
-        self.coll = client.test.tmp
+        # client = pymongo.MongoClient(host='192.168.0.21', port=27017)
+        # self.coll = client.test.tmp
 
     def receiveReport(self, query_string, environ, m):
         """
@@ -60,7 +60,7 @@ class Captain(WebApiServer):
         push data to DB
         """
         print(data)
-        self.coll.insert_many(data)
+        # self.coll.insert_many(data)
 
 
 
