@@ -1,95 +1,141 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
 import json
-import threading
 import os
 import sys
+import threading
 import time
+import requests
 import random
-
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/module')
-import configfile
-from logger import Logger
-from logging import CRITICAL,ERROR,WARNING,INFO,DEBUG,NOTSET
-from webapi import Request
+from flask import Flask, jsonify, request, url_for, abort, Response
 
 
 class Private(object):
-
     def __init__(self):
-        self.request = Request(conf.sgtaddr, conf.sgtport, 'SensorArmy/Sergeant')
-        self.thread_list = []
-        random.seed() # for getValue_random
+        self.config = None
+        self.__weapons = {}
+        self.__weapons['random'] = Sensor(random.random, 0)
+        self.__weapons['zero'] = Sensor(lambda :0, 0)
 
-        # join
-        response = self.request.executeGet('pvt/join')
-        if response is None: return
-        self.soldier_id = response['id']
-        self.put_interval = response['interval']
-        self.beat_interval = response['heartbeat']
+    def start_work(self):
+        work_thread = threading.Thread(target=self.__working, daemon=True)
+        work_thread.start()
 
-        # start beat/put thread
-        beat_thread = threading.Thread(target=self.askOrder, daemon=True)
-        self.thread_list.append(beat_thread)
-        beat_thread.start()
 
-        put_thread = threading.Thread(target=self.putValue, daemon=True)
-        self.thread_list.append(put_thread)
-        put_thread.start()
+    def join(self, addr, port):
+        self.superior_ep = addr + ':' + port
 
-    def askOrder(self):
-        # This function must be executed as a thread
-        while True:
-            uri = 'pvt/{0}/order'.format(self.soldier_id)
-            response = self.request.executeGet(uri)
-            if response == None: return
+        value = {"name": "pvt"}
+        res_dict = post_data(self.superior_ep, '/pvt/join', value).json()
 
-            for (key, value) in response.items():
-                if key == 'interval':
-                    self.put_interval = value
-                elif key == 'heartbeat':
-                    self.beat_interval = value
+        self.id = res_dict['id']
+        # TODO: logging
+        print(self.id)
 
-            time.sleep(self.beat_interval)
+    def set_order(self, order):
+        '''
+        この兵士に割り当てられている命令を置き換える
+        :param order: 新規命令のリスト
+        :return: 受理した命令
+        '''
+        submitted = []
+        for item in order:
+            sensor = item['sensor']
+            interval = item['interval']
+            if sensor not in self.__weapons: continue
 
-    def putValue(self):
-        # This function must be executed as a thread
-        while True:
-            value = json.dumps(self.getValue_random())
-            uri = 'pvt/{0}/put'.format(self.soldier_id)
-            response = self.request.executePost(uri, value.encode('utf-8'))
-            if response == None: return
+            self.__weapons[sensor].interval = interval
+            self.__working(sensor)
+            submitted.append({'sensor': sensor, 'interval': interval})
 
-            time.sleep(self.put_interval)
+        print('get order' + str(submitted))
+        return submitted
 
-    # getValue
-    def getValue_random(self):
-        return {'randomvalue': random.random()}
+    def __working(self, sensor):
+        '''
+        指定されたセンサー種別のセンサ値を送信するスレッド
+        :param sensor: センサー種別
+        '''
+        value = self.__weapons[sensor].func()
+        interval = self.__weapons[sensor].interval
+        timer = self.__weapons[sensor].timer
 
-    def shutdown(self):
-        for t in self.thread_list:
-            t.shutdown()
+        if timer is not None: timer.cancel()
+        t = threading.Timer(interval, self.__working, args=(sensor, ))
+        t.start()
+        self.__weapons[sensor].timer = t
+
+        post_data(self.superior_ep, '/pvt/' + self.id + '/work', value)
+
+
+
+
+class Sensor(object):
+    __slots__ = ['func', 'timer', 'interval']
+
+    def __init__(self, func, interval):
+        self.func = func
+        self.interval = interval
+        self.timer = None
+
+
+def post_data(addr, path, value):
+    '''
+    指定endpointにdict形式のデータをpostする
+    :param addr: 送信先アドレス
+    :param path: 送信先URIのパス
+    :param value: 送信するデータ(dict)
+    :return: Response object
+    '''
+    headers = {'Content-Type': 'application/json'}
+    data = json.dumps(value)
+    path = 'http://{0}{1}'.format(addr, path)
+    return requests.post(path, data=data, headers=headers)
+
+# REST interface ---------------------------------------------------------------
+
+app = Private()
+server = Flask(__name__)
+
+
+# json形式のリクエストボディからdict形式のオブジェクトを取得する
+def get_dict():
+    # content-type check
+    if request.headers['Content-Type'] != 'application/json':
+        return jsonify(res='application/json required'), 406
+
+    # json parse
+    try:
+        param_str = request.data.decode('utf-8')
+        param_dict = json.loads(param_str)
+    except json.JSONDecodeError:
+        return jsonify(error="param couldn't decode to json"), 400
+
+    return param_dict, 200
+
+
+# 新しい命令を受理する
+@server.route('/order', methods=['POST'])
+def get_order():
+    result = get_dict()
+    if result[1] != 200: return result
+
+    accepted = app.set_order(result[0])
+    return jsonify(result='success', accepted=accepted), 200
+
 
 # entry point ------------------------------------------------------------------
-
-conf = configfile.Config()
-logger = Logger(__name__, DEBUG)
-
-if __name__ == '__main__':
-    # set config-file name
-    conf_name = ''
-    if len(sys.argv) == 2:
-        conf_name = sys.argv[1]
+if __name__ == "__main__":
+    if len(sys.argv) == 4:
+        self_port = sys.argv[1]
+        su_addr = sys.argv[2]
+        su_port = sys.argv[3]
     else:
-        script_path = os.path.abspath(os.path.dirname(__file__))
-        conf_name = script_path + '/conf/private.conf'
+        print('superior addr/port required')
+        sys.exit()
+    app = Private()
+    app.join(su_addr, su_port)
 
-    # load and check config
-    config_params = ('sgtaddr', 'sgtport')
-    if conf.loadfile(conf_name, config_params) == False: quit(1)
-
-    # run main loop
-    pvt = Private()
-    try:
-        while True:
-            pass
-    except KeyboardInterrupt:
-        pass
+    server.debug = True
+    server.run(port=int(self_port))

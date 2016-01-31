@@ -1,144 +1,110 @@
-from wsgiref.simple_server import make_server
-from urllib.request import urlopen
-import urllib.error
-import datetime
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
 import json
-import threading
-import sys
 import os
-import re
-import signal
+import sys
+import threading
 import time
+import logging
+import hashlib
+from flask import Flask, jsonify, request, url_for, abort, Response
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/module')
-import configfile
-from logger import Logger
-from logging import CRITICAL,ERROR,WARNING,INFO,DEBUG,NOTSET
-from webapi import WebApiServer
-from webapi import Request
-
-
-class Sergeant(WebApiServer):
-    
+class Sergeant(object):
     def __init__(self):
-        self.thread_list = []
-        self.value_cache = []
-        WebApiServer.__init__(self)
-        self.func_list[r'/pvt/join']       = self.joinMember
-        self.func_list[r'/pvt/(\d)/put']   = self.putValue
-        self.func_list[r'/pvt/(\d)/order'] = self.askOrder
-        self.func_list[r'/dev/cache']      = self.outputCache
+        self.cache = []
+        self.pvt_list = {}
+        self.config = None
 
-        self.job_functions = {'setinterval': self.setInterval}
-        self.request = Request(conf.cptaddr, conf.cptport, 'SensorArmy/Captain')
-        self.pvt_num = 0
 
-        # join
-        response = self.request.executeGet('sgt/join')
-        if response == None: return
-        self.soldier_id = response['id']
-        self.submit_interval = response['interval']
-        self.beat_interval = response['heartbeat']
+    def working(self):
+        # ask job
+        # submit report
+        pass
 
-        # start beat/submit thread
-        beat_thread = threading.Thread(target=self.askJob, daemon=True)
-        self.thread_list.append(beat_thread)
-        beat_thread.start()
 
-        submit_thread = threading.Thread(target=self.submitReport, daemon=True)
-        self.thread_list.append(submit_thread)
-        submit_thread.start()
+    def join(self):
+        pass
 
-    def askJob(self):
-        while True:
-            uri = 'sgt/{0}/job'.format(self.soldier_id)
-            response = self.request.executeGet(uri)
-            if response == None: return
 
-            for (key, value) in response.items():
-                if key == 'interval':
-                    self.submit_interval = value
-                elif key == 'heartbeat':
-                    self.beat_interval = value
+    def accept_work(self, id, work):
+        if id not in self.pvt_list:
+            return jsonify(msg='the pvt is not my soldier'), 403
 
-            time.sleep(self.beat_interval)
+        self.cache.append({'pvt_id':id, 'work':work})
+        return jsonify(res='ok')
 
-    def submitReport(self):
-        while True:
-            if len(self.value_cache) > 0:
-                value = json.dumps(self.value_cache)
-                uri = 'sgt/{0}/report'.format(self.soldier_id)
-                response = self.request.executePost(uri, value.encode('utf-8'))
-                if response == None: return
-                self.value_cache.clear()
 
-            time.sleep(self.submit_interval)
+    def add_pvt(self, info):
+        new_id = str(id(info))
+        self.pvt_list[new_id] = {'info':info}
+        return jsonify(res='ok', id=new_id)
 
-    def setInterval(self, values):
-        self.submit_interval = values['value']
 
-    def stop(self):
-        try:
-            self.ask_thread.cancel()
-            self.submit_thread.cancel()
-        except:
-            pass
+    def show_cache(self):
+        return jsonify(cache = self.cache)
 
-    # WebAPI functions
-    def putValue(self, query_string, environ, m):
-        pvt_id = m[0]
 
-        # generate value from input
-        wsgi_input = environ['wsgi.input']
-        content_length = int(environ.get('CONTENT_LENGTH', 0))
-        value_raw = wsgi_input.read(content_length).decode('utf-8')
-        value_dict = json.loads(value_raw)
 
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        # item = (pvt_id ,timestamp, value_dict)
-        item = {"pvt_id": pvt_id,
-                "time": timestamp,
-                "value": value_dict
-                }
-        self.value_cache.append(item)
-        result = {"put": item}
-        return result
 
-    def joinMember(self, query_string, environ, m):
-        result = {"id" : self.pvt_num, "interval": 4, "heartbeat" : 3}
-        self.pvt_num += 1
-        return result
+# REST interface ---------------------------------------------------------------
 
-    def askOrder(self, query_string, environ, m):
-        result = {}
-        return result
+app = Sergeant()
+server = Flask(__name__)
 
-    def outputCache(self, query_string, environ, m):
-        return self.value_cache
+# json形式のリクエストボディからdict形式のオブジェクトを取得する
+def get_dict():
+    # content-type check
+    if request.headers['Content-Type'] != 'application/json':
+        return jsonify(res='application/json required'), 406
+
+    # json parse
+    try:
+        param_str = request.data.decode('utf-8')
+        param_dict = json.loads(param_str)
+    except json.JSONDecodeError:
+        return jsonify(error="param couldn't decode to json"), 400
+
+    return param_dict, 200
+
+
+@server.route('/pvt/<id>/work', methods=['GET', 'POST'])
+def pvt_work(id):
+    result = get_dict()
+    if result[1] != 200: return result
+
+    return app.accept_work(id, result[0])
+
+
+@server.route('/pvt/join', methods=['POST'])
+def pvt_join():
+    result = get_dict()
+    if result[1] != 200: return result
+
+    try:
+        return app.add_pvt(result[0])
+    except BaseException as e:
+        print('error: ' + e.__class__.__name__)
+        return jsonify(error="got a exception"), 500
+
+
+@server.route('/pvt/<id>/order', methods=['GET', 'POST'])
+def pvt_order():
+    # TODO: impl
+    pass
+
+
+@server.route('/dev/cache', methods=['GET', 'POST'])
+def dev_cache():
+    return app.show_cache()
 
 
 # entry point ------------------------------------------------------------------
-
-conf = configfile.Config()
-logger = Logger(__name__, DEBUG)
-app = None
-
-if __name__ == '__main__':
-    # set config-file name
-    conf_name = ''
+if __name__ == "__main__":
     if len(sys.argv) == 2:
-        conf_name = sys.argv[1]
+        port = int(sys.argv[1])
     else:
-        script_path = os.path.abspath(os.path.dirname(__file__))
-        conf_name = script_path + '/conf/sergeant.conf'
+        port = 5000
+    server.run(port=port)
 
-    # load and check config
-    config_params = ('cptaddr', 'cptport', 'sgtport', 'url_prefix')
-    if conf.loadfile(conf_name, config_params) == False: quit(1)
 
-    # start server
-    app = Sergeant()
-    try:
-        app.startServer(conf.sgtport, conf.url_prefix)
-    except KeyboardInterrupt:
-        pass
