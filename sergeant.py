@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+
+import sys
+from common import get_dict
+from flask import Flask, jsonify
 from logging import getLogger, StreamHandler, DEBUG
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -8,11 +12,6 @@ handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
-import os
-import sys
-import threading
-from common import get_dict
-from flask import Flask, jsonify
 
 class Sergeant(object):
     def __init__(self):
@@ -27,11 +26,11 @@ class Sergeant(object):
     def join(self):
         pass
 
-    def accept_work(self, id, work):
-        if id not in self.pvt_list:
+    def accept_work(self, pvt_id, work):
+        if pvt_id not in self.pvt_list:
             raise KeyError
-        self.cache.append({'pvt_id':id, 'work':work})
-        logger.info('accept work from pvt: {0}'.format(id))
+        self.cache.append({'pvt_id': pvt_id, 'work': work})
+        logger.info('accept work from pvt: {0}'.format(pvt_id))
 
     def accept_pvt(self, info):
         new_id = str(id(info))
@@ -41,11 +40,10 @@ class Sergeant(object):
         logger.info('accept a new private: {0}, {1}'.format(name, new_id))
         return {'name': name, 'id': new_id}
 
-    def get_pvt_info(self, id):
-        info = self.pvt_list[id]
-        info['id'] = id
+    def get_pvt_info(self, pvt_id):
+        info = self.pvt_list[pvt_id]
+        info['id'] = pvt_id
         return info
-
 
 
 # REST interface ---------------------------------------------------------------
@@ -56,30 +54,35 @@ server = Flask(__name__)
 
 @server.route('/pvt/join', methods=['POST'])
 def pvt_join():
-    input = get_dict()
-    if input[1] != 200: return input
+    value = get_dict()
+    if value[1] != 200:
+        return value
 
-    res = app.accept_pvt(input[0])
+    res = app.accept_pvt(value[0])
     return jsonify(res)
 
+
 @server.route('/pvt/<id>/work', methods=['POST'])
-def pvt_work(id):
-    input = get_dict()
-    if input[1] != 200: return input
+def pvt_work(pvt_id):
+    value = get_dict()
+    if value[1] != 200:
+        return value
 
     try:
-        app.accept_work(id, input[0])
+        app.accept_work(pvt_id, value[0])
     except KeyError:
         return jsonify(msg='the pvt is not my soldier'), 404
     return jsonify(result='success')
 
+
 @server.route('/pvt/<id>/info', methods=['GET'])
-def pvt_info(id):
+def pvt_info(pvt_id):
     try:
-        res = app.get_pvt_info(id)
+        res = app.get_pvt_info(pvt_id)
     except KeyError:
         return jsonify(msg='the pvt is not my soldier'), 404
     return jsonify(res)
+
 
 @server.route('/dev/cache', methods=['GET'])
 def dev_cache():
@@ -93,5 +96,3 @@ if __name__ == "__main__":
     else:
         port = 5000
     server.run(port=port, debug=True)
-
-

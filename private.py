@@ -1,30 +1,29 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from logging import getLogger,StreamHandler,DEBUG
+
+import sys
+import threading
+import requests
+import random
+from common import get_dict
+from flask import Flask, jsonify
+from logging import getLogger, StreamHandler, DEBUG
 logger = getLogger(__name__)
 handler = StreamHandler()
 handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
-import json
-import os
-import sys
-import threading
-import time
-import requests
-import random
-from common import get_dict
-from flask import Flask, jsonify, request, url_for, abort, Response
-
 
 class Private(object):
     def __init__(self):
         # self.config = None
+        self.superior_ep = ''
+        self.id = ''
         self.__sensors = {}
         self.__sensors['random'] = Sensor(random.random, 0)
-        self.__sensors['zero'] = Sensor(lambda :0, 0)
+        self.__sensors['zero'] = Sensor(lambda: 0, 0)
 
     def join(self, addr, port):
         self.superior_ep = addr + ':' + port
@@ -39,18 +38,19 @@ class Private(object):
         logger.info('get my pvt-id: {0}'.format(self.id))
 
     def set_order(self, order):
-        '''
+        """
         この兵士に割り当てられている命令を置き換える
         :param order: 新規命令のリスト
         :return: 受理した命令
-        '''
+        """
         # 既存の命令をリセットして上書きする仕様にすべきか
         # 更に不正な情報が含まれていた場合や命令の差出人がおかしい場合にハネる必要がありそう
         accepted = []
         for item in order:
             sensor = item['sensor']
             interval = item['interval']
-            if sensor not in self.__sensors: continue
+            if sensor not in self.__sensors:
+                continue
 
             self.__sensors[sensor].interval = interval
             self.__working(sensor)
@@ -61,22 +61,22 @@ class Private(object):
         return accepted
 
     def __working(self, sensor):
-        '''
+        """
         指定されたセンサー種別のセンサ値を送信するスレッド
         :param sensor: センサー種別
-        '''
+        """
         value = self.__sensors[sensor].func()
         interval = self.__sensors[sensor].interval
         timer = self.__sensors[sensor].timer
 
-        if timer is not None: timer.cancel()
+        if timer is not None:
+            timer.cancel()
         t = threading.Timer(interval, self.__working, args=(sensor, ))
         t.start()
         self.__sensors[sensor].timer = t
 
         path = 'http://{0}/pvt/{1}/work'.format(self.superior_ep, self.id)
         return requests.post(path, json={'sensor': sensor, 'value': value})
-
 
 
 class Sensor(object):
@@ -97,10 +97,11 @@ server = Flask(__name__)
 # 新しい命令を受理する
 @server.route('/order', methods=['PUT'])
 def get_order():
-    input = get_dict()
-    if input[1] != 200: return input
+    value = get_dict()
+    if value[1] != 200:
+        return value
 
-    accepted = app.set_order(input[0])
+    accepted = app.set_order(value[0])
     return jsonify(result='success', accepted=accepted), 200
 
 
