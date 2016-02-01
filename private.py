@@ -31,9 +31,9 @@ class Private(object):
         logger.info('join into the sergeant: {0}'.format(self.superior_ep))
 
         info = {'name': "pvt-skel",
-                'sensors': self.__sensors.keys()}
+                'sensors': list(self.__sensors.keys())}
         path = 'http://{0}/pvt/join'.format(self.superior_ep)
-        res = requests.post(path, json={'name': "pvt-skel"}).json()
+        res = requests.post(path, json=info).json()
 
         self.id = res['id']
         logger.info('get my pvt-id: {0}'.format(self.id))
