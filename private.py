@@ -22,16 +22,18 @@ from flask import Flask, jsonify, request, url_for, abort, Response
 class Private(object):
     def __init__(self):
         # self.config = None
-        self.__weapons = {}
-        self.__weapons['random'] = Sensor(random.random, 0)
-        self.__weapons['zero'] = Sensor(lambda :0, 0)
+        self.__sensors = {}
+        self.__sensors['random'] = Sensor(random.random, 0)
+        self.__sensors['zero'] = Sensor(lambda :0, 0)
 
     def join(self, addr, port):
         self.superior_ep = addr + ':' + port
         logger.info('join into the sergeant: {0}'.format(self.superior_ep))
 
+        info = {'name': "pvt-skel",
+                'sensors': self.__sensors.keys()}
         path = 'http://{0}/pvt/join'.format(self.superior_ep)
-        res = requests.post(path, json={'sensor': "pvt-skel"}).json()
+        res = requests.post(path, json={'name': "pvt-skel"}).json()
 
         self.id = res['id']
         logger.info('get my pvt-id: {0}'.format(self.id))
@@ -42,13 +44,15 @@ class Private(object):
         :param order: 新規命令のリスト
         :return: 受理した命令
         '''
+        # 既存の命令をリセットして上書きする仕様にすべきか
+        # 更に不正な情報が含まれていた場合や命令の差出人がおかしい場合にハネる必要がありそう
         accepted = []
         for item in order:
             sensor = item['sensor']
             interval = item['interval']
-            if sensor not in self.__weapons: continue
+            if sensor not in self.__sensors: continue
 
-            self.__weapons[sensor].interval = interval
+            self.__sensors[sensor].interval = interval
             self.__working(sensor)
             accepted.append({'sensor': sensor, 'interval': interval})
 
@@ -61,14 +65,14 @@ class Private(object):
         指定されたセンサー種別のセンサ値を送信するスレッド
         :param sensor: センサー種別
         '''
-        value = self.__weapons[sensor].func()
-        interval = self.__weapons[sensor].interval
-        timer = self.__weapons[sensor].timer
+        value = self.__sensors[sensor].func()
+        interval = self.__sensors[sensor].interval
+        timer = self.__sensors[sensor].timer
 
         if timer is not None: timer.cancel()
         t = threading.Timer(interval, self.__working, args=(sensor, ))
         t.start()
-        self.__weapons[sensor].timer = t
+        self.__sensors[sensor].timer = t
 
         path = 'http://{0}/pvt/{1}/work'.format(self.superior_ep, self.id)
         return requests.post(path, json={'sensor': sensor, 'value': value})
