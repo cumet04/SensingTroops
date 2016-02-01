@@ -3,6 +3,8 @@
 
 
 import sys
+import threading
+import requests
 from common import get_dict
 from flask import Flask, jsonify
 from logging import getLogger, StreamHandler, DEBUG
@@ -17,14 +19,38 @@ class Sergeant(object):
     def __init__(self):
         self.cache = []
         self.pvt_list = {}
+        self.superior_ep = ''
+        self.id = ''
+        self.report_timer = None
+        self.report_interval = 0
 
-    def working(self):
-        # ask job
-        # submit report
-        pass
+# soldier functions
 
-    def join(self):
-        pass
+    def join(self, addr, port):
+        self.superior_ep = addr + ':' + port
+        logger.info('join into the captain: {0}'.format(self.superior_ep))
+
+        info = {'name': "sgt-skel"}
+        path = 'http://{0}/sgt/join'.format(self.superior_ep)
+        res = requests.post(path, json=info).json()
+
+        self.id = res['id']
+        logger.info('get my sgt-id: {0}'.format(self.id))
+
+    def report(self):
+        if self.report_interval == 0:
+            return
+        if self.report_timer is not None:
+            self.report_timer.cancel()
+
+        t = threading.Timer(self.report_interval, self.report)
+        t.start()
+        self.report_timer = t
+
+        path = 'http://{0}/sgt/{1}/report'.format(self.superior_ep, self.id)
+        return requests.post(path, json=self.cache)
+
+# superior functions
 
     def accept_work(self, pvt_id, work):
         if pvt_id not in self.pvt_list:
@@ -48,7 +74,6 @@ class Sergeant(object):
 
 # REST interface ---------------------------------------------------------------
 
-app = Sergeant()
 server = Flask(__name__)
 
 
@@ -91,8 +116,13 @@ def dev_cache():
 
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        port = int(sys.argv[1])
+    if len(sys.argv) == 4:
+        self_port = int(sys.argv[1])
+        su_addr = sys.argv[2]
+        su_port = sys.argv[3]
     else:
-        port = 5000
-    server.run(port=port, debug=True)
+        logger.error('superior addr/port required')
+        sys.exit()
+    app = Sergeant()
+    app.join(su_addr, su_port)
+    server.run(port=self_port, debug=True)
