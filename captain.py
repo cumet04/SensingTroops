@@ -1,92 +1,79 @@
-from wsgiref.simple_server import make_server
+from logging import getLogger,StreamHandler,DEBUG
+logger = getLogger(__name__)
+handler = StreamHandler()
+handler.setLevel(DEBUG)
+logger.setLevel(DEBUG)
+logger.addHandler(handler)
+
 import datetime
 import json
-import signal
 import sys
 import os
 import pymongo
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/module')
-import configfile
-from logger import Logger
 from logging import CRITICAL,ERROR,WARNING,INFO,DEBUG,NOTSET
-from webapi import WebApiServer
+from common import get_dict
+from flask import Flask, jsonify, request, url_for, abort, Response
 
+# client = pymongo.MongoClient(host='192.168.0.21', port=27017)
+# self.coll = client.test.tmp
+# self.coll.insert_many(data)
 
-class Captain(WebApiServer):
+class Captain(object):
     
     def __init__(self):
-        WebApiServer.__init__(self)
-        self.func_list[r'/sgt/join']        = self.joinMember
-        self.func_list[r'/sgt/(\d)/job']    = self.giveJob
-        self.func_list[r'/sgt/(\d)/report'] = self.receiveReport
-        self.sgt_num = 0
+        self.cache = []
+        self.member_list = {}
 
-        # client = pymongo.MongoClient(host='192.168.0.21', port=27017)
-        # self.coll = client.test.tmp
+    def accept_report(self, id, report):
+        if id not in self.member_list:
+            return jsonify(msg='the sergeant is not my soldier'), 403
 
-    def receiveReport(self, query_string, environ, m):
-        """
-        receiveReport
-        """
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        wsgi_input = environ['wsgi.input']
-        content_length = int(environ.get('CONTENT_LENGTH', 0))
-        content_json = wsgi_input.read(content_length).decode('utf-8')
-        content_dict = json.loads(content_json)
+        self.cache.append({'sgt_id':id, 'work':report})
+        logger.info('accept work from sgt: {0}'.format(id))
+        return jsonify(result='success')
 
-        self.pushData(content_dict)
-        result = {"receive": content_json}
-        return result
+    def accept_sgt(self, info):
+        new_id = str(id(info))
+        self.member_list[new_id] = {'info':info}
+        logger.info('accept a new sergeant: {0}, {1}'.format(info['name'], id))
+        return jsonify(result='success', name=info['name'], id=new_id)
 
-    def joinMember(self, query_string, environ, m):
-        """
-        joinMember
-        """
-        result = {"id" : self.sgt_num, "interval": 10, "heartbeat" : 3}
-        self.sgt_num += 1
-        return result
+    def show_cache(self):
+        return jsonify(cache = self.cache)
 
-    def giveJob(self, query_string, environ, m):
-        """
-        giveJob
-        """
-        result = {"interval": 10, "heartbeat" : 3}
-        sys.stdout.flush()
-        return result
 
-    def pushData(self, data):
-        """
-        push data to DB
-        """
-        print(data)
-        # self.coll.insert_many(data)
+# REST interface ---------------------------------------------------------------
 
+app = Captain()
+server = Flask(__name__)
+
+
+@server.route('/sgt/join', methods=['POST'])
+def sgt_join():
+    input = get_dict()
+    if input[1] != 200: return input
+
+    res = app.accept_sgt(input[0])
+    return res
+
+@server.route('/sgt/<id>/report', methods=['POST'])
+def sgt_report(id):
+    input = get_dict()
+    if input[1] != 200: return input
+
+    res = app.accept_report(id, input[0])
+    return res
+
+@server.route('/dev/cache', methods=['GET'])
+def dev_cache():
+    return app.show_cache()
 
 
 # entry point ------------------------------------------------------------------
-
-conf = configfile.Config()
-logger = Logger(__name__, DEBUG)
-
-if __name__ == '__main__':
-    # set config-file name
-    conf_name = ''
+if __name__ == "__main__":
     if len(sys.argv) == 2:
-        conf_name = sys.argv[1]
+        port = int(sys.argv[1])
     else:
-        script_path = os.path.abspath(os.path.dirname(__file__))
-        conf_name = script_path + '/conf/captain.conf'
-
-    # load and check config
-    config_params = ('cptport', 'url_prefix')
-    if conf.loadfile(conf_name, config_params) == False: quit(1)
-
-    # start server
-    app = Captain()
-    # app.pushData({"testname": "aaa"})
-
-    try:
-        app.startServer(conf.cptport, conf.url_prefix)
-    except KeyboardInterrupt:
-        pass
+        port = 5100
+    server.run(port=port, debug=True)
