@@ -7,6 +7,7 @@ handler = StreamHandler()
 handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
+
 import json
 import os
 import sys
@@ -23,30 +24,34 @@ class Sergeant(object):
         self.pvt_list = {}
         self.config = None
 
-
     def working(self):
         # ask job
         # submit report
         pass
 
-
     def join(self):
         pass
 
-
     def accept_work(self, id, work):
         if id not in self.pvt_list:
-            return jsonify(msg='the pvt is not my soldier'), 403
+            return jsonify(msg='the pvt is not my soldier'), 404
 
         self.cache.append({'pvt_id':id, 'work':work})
-        return jsonify(res='ok')
+        logger.info('accept work from pvt: {0}'.format(id))
+        return jsonify(result='success')
 
-
-    def add_pvt(self, info):
+    def accept_pvt(self, info):
         new_id = str(id(info))
         self.pvt_list[new_id] = {'info':info}
-        return jsonify(res='ok', id=new_id)
+        logger.info('accept a new private: {0}, {1}'.format(info['name'], id))
+        return jsonify(result='success', name=info['name'], id=new_id)
 
+    def get_pvt_info(self, id):
+        if id not in self.pvt_list:
+            return jsonify(msg='the pvt is not my soldier'), 404
+        info = self.pvt_list[id]
+        info['id'] = id
+        return jsonify(info)
 
     def show_cache(self):
         return jsonify(cache = self.cache)
@@ -65,17 +70,21 @@ def pvt_join():
     input = get_dict()
     if input[1] != 200: return input
 
-    res = app.add_pvt(input[0])
+    res = app.accept_pvt(input[0])
     return res
-
 
 @server.route('/pvt/<id>/work', methods=['POST'])
 def pvt_work(id):
     input = get_dict()
     if input[1] != 200: return input
 
-    return app.accept_work(id, input[0])
+    res = app.accept_work(id, input[0])
+    return res
 
+@server.route('/pvt/<id>/info', methods=['GET'])
+def pvt_info(id):
+    res = app.get_pvt_info(id)
+    return res
 
 @server.route('/dev/cache', methods=['GET'])
 def dev_cache():
