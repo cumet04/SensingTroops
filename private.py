@@ -1,6 +1,13 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+from logging import getLogger,StreamHandler,DEBUG
+logger = getLogger(__name__)
+handler = StreamHandler()
+handler.setLevel(DEBUG)
+logger.setLevel(DEBUG)
+logger.addHandler(handler)
+
 import json
 import os
 import sys
@@ -21,13 +28,13 @@ class Private(object):
 
     def join(self, addr, port):
         self.superior_ep = addr + ':' + port
+        logger.info('join into the sergeant: {0}'.format(self.superior_ep))
 
         path = 'http://{0}/pvt/join'.format(self.superior_ep)
         res = requests.post(path, json={'sensor': "pvt-skel"}).json()
 
         self.id = res['id']
-        # TODO: logging
-        print(self.id)
+        logger.info('get my pvt-id: {0}'.format(self.id))
 
     def set_order(self, order):
         '''
@@ -35,7 +42,7 @@ class Private(object):
         :param order: 新規命令のリスト
         :return: 受理した命令
         '''
-        submitted = []
+        accepted = []
         for item in order:
             sensor = item['sensor']
             interval = item['interval']
@@ -43,10 +50,11 @@ class Private(object):
 
             self.__weapons[sensor].interval = interval
             self.__working(sensor)
-            submitted.append({'sensor': sensor, 'interval': interval})
+            accepted.append({'sensor': sensor, 'interval': interval})
 
-        print('get order' + str(submitted))
-        return submitted
+        logger.info('accepted new order')
+        logger.debug('new order: {0}'.format(str(accepted)))
+        return accepted
 
     def __working(self, sensor):
         '''
@@ -64,7 +72,6 @@ class Private(object):
 
         path = 'http://{0}/pvt/{1}/work'.format(self.superior_ep, self.id)
         return requests.post(path, json={'sensor': sensor, 'value': value})
-
 
 
 
@@ -86,10 +93,10 @@ server = Flask(__name__)
 # 新しい命令を受理する
 @server.route('/order', methods=['PUT'])
 def get_order():
-    result = get_dict()
-    if result[1] != 200: return result
+    input = get_dict()
+    if input[1] != 200: return input
 
-    accepted = app.set_order(result[0])
+    accepted = app.set_order(input[0])
     return jsonify(result='success', accepted=accepted), 200
 
 
@@ -100,7 +107,7 @@ if __name__ == "__main__":
         su_addr = sys.argv[2]
         su_port = sys.argv[3]
     else:
-        print('superior addr/port required')
+        logger.error('superior addr/port required')
         sys.exit()
     app = Private()
     app.join(su_addr, su_port)

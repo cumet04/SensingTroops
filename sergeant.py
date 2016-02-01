@@ -1,6 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+from logging import getLogger,StreamHandler,DEBUG
+logger = getLogger(__name__)
+handler = StreamHandler()
+handler.setLevel(DEBUG)
+logger.setLevel(DEBUG)
+logger.addHandler(handler)
 import json
 import os
 import sys
@@ -56,22 +62,19 @@ server = Flask(__name__)
 
 @server.route('/pvt/join', methods=['POST'])
 def pvt_join():
-    result = get_dict()
-    if result[1] != 200: return result
+    input = get_dict()
+    if input[1] != 200: return input
 
-    try:
-        return app.add_pvt(result[0])
-    except BaseException as e:
-        print('error: ' + e.__class__.__name__)
-        return jsonify(error="got a exception"), 500
+    res = app.add_pvt(input[0])
+    return res
 
 
 @server.route('/pvt/<id>/work', methods=['POST'])
 def pvt_work(id):
-    result = get_dict()
-    if result[1] != 200: return result
+    input = get_dict()
+    if input[1] != 200: return input
 
-    return app.accept_work(id, result[0])
+    return app.accept_work(id, input[0])
 
 
 @server.route('/dev/cache', methods=['GET'])
