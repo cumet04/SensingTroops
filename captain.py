@@ -26,7 +26,7 @@ class Captain(object):
     def accept_report(self, sgt_id, report):
         if sgt_id not in self.sgt_list:
             raise KeyError
-        self.cache.append({'pvt_id': sgt_id, 'report': report})
+        self.cache.append({'sgt_id': sgt_id, 'report': report})
         logger.info('accept work from pvt: {0}'.format(sgt_id))
 
     def accept_sgt(self, info):
@@ -83,7 +83,7 @@ def sgt_info(sgt_id):
 
 @server.route('/dev/cache', methods=['GET'])
 def dev_cache():
-    return jsonify(app.cache)
+    return jsonify(cache=app.cache)
 
 
 # entry point ------------------------------------------------------------------
