@@ -59,7 +59,7 @@ def sgt_join():
     return jsonify(res)
 
 
-@server.route('/sgt/<id>/report', methods=['POST'])
+@server.route('/sgt/<sgt_id>/report', methods=['POST'])
 def sgt_report(sgt_id):
     value = get_dict()
     if value[1] != 200:
@@ -72,7 +72,7 @@ def sgt_report(sgt_id):
     return jsonify(result='success')
 
 
-@server.route('/sgt/<id>/info', methods=['GET'])
+@server.route('/sgt/<sgt_id>/info', methods=['GET'])
 def sgt_info(sgt_id):
     try:
         res = app.get_pvt_info(sgt_id)

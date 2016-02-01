@@ -87,7 +87,7 @@ def pvt_join():
     return jsonify(res)
 
 
-@server.route('/pvt/<id>/work', methods=['POST'])
+@server.route('/pvt/<pvt_id>/work', methods=['POST'])
 def pvt_work(pvt_id):
     value = get_dict()
     if value[1] != 200:
@@ -100,7 +100,7 @@ def pvt_work(pvt_id):
     return jsonify(result='success')
 
 
-@server.route('/pvt/<id>/info', methods=['GET'])
+@server.route('/pvt/<pvt_id>/info', methods=['GET'])
 def pvt_info(pvt_id):
     try:
         res = app.get_pvt_info(pvt_id)
