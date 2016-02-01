@@ -6,27 +6,22 @@ import os
 import sys
 import threading
 import time
-import requests
 import random
+from common import get_dict, post_data
 from flask import Flask, jsonify, request, url_for, abort, Response
 
 
 class Private(object):
     def __init__(self):
-        self.config = None
+        # self.config = None
         self.__weapons = {}
         self.__weapons['random'] = Sensor(random.random, 0)
         self.__weapons['zero'] = Sensor(lambda :0, 0)
 
-    def start_work(self):
-        work_thread = threading.Thread(target=self.__working, daemon=True)
-        work_thread.start()
-
-
     def join(self, addr, port):
         self.superior_ep = addr + ':' + port
 
-        value = {"name": "pvt"}
+        value = {"name": "pvt-skel"}
         res_dict = post_data(self.superior_ep, '/pvt/join', value).json()
 
         self.id = res_dict['id']
@@ -66,7 +61,8 @@ class Private(object):
         t.start()
         self.__weapons[sensor].timer = t
 
-        post_data(self.superior_ep, '/pvt/' + self.id + '/work', value)
+        post_data(self.superior_ep, '/pvt/' + self.id + '/work',
+                  {'sensor': sensor, 'value': value})
 
 
 
@@ -80,39 +76,10 @@ class Sensor(object):
         self.timer = None
 
 
-def post_data(addr, path, value):
-    '''
-    指定endpointにdict形式のデータをpostする
-    :param addr: 送信先アドレス
-    :param path: 送信先URIのパス
-    :param value: 送信するデータ(dict)
-    :return: Response object
-    '''
-    headers = {'Content-Type': 'application/json'}
-    data = json.dumps(value)
-    path = 'http://{0}{1}'.format(addr, path)
-    return requests.post(path, data=data, headers=headers)
-
 # REST interface ---------------------------------------------------------------
 
 app = Private()
 server = Flask(__name__)
-
-
-# json形式のリクエストボディからdict形式のオブジェクトを取得する
-def get_dict():
-    # content-type check
-    if request.headers['Content-Type'] != 'application/json':
-        return jsonify(res='application/json required'), 406
-
-    # json parse
-    try:
-        param_str = request.data.decode('utf-8')
-        param_dict = json.loads(param_str)
-    except json.JSONDecodeError:
-        return jsonify(error="param couldn't decode to json"), 400
-
-    return param_dict, 200
 
 
 # 新しい命令を受理する
