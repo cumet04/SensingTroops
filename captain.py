@@ -1,46 +1,46 @@
-from logging import getLogger,StreamHandler,DEBUG
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+import sys
+
+from common import get_dict
+from flask import Flask, jsonify
+from logging import getLogger, StreamHandler, DEBUG
 logger = getLogger(__name__)
 handler = StreamHandler()
 handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
-import datetime
-import json
-import sys
-import os
-import pymongo
-
-from logging import CRITICAL,ERROR,WARNING,INFO,DEBUG,NOTSET
-from common import get_dict
-from flask import Flask, jsonify, request, url_for, abort, Response
-
 # client = pymongo.MongoClient(host='192.168.0.21', port=27017)
 # self.coll = client.test.tmp
 # self.coll.insert_many(data)
+
 
 class Captain(object):
     
     def __init__(self):
         self.cache = []
-        self.member_list = {}
+        self.sgt_list = {}
 
-    def accept_report(self, id, report):
-        if id not in self.member_list:
-            return jsonify(msg='the sergeant is not my soldier'), 403
-
-        self.cache.append({'sgt_id':id, 'work':report})
-        logger.info('accept work from sgt: {0}'.format(id))
-        return jsonify(result='success')
+    def accept_report(self, sgt_id, report):
+        if sgt_id not in self.sgt_list:
+            raise KeyError
+        self.cache.append({'pvt_id': sgt_id, 'report': report})
+        logger.info('accept work from pvt: {0}'.format(sgt_id))
 
     def accept_sgt(self, info):
         new_id = str(id(info))
-        self.member_list[new_id] = {'info':info}
-        logger.info('accept a new sergeant: {0}, {1}'.format(info['name'], id))
-        return jsonify(result='success', name=info['name'], id=new_id)
+        name = info['name']
 
-    def show_cache(self):
-        return jsonify(cache = self.cache)
+        self.sgt_list[new_id] = info
+        logger.info('accept a new sergeant: {0}, {1}'.format(name, new_id))
+        return {'name': name, 'id': new_id}
+
+    def get_pvt_info(self, sgt_id):
+        info = self.sgt_list[sgt_id]
+        info['id'] = sgt_id
+        return info
 
 
 # REST interface ---------------------------------------------------------------
@@ -51,23 +51,39 @@ server = Flask(__name__)
 
 @server.route('/sgt/join', methods=['POST'])
 def sgt_join():
-    input = get_dict()
-    if input[1] != 200: return input
+    value = get_dict()
+    if value[1] != 200:
+        return value
 
-    res = app.accept_sgt(input[0])
-    return res
+    res = app.accept_sgt(value[0])
+    return jsonify(res)
+
 
 @server.route('/sgt/<id>/report', methods=['POST'])
-def sgt_report(id):
-    input = get_dict()
-    if input[1] != 200: return input
+def sgt_report(sgt_id):
+    value = get_dict()
+    if value[1] != 200:
+        return value
 
-    res = app.accept_report(id, input[0])
-    return res
+    try:
+        app.accept_report(sgt_id, value[0])
+    except KeyError:
+        return jsonify(msg='the sgt is not my soldier'), 404
+    return jsonify(result='success')
+
+
+@server.route('/sgt/<id>/info', methods=['GET'])
+def sgt_info(sgt_id):
+    try:
+        res = app.get_pvt_info(sgt_id)
+    except KeyError:
+        return jsonify(msg='the pvt is not my soldier'), 404
+    return jsonify(res)
+
 
 @server.route('/dev/cache', methods=['GET'])
 def dev_cache():
-    return app.show_cache()
+    return jsonify(app.cache)
 
 
 # entry point ------------------------------------------------------------------
