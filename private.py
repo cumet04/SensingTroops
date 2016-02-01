@@ -114,7 +114,6 @@ if __name__ == "__main__":
     else:
         logger.error('superior addr/port required')
         sys.exit()
-    app = Private()
     app.join(su_addr, su_port)
 
     server.debug = True
