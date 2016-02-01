@@ -6,8 +6,9 @@ import os
 import sys
 import threading
 import time
+import requests
 import random
-from common import get_dict, post_data
+from common import get_dict
 from flask import Flask, jsonify, request, url_for, abort, Response
 
 
@@ -21,10 +22,10 @@ class Private(object):
     def join(self, addr, port):
         self.superior_ep = addr + ':' + port
 
-        value = {"name": "pvt-skel"}
-        res_dict = post_data(self.superior_ep, '/pvt/join', value).json()
+        path = 'http://{0}/pvt/join'.format(self.superior_ep)
+        res = requests.post(path, json={'sensor': "pvt-skel"}).json()
 
-        self.id = res_dict['id']
+        self.id = res['id']
         # TODO: logging
         print(self.id)
 
@@ -61,8 +62,8 @@ class Private(object):
         t.start()
         self.__weapons[sensor].timer = t
 
-        post_data(self.superior_ep, '/pvt/' + self.id + '/work',
-                  {'sensor': sensor, 'value': value})
+        path = 'http://{0}/pvt/{1}/work'.format(self.superior_ep, self.id)
+        return requests.post(path, json={'sensor': sensor, 'value': value})
 
 
 
@@ -83,7 +84,7 @@ server = Flask(__name__)
 
 
 # 新しい命令を受理する
-@server.route('/order', methods=['POST'])
+@server.route('/order', methods=['PUT'])
 def get_order():
     result = get_dict()
     if result[1] != 200: return result

@@ -2,25 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import json
-import requests
 from flask import jsonify, request
 
-def post_data(addr, path, value):
-    '''
-    指定endpointにdict形式のデータをpostする
-    :param addr: 送信先アドレス
-    :param path: 送信先URIのパス
-    :param value: 送信するデータ(dict)
-    :return: Response object
-    '''
-    headers = {'Content-Type': 'application/json'}
-    data = json.dumps(value)
-    path = 'http://{0}{1}'.format(addr, path)
-    return requests.post(path, data=data, headers=headers)
 
-
-# json形式のリクエストボディからdict形式のオブジェクトを取得する
 def get_dict():
+    '''
+    [Flask.routeに登録された関数内で利用]
+    json形式のリクエストボディからdict形式のオブジェクトを取得する
+    :return: リクエストボディ(dict)
+    '''
     # content-type check
     if request.headers['Content-Type'] != 'application/json':
         return jsonify(res='application/json required'), 406

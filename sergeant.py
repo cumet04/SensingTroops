@@ -8,7 +8,7 @@ import threading
 import time
 import logging
 import hashlib
-from common import get_dict, post_data
+from common import get_dict
 from flask import Flask, jsonify, request, url_for, abort, Response
 
 class Sergeant(object):
@@ -54,14 +54,6 @@ app = Sergeant()
 server = Flask(__name__)
 
 
-@server.route('/pvt/<id>/work', methods=['GET', 'POST'])
-def pvt_work(id):
-    result = get_dict()
-    if result[1] != 200: return result
-
-    return app.accept_work(id, result[0])
-
-
 @server.route('/pvt/join', methods=['POST'])
 def pvt_join():
     result = get_dict()
@@ -74,13 +66,15 @@ def pvt_join():
         return jsonify(error="got a exception"), 500
 
 
-@server.route('/pvt/<id>/order', methods=['GET', 'POST'])
-def pvt_order():
-    # TODO: impl
-    pass
+@server.route('/pvt/<id>/work', methods=['POST'])
+def pvt_work(id):
+    result = get_dict()
+    if result[1] != 200: return result
+
+    return app.accept_work(id, result[0])
 
 
-@server.route('/dev/cache', methods=['GET', 'POST'])
+@server.route('/dev/cache', methods=['GET'])
 def dev_cache():
     return app.show_cache()
 
@@ -91,6 +85,6 @@ if __name__ == "__main__":
         port = int(sys.argv[1])
     else:
         port = 5000
-    server.run(port=port)
+    server.run(port=port, debug=True)
 
 
