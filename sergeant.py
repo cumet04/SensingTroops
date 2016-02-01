@@ -50,6 +50,26 @@ class Sergeant(object):
         path = 'http://{0}/sgt/{1}/report'.format(self.superior_ep, self.id)
         return requests.post(path, json=self.cache)
 
+    def set_job(self, job_list):
+        """
+        この兵士に割り当てられている任務を置き換える
+        :param job_list: 新規任務のリスト
+        :return: 受理した命令
+        """
+        # 既存の命令をリセットして上書きする仕様にすべきか
+        # 更に不正な情報が含まれていた場合や命令の差出人がおかしい場合にハネる必要がありそう
+        accepted = []
+        for item in job_list:
+            if item['subject'] != 'report':
+                continue
+            self.report_interval = item['interval']
+            self.report()
+            accepted.append(item)
+
+        logger.info('accepted new jobs')
+        logger.debug('new jobs: {0}'.format(str(accepted)))
+        return accepted
+
 # superior functions
 
     def accept_work(self, pvt_id, work):
@@ -74,6 +94,7 @@ class Sergeant(object):
 
 # REST interface ---------------------------------------------------------------
 
+app = Sergeant()
 server = Flask(__name__)
 
 
@@ -111,7 +132,18 @@ def pvt_info(pvt_id):
 
 @server.route('/dev/cache', methods=['GET'])
 def dev_cache():
-    return jsonify(app.cache)
+    print(app.cache)
+    return jsonify(cache=app.cache)
+
+
+@server.route('/sgt/job', methods=['PUT'])
+def get_order():
+    value = get_dict()
+    if value[1] != 200:
+        return value
+
+    accepted = app.set_job(value[0])
+    return jsonify(result='success', accepted=accepted), 200
 
 
 # entry point ------------------------------------------------------------------
@@ -123,6 +155,5 @@ if __name__ == "__main__":
     else:
         logger.error('superior addr/port required')
         sys.exit()
-    app = Sergeant()
     app.join(su_addr, su_port)
     server.run(port=self_port, debug=True)
