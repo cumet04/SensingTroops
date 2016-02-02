@@ -18,19 +18,23 @@ logger.addHandler(handler)
 
 class Private(object):
     def __init__(self):
-        # self.config = None
+        self.info = {
+            'name': 'pvt-http',
+            'port': 0
+        }
         self.superior_ep = ''
         self.id = ''
-        self.__sensors = {}
-        self.__sensors['random'] = Sensor(random.random, 0)
-        self.__sensors['zero'] = Sensor(lambda: 0, 0)
+        self.__sensors = {
+            'random': Sensor(random.random, 0),
+            'zero': Sensor(lambda: 0, 0)
+        }
 
     def join(self, addr, port):
         self.superior_ep = addr + ':' + port
         logger.info('join into the sergeant: {0}'.format(self.superior_ep))
 
-        info = {'name': "pvt-skel",
-                'sensors': list(self.__sensors.keys())}
+        info = self.info
+        info['sensors'] = list(self.__sensors.keys())
         path = 'http://{0}/pvt/join'.format(self.superior_ep)
         res = requests.post(path, json=info).json()
 
@@ -114,7 +118,8 @@ if __name__ == "__main__":
     else:
         logger.error('superior addr/port required')
         sys.exit()
+    app.info['port'] = self_port
     app.join(su_addr, su_port)
 
-    server.debug = True
+    # server.debug = True
     server.run(port=int(self_port))
