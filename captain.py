@@ -37,10 +37,13 @@ class Captain(object):
         logger.info('accept a new sergeant: {0}, {1}'.format(name, new_id))
         return {'name': name, 'id': new_id}
 
-    def get_pvt_info(self, sgt_id):
+    def get_sgt_info(self, sgt_id):
         info = self.sgt_list[sgt_id]
         info['id'] = sgt_id
         return info
+
+    def get_sgt_list(self):
+        return {'sgt_list': list(self.sgt_list.keys())}
 
 
 # REST interface ---------------------------------------------------------------
@@ -72,6 +75,12 @@ def sgt_report(sgt_id):
     return jsonify(result='success')
 
 
+@server.route('/sgt/list', methods=['GET'])
+def pvt_list():
+    res = app.get_sgt_list()
+    return jsonify(res)
+
+
 @server.route('/sgt/<sgt_id>/info', methods=['GET'])
 def sgt_info(sgt_id):
     try:
@@ -92,4 +101,5 @@ if __name__ == "__main__":
         port = int(sys.argv[1])
     else:
         port = 5100
-    server.run(port=port, debug=True)
+    server.debug = True
+    server.run(port=port)

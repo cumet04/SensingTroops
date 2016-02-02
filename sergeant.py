@@ -91,6 +91,9 @@ class Sergeant(object):
         info['id'] = pvt_id
         return info
 
+    def get_pvt_list(self):
+        return {'pvt_list': list(self.pvt_list.keys())}
+
 
 # REST interface ---------------------------------------------------------------
 
@@ -121,6 +124,12 @@ def pvt_work(pvt_id):
     return jsonify(result='success')
 
 
+@server.route('/pvt/list', methods=['GET'])
+def pvt_list():
+    res = app.get_pvt_list()
+    return jsonify(res)
+
+
 @server.route('/pvt/<pvt_id>/info', methods=['GET'])
 def pvt_info(pvt_id):
     try:
@@ -128,12 +137,6 @@ def pvt_info(pvt_id):
     except KeyError:
         return jsonify(msg='the pvt is not my soldier'), 404
     return jsonify(res)
-
-
-@server.route('/dev/cache', methods=['GET'])
-def dev_cache():
-    print(app.cache)
-    return jsonify(cache=app.cache)
 
 
 @server.route('/sgt/job', methods=['PUT'])
@@ -146,6 +149,12 @@ def get_order():
     return jsonify(result='success', accepted=accepted), 200
 
 
+@server.route('/dev/cache', methods=['GET'])
+def dev_cache():
+    print(app.cache)
+    return jsonify(cache=app.cache)
+
+
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
     if len(sys.argv) == 4:
@@ -156,4 +165,5 @@ if __name__ == "__main__":
         logger.error('superior addr/port required')
         sys.exit()
     app.join(su_addr, su_port)
-    server.run(port=self_port, debug=True)
+    # server.debug = True
+    server.run(port=self_port)
