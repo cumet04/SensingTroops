@@ -19,11 +19,11 @@ logger.addHandler(handler)
 class Private(object):
     def __init__(self):
         self.info = {
+            'id': '',
             'name': 'pvt-http',
             'port': 0
         }
         self.superior_ep = ''
-        self.id = ''
         self.__sensors = {
             'random': Sensor(random.random, 0),
             'zero': Sensor(lambda: 0, 0)
@@ -38,8 +38,12 @@ class Private(object):
         path = 'http://{0}/pvt/join'.format(self.superior_ep)
         res = requests.post(path, json=info).json()
 
-        self.id = res['id']
-        logger.info('get my pvt-id: {0}'.format(self.id))
+        self.info['id'] = res['id']
+        logger.info('get my pvt-id: {0}'.format(self.info['id']))
+
+    def get_info(self):
+        logger.info('get self info')
+        return self.info
 
     def set_order(self, order):
         """
@@ -79,7 +83,7 @@ class Private(object):
         t.start()
         self.__sensors[sensor].timer = t
 
-        path = 'http://{0}/pvt/{1}/work'.format(self.superior_ep, self.id)
+        path = 'http://{0}/pvt/{1}/work'.format(self.superior_ep, self.info['id'])
         return requests.post(path, json={'sensor': sensor, 'value': value})
 
 
@@ -108,6 +112,16 @@ def get_order():
     accepted = app.set_order(value[0])
     return jsonify(result='success', accepted=accepted), 200
 
+
+# 自身の情報を返す
+@server.route('/info', methods=['GET'])
+def get_info():
+    value = get_dict()
+    if value[1] != 200:
+        return value
+
+    info = app.get_info()
+    return jsonify(result='success', info=info), 200
 
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
