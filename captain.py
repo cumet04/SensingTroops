@@ -19,36 +19,50 @@ logger.addHandler(handler)
 
 class Captain(object):
     
-    def __init__(self):
-        self.cache = []
-        self.sgt_list = {}
+    def __init__(self, name):
+        self._id = None
+        self._name = name
+        self._addr = None
+        self._port = 0
+        self._cache = []
+        self._sgt_list = {}
+
+    def get_info(self):
+        logger.info('get self info')
+        info = {
+            'id': self._id,
+            'name': self._name,
+            'addr': self._addr,
+            'port': self._port,
+        }
+        return info
 
     def accept_report(self, sgt_id, report):
-        if sgt_id not in self.sgt_list:
+        if sgt_id not in self._sgt_list:
             raise KeyError
-        self.cache.append({'sgt_id': sgt_id, 'report': report})
+        self._cache.append({'sgt_id': sgt_id, 'report': report})
         logger.info('accept work from pvt: {0}'.format(sgt_id))
 
     def accept_sgt(self, info):
         new_id = str(id(info))
         name = info['name']
 
-        self.sgt_list[new_id] = info
+        self._sgt_list[new_id] = info
         logger.info('accept a new sergeant: {0}, {1}'.format(name, new_id))
         return {'name': name, 'id': new_id}
 
     def get_sgt_info(self, sgt_id):
-        info = self.sgt_list[sgt_id]  # this may raise KeyError
+        info = self._sgt_list[sgt_id]  # this may raise KeyError
         info['id'] = sgt_id
         return info
 
     def get_sgt_list(self):
-        return list(self.sgt_list.keys())
+        return list(self._sgt_list.keys())
 
 
 # REST interface ---------------------------------------------------------------
 
-app = Captain()
+app = Captain('cpt-http')
 server = Flask(__name__)
 
 
@@ -92,7 +106,7 @@ def sgt_info(sgt_id):
 
 @server.route('/dev/cache', methods=['GET'])
 def dev_cache():
-    return jsonify(cache=app.cache)
+    return jsonify(cache=app._cache)
 
 
 @server.route('/web/status', methods=['GET'])
@@ -109,11 +123,24 @@ def show_status():
     return render_template("captain_ui.html", cpt = cpt)
 
 
+# 自身の情報を返す
+@server.route('/info', methods=['GET'])
+def get_info():
+    value = get_dict()
+    if value[1] != 200:
+        return value
+
+    info = app.get_info()
+    return jsonify(result='success', info=info), 200
+
+
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
     if len(sys.argv) == 2:
         port = int(sys.argv[1])
     else:
         port = 5100
+    app.info['port'] = port
+    app.info['addr'] = 'localhost'
     server.debug = True
     server.run(port=port)

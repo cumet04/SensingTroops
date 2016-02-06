@@ -17,33 +17,45 @@ logger.addHandler(handler)
 
 
 class Private(object):
-    def __init__(self):
-        self.info = {
-            'id': '',
-            'name': 'pvt-http',
-            'port': 0
-        }
-        self.superior_ep = ''
-        self.__sensors = {
+    def __init__(self, name):
+        self._id = None
+        self._name = name
+        self._addr = None
+        self._port = 0
+        self._superior_ep = ''
+        self._sensors = {
             'random': Sensor(random.random, 0),
             'zero': Sensor(lambda: 0, 0)
         }
 
     def join(self, addr, port):
-        self.superior_ep = addr + ':' + port
-        logger.info('join into the sergeant: {0}'.format(self.superior_ep))
+        """
+        指定された上官に入隊申請を行う
+        :param str addr: 上官のIPアドレス
+        :param str port: 上官のポート番号
+        :rtype: str
+        :return: id
+        """
+        self._superior_ep = addr + ':' + port
+        logger.info('join into the sergeant: {0}'.format(self._superior_ep))
 
-        info = self.info
-        info['sensors'] = list(self.__sensors.keys())
-        path = 'http://{0}/pvt/join'.format(self.superior_ep)
-        res = requests.post(path, json=info).json()
+        path = 'http://{0}/pvt/join'.format(self._superior_ep)
+        res = requests.post(path, json=self.get_info()).json()
 
-        self.info['id'] = res['id']
-        logger.info('get my pvt-id: {0}'.format(self.info['id']))
+        self._id = res['id']
+        logger.info('get my pvt-id: {0}'.format(self._id))
+        return self._id
 
     def get_info(self):
         logger.info('get self info')
-        return self.info
+        info = {
+            'id': self._id,
+            'name': self._name,
+            'addr': self._addr,
+            'port': self._port,
+            'sensors': list(self._sensors.keys())
+        }
+        return info
 
     def set_order(self, order):
         """
@@ -57,10 +69,10 @@ class Private(object):
         for item in order:
             sensor = item['sensor']
             interval = item['interval']
-            if sensor not in self.__sensors:
+            if sensor not in self._sensors:
                 continue
 
-            self.__sensors[sensor].interval = interval
+            self._sensors[sensor].interval = interval
             self.__working(sensor)
             accepted.append({'sensor': sensor, 'interval': interval})
 
@@ -73,17 +85,17 @@ class Private(object):
         指定されたセンサー種別のセンサ値を送信するスレッド
         :param sensor: センサー種別
         """
-        value = self.__sensors[sensor].func()
-        interval = self.__sensors[sensor].interval
-        timer = self.__sensors[sensor].timer
+        value = self._sensors[sensor].func()
+        interval = self._sensors[sensor].interval
+        timer = self._sensors[sensor].timer
 
         if timer is not None:
             timer.cancel()
         t = threading.Timer(interval, self.__working, args=(sensor, ))
         t.start()
-        self.__sensors[sensor].timer = t
+        self._sensors[sensor].timer = t
 
-        path = 'http://{0}/pvt/{1}/work'.format(self.superior_ep, self.info['id'])
+        path = 'http://{0}/pvt/{1}/work'.format(self._superior_ep, self.info['id'])
         return requests.post(path, json={'sensor': sensor, 'value': value})
 
 
@@ -98,7 +110,7 @@ class Sensor(object):
 
 # REST interface ---------------------------------------------------------------
 
-app = Private()
+app = Private('pvt-http')
 server = Flask(__name__)
 
 
@@ -133,6 +145,7 @@ if __name__ == "__main__":
         logger.error('superior addr/port required')
         sys.exit()
     app.info['port'] = self_port
+    app.info['addr'] = 'localhost'
     app.join(su_addr, su_port)
 
     # server.debug = True
