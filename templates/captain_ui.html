@@ -6,17 +6,17 @@
 </head>
 <body>
 
-Captain: {{cpt.id}}
+{{cpt.name}}, {{cpt.id}}: <a href=http://{{cpt.addr}}:{{cpt.port}}/info>info</a>
 <ul>
     <li>sgt list</li>
     <ul>
         {% for sgt in cpt.sgt_list %}
-        <li>Sergeant: {{sgt.id}}</li>
+        <li>{{sgt.name}}, {{sgt.id}}: <a href=http://{{sgt.addr}}:{{sgt.port}}/info>info</a></li>
         <ul>
             <li>pvt list</li>
             <ul>
                 {% for pvt in sgt.pvt_list %}
-                    <li>Private: {{pvt.id}}</li>
+                    <li>{{pvt.name}}, {{pvt.id}}: <a href=http://{{pvt.addr}}:{{pvt.port}}/info>info</a></li>
                 {% endfor %}
             </ul>
         </ul>

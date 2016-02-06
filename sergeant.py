@@ -16,11 +16,11 @@ logger.addHandler(handler)
 
 
 class Sergeant(object):
-    def __init__(self, name):
+    def __init__(self, name, addr, port):
         self._id = ''
         self._name = name
-        self._addr = None
-        self._port = 0
+        self._addr = addr
+        self._port = port
         self._superior_ep = ''
 
         self._cache = []
@@ -100,15 +100,14 @@ class Sergeant(object):
     def accept_pvt(self, info):
         new_id = str(id(info))
         name = info['name']
+        info['id'] = new_id
 
         self._pvt_list[new_id] = info
         logger.info('accept a new private: {0}, {1}'.format(name, new_id))
-        return {'name': name, 'id': new_id}
+        return info
 
     def get_pvt_info(self, pvt_id):
-        info = self._pvt_list[pvt_id]
-        info['id'] = pvt_id
-        return info
+        return self._pvt_list[pvt_id]
 
     def get_pvt_list(self):
         return list(self._pvt_list.keys())
@@ -116,7 +115,6 @@ class Sergeant(object):
 
 # REST interface ---------------------------------------------------------------
 
-app = Sergeant('sgt-http')
 server = Flask(__name__)
 
 
@@ -171,10 +169,6 @@ def get_order():
 # 自身の情報を返す
 @server.route('/info', methods=['GET'])
 def get_info():
-    value = get_dict()
-    if value[1] != 200:
-        return value
-
     info = app.get_info()
     return jsonify(result='success', info=info), 200
 
@@ -193,6 +187,7 @@ if __name__ == "__main__":
     else:
         logger.error('superior addr/port required')
         sys.exit()
+    app = Sergeant('sgt-http', 'localhost', self_port)
     app.join(su_addr, su_port)
     # server.debug = True
     server.run(port=self_port)

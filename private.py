@@ -17,11 +17,11 @@ logger.addHandler(handler)
 
 
 class Private(object):
-    def __init__(self, name):
+    def __init__(self, name, addr, port):
         self._id = None
         self._name = name
-        self._addr = None
-        self._port = 0
+        self._addr = addr
+        self._port = port
         self._superior_ep = ''
         self._sensors = {
             'random': Sensor(random.random, 0),
@@ -110,28 +110,26 @@ class Sensor(object):
 
 # REST interface ---------------------------------------------------------------
 
-app = Private('pvt-http')
 server = Flask(__name__)
 
 
 # 新しい命令を受理する
-@server.route('/order', methods=['PUT'])
+@server.route('/order', methods=['GET', 'PUT'])
 def get_order():
-    value = get_dict()
-    if value[1] != 200:
-        return value
-
-    accepted = app.set_order(value[0])
-    return jsonify(result='success', accepted=accepted), 200
+    if requests.method == 'PUT':
+        value = get_dict()
+        if value[1] != 200:
+            return value
+        orders = app.set_order(value[0])
+    elif requests.method == 'GET':
+        # TODO: impl
+        pass
+    return jsonify(result='success', orders=orders), 200
 
 
 # 自身の情報を返す
 @server.route('/info', methods=['GET'])
 def get_info():
-    value = get_dict()
-    if value[1] != 200:
-        return value
-
     info = app.get_info()
     return jsonify(result='success', info=info), 200
 
@@ -144,8 +142,7 @@ if __name__ == "__main__":
     else:
         logger.error('superior addr/port required')
         sys.exit()
-    app.info['port'] = self_port
-    app.info['addr'] = 'localhost'
+    app = Private('pvt-http', 'localhost', self_port)
     app.join(su_addr, su_port)
 
     # server.debug = True
