@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-
+import requests
 from common import get_dict
 from flask import Flask, jsonify, render_template
 from logging import getLogger, StreamHandler, DEBUG
@@ -19,11 +19,11 @@ logger.addHandler(handler)
 
 class Captain(object):
     
-    def __init__(self, name):
+    def __init__(self, name, addr, port):
         self._id = None
         self._name = name
-        self._addr = None
-        self._port = 0
+        self._addr = addr
+        self._port = port
         self._cache = []
         self._sgt_list = {}
 
@@ -45,11 +45,11 @@ class Captain(object):
 
     def accept_sgt(self, info):
         new_id = str(id(info))
-        name = info['name']
+        info['id'] = new_id
 
         self._sgt_list[new_id] = info
-        logger.info('accept a new sergeant: {0}, {1}'.format(name, new_id))
-        return {'name': name, 'id': new_id}
+        logger.info('accept a new sergeant: {0}, {1}'.format(info['name'], new_id))
+        return info
 
     def get_sgt_info(self, sgt_id):
         info = self._sgt_list[sgt_id]  # this may raise KeyError
@@ -59,10 +59,31 @@ class Captain(object):
     def get_sgt_list(self):
         return list(self._sgt_list.keys())
 
+    def generate_troops_info(self):
+        cpt = self.get_info()
+        sgt_list = []
+        for sgt in self._sgt_list.values():
+            # get pvt id list
+            ep = 'http://{0}:{1}/pvt/list'.format(sgt['addr'], sgt['port'])
+            id_list = requests.get(ep).json()['pvt_list']
+
+            # get pvt detail
+            pvt_list = []
+            for pvt_id in id_list:
+                ep = 'http://{0}:{1}/pvt/{2}/info'.format(sgt['addr'], sgt['port'], pvt_id)
+                pvt_info = requests.get(ep).json()
+                pvt_list.append(pvt_info)
+
+            # append sgt info
+            sgt['pvt_list'] = pvt_list
+            sgt_list.append(sgt.copy())
+
+        cpt['sgt_list'] = sgt_list
+        return cpt
+
 
 # REST interface ---------------------------------------------------------------
 
-app = Captain('cpt-http')
 server = Flask(__name__)
 
 
@@ -111,25 +132,12 @@ def dev_cache():
 
 @server.route('/web/status', methods=['GET'])
 def show_status():
-    sgt_list = []
-    for sgt_id in app.get_sgt_list():
-        pvt_list =[{'id': 'test-pvt-id1'}, {'id': 'test-pvt-id2'}]
-        sgt = {'id': sgt_id, 'pvt_list': pvt_list}
-        sgt_list.append(sgt)
-    cpt = {
-        'id': 'cpt-id',
-        'sgt_list': sgt_list
-    }
-    return render_template("captain_ui.html", cpt = cpt)
+    return render_template("captain_ui.html", cpt = app.generate_troops_info())
 
 
 # 自身の情報を返す
 @server.route('/info', methods=['GET'])
 def get_info():
-    value = get_dict()
-    if value[1] != 200:
-        return value
-
     info = app.get_info()
     return jsonify(result='success', info=info), 200
 
@@ -140,7 +148,6 @@ if __name__ == "__main__":
         port = int(sys.argv[1])
     else:
         port = 5100
-    app.info['port'] = port
-    app.info['addr'] = 'localhost'
+    app = Captain('cpt-http', 'localhost', port)
     server.debug = True
     server.run(port=port)
