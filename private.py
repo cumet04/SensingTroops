@@ -121,7 +121,10 @@ def get_order():
     if value[1] != 200:
         return value
 
-    accepted = app.set_order(value[0])
+    orders = value[0]['orders']
+    if not isinstance(orders, list):
+        orders = [orders]
+    accepted = app.set_order(orders)
     return jsonify(result='success', accepted=accepted), 200
 
 
