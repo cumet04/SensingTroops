@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Sensing Troops</title>
+</head>
+<body>
+
+Captain: {{cpt.id}}
+<ul>
+    <li>sgt list</li>
+    <ul>
+        {% for sgt in cpt.sgt_list %}
+        <li>Sergeant: {{sgt.id}}</li>
+        <ul>
+            <li>pvt list</li>
+            <ul>
+                {% for pvt in sgt.pvt_list %}
+                    <li>Private: {{pvt.id}}</li>
+                {% endfor %}
+            </ul>
+        </ul>
+        {% endfor %}
+    </ul>
+<!--
+<li>cache</li>
+{% for sgt in cpt.sgt_list %}
+  <li>{{ i }}</li>
+{% endfor %}
+</ul>
+-->
+
+</body>
+</html>

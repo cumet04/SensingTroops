@@ -4,7 +4,7 @@
 import sys
 
 from common import get_dict
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 from logging import getLogger, StreamHandler, DEBUG
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -38,12 +38,12 @@ class Captain(object):
         return {'name': name, 'id': new_id}
 
     def get_sgt_info(self, sgt_id):
-        info = self.sgt_list[sgt_id]
+        info = self.sgt_list[sgt_id]  # this may raise KeyError
         info['id'] = sgt_id
         return info
 
     def get_sgt_list(self):
-        return {'sgt_list': list(self.sgt_list.keys())}
+        return list(self.sgt_list.keys())
 
 
 # REST interface ---------------------------------------------------------------
@@ -78,13 +78,13 @@ def sgt_report(sgt_id):
 @server.route('/sgt/list', methods=['GET'])
 def pvt_list():
     res = app.get_sgt_list()
-    return jsonify(res)
+    return jsonify({'sgt_list': res})
 
 
 @server.route('/sgt/<sgt_id>/info', methods=['GET'])
 def sgt_info(sgt_id):
     try:
-        res = app.get_pvt_info(sgt_id)
+        res = app.get_sgt_info(sgt_id)
     except KeyError:
         return jsonify(msg='the pvt is not my soldier'), 404
     return jsonify(res)
@@ -93,6 +93,20 @@ def sgt_info(sgt_id):
 @server.route('/dev/cache', methods=['GET'])
 def dev_cache():
     return jsonify(cache=app.cache)
+
+
+@server.route('/web/status', methods=['GET'])
+def show_status():
+    sgt_list = []
+    for sgt_id in app.get_sgt_list():
+        pvt_list =[{'id': 'test-pvt-id1'}, {'id': 'test-pvt-id2'}]
+        sgt = {'id': sgt_id, 'pvt_list': pvt_list}
+        sgt_list.append(sgt)
+    cpt = {
+        'id': 'cpt-id',
+        'sgt_list': sgt_list
+    }
+    return render_template("captain_ui.html", cpt = cpt)
 
 
 # entry point ------------------------------------------------------------------
