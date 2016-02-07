@@ -1,6 +1,6 @@
 var frisby = require('frisby');
 var addr = 'localhost'
-var port = '50018'
+var port = '50000'
 var ep = 'http://' + addr + ':' + port
 
 frisby.create('GET info')
@@ -13,8 +13,19 @@ frisby.create('GET info')
             name: 'pvt-http',
             addr: addr,
             port: port,
-            sensors: ['random', 'zero']
+            sensors: [] // 配列を順不同でテストはできなさそうだったので中身は見ない
         }
+    })
+    .toss();
+
+frisby.create('GET order')
+    .get(ep + '/order')
+    .addHeader('Content-Type', 'application/json')
+    .expectStatus(200)
+    .expectHeaderContains('Content-Type', 'application/json')
+    .expectJSON({
+        result: 'success',
+        orders: [{sensor: "random", interval: 2}]
     })
     .toss();
 
