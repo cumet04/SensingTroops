@@ -149,5 +149,7 @@ if __name__ == "__main__":
     app = Private('pvt-http', 'localhost', self_port)
     app.join(su_addr, su_port)
 
-    server.debug = True
+    # debugをオンにするとアプリケーションが二重で起動するためオフにしておく
+    # TODO: debug=Trueでもappが二重起動しないようにする
+    # server.debug = True
     server.run(port=int(self_port))
