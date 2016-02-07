@@ -7,7 +7,7 @@ import threading
 import requests
 import random
 from common import get_dict
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -95,7 +95,7 @@ class Private(object):
         t.start()
         self._sensors[sensor].timer = t
 
-        path = 'http://{0}/pvt/{1}/work'.format(self._superior_ep, self.info['id'])
+        path = 'http://{0}/pvt/{1}/work'.format(self._superior_ep, self._id)
         return requests.post(path, json={'sensor': sensor, 'value': value})
 
 
@@ -116,7 +116,7 @@ server = Flask(__name__)
 # 新しい命令を受理する
 @server.route('/order', methods=['GET', 'PUT'])
 def get_order():
-    if requests.method == 'PUT':
+    if request.method == 'PUT':
         value = get_dict()
         if value[1] != 200:
             return value
@@ -125,9 +125,9 @@ def get_order():
         if not isinstance(orders, list):
             orders = [orders]
         orders = app.set_order(orders)
-    elif requests.method == 'GET':
+    elif request.method == 'GET':
         # TODO: impl
-        pass
+        orders = []
     return jsonify(result='success', orders=orders), 200
 
 
@@ -149,5 +149,5 @@ if __name__ == "__main__":
     app = Private('pvt-http', 'localhost', self_port)
     app.join(su_addr, su_port)
 
-    # server.debug = True
+    server.debug = True
     server.run(port=int(self_port))
