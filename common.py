@@ -11,6 +11,8 @@ def get_dict():
     json形式のリクエストボディからdict形式のオブジェクトを取得する
     :return: リクエストボディ(dict)
     '''
+    # request.jsonを使うとエラー処理ができない; content-typeなのかデータが悪いのかが不明
+
     # content-type check
     if request.headers['Content-Type'] != 'application/json':
         return jsonify(res='application/json required'), 406
