@@ -74,8 +74,16 @@ class Captain(object):
                 pvt_info = requests.get(ep).json()
                 pvt_list.append(pvt_info)
 
+            # get sgt's cache
+            ep = 'http://{0}:{1}/dev/cache'.format(sgt['addr'], sgt['port'])
+            cache_list = requests.get(ep).json()['cache']
+            cache_text = ''
+            for cache in cache_list:
+                cache_text = cache_text + str(cache) + '\n'
+
             # append sgt info
             sgt['pvt_list'] = pvt_list
+            sgt['cache_text'] = cache_text
             sgt_list.append(sgt.copy())
 
         cpt['sgt_list'] = sgt_list
