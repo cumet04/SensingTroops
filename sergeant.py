@@ -6,7 +6,7 @@ import sys
 import threading
 import requests
 from common import get_dict
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -25,8 +25,14 @@ class Sergeant(object):
 
         self._cache = []
         self._pvt_list = {}
-        self.report_timer = None
-        self.report_interval = 0
+        self.job_list = {
+            'report': None,
+            'command': [],
+        }
+        self.job_wait_events = {
+            'report': None,
+            'command': [],
+        }
 
 # soldier functions
 
@@ -58,36 +64,65 @@ class Sergeant(object):
         }
         return info
 
-    def report(self):
-        if self.report_interval == 0:
-            return
-        if self.report_timer is not None:
-            self.report_timer.cancel()
+    def set_report(self, report):
+        # 既存のreportスレッドを消す
+        if self.job_wait_events['report'] is not None:
+            self.job_wait_events['report'].set()
+        self.job_wait_events['report'] = None
 
-        t = threading.Timer(self.report_interval, self.report)
+        # TODO: reportが受理可能なものであるかのチェック
+        event = threading.Event()
+        t = threading.Thread(target = self._report_thread, args = (report, event))
         t.start()
-        self.report_timer = t
+        self.job_wait_events['report'] = event
+        self.job_list['report'] = report
 
-        path = 'http://{0}/sgt/{1}/report'.format(self._superior_ep, self._id)
-        return requests.post(path, json=self._cache)
+        logger.info('accepted new job: report')
+        logger.debug('new job: {0}'.format(str(report)))
+        return report
 
-    def set_job(self, job_list):
-        """
-        この兵士に割り当てられている任務を置き換える
-        :param job_list: 新規任務のリスト
-        :return: 受理した命令
-        """
+    def set_commands(self, command_list):
+        if not isinstance(command_list, list):
+            command_list = [command_list]
+
+        # 既存のcommandスレッドを消す
+        map(lambda w: w.set(), self.job_wait_events['command'])
+        self.job_wait_events['command'] = []
+
         accepted = []
-        for item in job_list:
-            if item['subject'] != 'report':
-                continue
-            self.report_interval = item['interval']
-            self.report()
-            accepted.append(item)
+        for command in command_list:
+            # TODO: commandが受理可能なものであるかのチェック
+            event = threading.Event()
+            t = threading.Thread(target = self._command_thread, args = (command, event))
+            t.start()
+            self.job_wait_events['command'].append(event)
+            accepted.append(command)
 
-        logger.info('accepted new jobs')
+        logger.info('accepted new jobs: command')
         logger.debug('new jobs: {0}'.format(str(accepted)))
+        self.job_list['command'] = accepted
         return accepted
+
+    def _command_thread(self, command, event):
+        # oneshotなcommandのみ暫定実装. eventはスルー
+        target = []
+        if command['target'] == 'all':
+            target = self.get_pvt_list()
+        order = command['order']
+
+        for pvt in [self._pvt_list[id] for id in target]:
+            path = 'http://{0}:{1}/order'.format(pvt['addr'], pvt['port'])
+            requests.put(path, json={'orders': order})
+
+    def _report_thread(self, command, event):
+        interval = command['interval']
+        # filter = command['filter']
+        # encoding = command['encoding']
+
+        # if event is set, exit the loop
+        while not event.wait(timeout = interval):
+            path = 'http://{0}/sgt/{1}/report'.format(self._superior_ep, self._id)
+            requests.post(path, json=self._cache)
 
 # superior functions
 
@@ -156,14 +191,34 @@ def pvt_info(pvt_id):
     return jsonify(res)
 
 
-@server.route('/sgt/job', methods=['PUT'])
-def get_order():
-    value = get_dict()
-    if value[1] != 200:
-        return value
+@server.route('/sgt/job/report', methods=['GET', 'PUT'])
+def setjob_report():
+    report = None
+    if request.method == 'GET':
+        report = app.job_list['report']
+    elif request.method == 'PUT':
+        value = get_dict()
+        if value[1] != 200:
+            return value
+        input = value[0]['report_job']
+        report = app.set_report(input)
 
-    accepted = app.set_job(value[0])
-    return jsonify(result='success', accepted=accepted), 200
+    return jsonify(result='success', report=report), 200
+
+
+@server.route('/sgt/job/command', methods=['GET', 'PUT'])
+def setjob_command():
+    commands = []
+    if request.method == 'GET':
+        commands = app.job_list['command']
+    elif request.method == 'PUT':
+        value = get_dict()
+        if value[1] != 200:
+            return value
+        input = value[0]['command_jobs']
+        commands = app.set_commands(input)
+
+    return jsonify(result='success', commands=commands), 200
 
 
 # 自身の情報を返す
@@ -189,5 +244,5 @@ if __name__ == "__main__":
         sys.exit()
     app = Sergeant('sgt-http', 'localhost', self_port)
     app.join(su_addr, su_port)
-    # server.debug = True
+    server.debug = True
     server.run(port=self_port)
