@@ -19,6 +19,9 @@
                     <li>{{pvt.name}}, {{pvt.id}}: <a href=http://{{pvt.addr}}:{{pvt.port}}/info>info</a></li>
                 {% endfor %}
             </ul>
+            <li>cache</li>
+            <textarea name="cache" cols=120 rows=8>{{sgt.cache_text}}
+            </textarea>
         </ul>
         {% endfor %}
     </ul>
