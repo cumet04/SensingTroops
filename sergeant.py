@@ -5,6 +5,7 @@
 import sys
 import threading
 import requests
+import os
 from common import get_dict
 from flask import Flask, jsonify
 from logging import getLogger, StreamHandler, DEBUG
@@ -187,7 +188,10 @@ if __name__ == "__main__":
     else:
         logger.error('superior addr/port required')
         sys.exit()
-    app = Sergeant('sgt-http', 'localhost', self_port)
-    app.join(su_addr, su_port)
-    # server.debug = True
+
+    if os.getppid() != 1:
+        app = Sergeant('sgt-http', 'localhost', self_port)
+        app.join(su_addr, su_port)
+
+    server.debug = True
     server.run(port=self_port)

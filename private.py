@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
+import os
 import sys
 import threading
 import requests
@@ -146,10 +147,10 @@ if __name__ == "__main__":
     else:
         logger.error('superior addr/port required')
         sys.exit()
-    app = Private('pvt-http', 'localhost', self_port)
-    app.join(su_addr, su_port)
 
-    # debugをオンにするとアプリケーションが二重で起動するためオフにしておく
-    # TODO: debug=Trueでもappが二重起動しないようにする
-    # server.debug = True
+    if os.getppid() != 1:
+        app = Private('pvt-http', 'localhost', self_port)
+        app.join(su_addr, su_port)
+
+    server.debug = True
     server.run(port=int(self_port))

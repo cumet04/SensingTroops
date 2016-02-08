@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 import requests
 from common import get_dict
@@ -156,6 +157,9 @@ if __name__ == "__main__":
         port = int(sys.argv[1])
     else:
         port = 5100
-    app = Captain('cpt-http', 'localhost', port)
+
+    if os.getppid() != 1:
+        app = Captain('cpt-http', 'localhost', port)
+
     server.debug = True
     server.run(port=port)
