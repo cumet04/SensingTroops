@@ -123,6 +123,7 @@ class Sergeant(object):
         while not event.wait(timeout = interval):
             path = 'http://{0}/sgt/{1}/report'.format(self._superior_ep, self._id)
             requests.post(path, json=self._cache)
+            self._cache = []
 
 # superior functions
 
