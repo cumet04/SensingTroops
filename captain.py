@@ -4,6 +4,8 @@
 import os
 import sys
 import requests
+import json
+import copy
 from common import get_dict
 from flask import Flask, jsonify, render_template
 from logging import getLogger, StreamHandler, DEBUG
@@ -79,10 +81,8 @@ class Captain(object):
 
             # get sgt's cache
             ep = 'http://{0}:{1}/dev/cache'.format(sgt['addr'], sgt['port'])
-            cache_list = requests.get(ep).json()['cache']
-            cache_text = ''
-            for cache in cache_list:
-                cache_text = cache_text + str(cache) + '\n'
+            cache_list = [str(c) for c in requests.get(ep).json()['cache']]
+            cache_text = json.dumps(cache_list, indent=4, separators=(',', ': '))
 
             # append sgt info
             sgt['pvt_list'] = pvt_list
@@ -91,10 +91,10 @@ class Captain(object):
         cpt['sgt_list'] = sgt_list
 
         # generate cpt's cache
-        cache_text = ''
-        for cache in self._cache:
-            cache_text = cache_text + str(cache) + '\n'
-        cpt['cache_text'] = cache_text
+        cache_list = copy.deepcopy(self._cache)
+        for report in cache_list:
+            report['report'] = [str(work) for work in report['report']]
+        cpt['cache_text'] = json.dumps(cache_list, indent=4, separators=(',', ': '))
         return cpt
 
 
