@@ -245,8 +245,7 @@ if __name__ == "__main__":
         logger.error('superior addr/port required')
         sys.exit()
 
-    if os.getppid() != 1:
-        app = Sergeant('sgt-http', 'localhost', self_port)
-        app.join(su_addr, su_port)
+    app = Sergeant('sgt-http', 'localhost', self_port)
+    app.join(su_addr, su_port)
     server.debug = True
-    server.run(port=self_port)
+    server.run(port=self_port, use_debugger = True, use_reloader = False)

@@ -154,12 +154,10 @@ def get_info():
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
     if len(sys.argv) == 2:
-        port = int(sys.argv[1])
+        self_port = int(sys.argv[1])
     else:
-        port = 5100
+        self_port = 52000
 
-    if os.getppid() != 1:
-        app = Captain('cpt-http', 'localhost', port)
-
+    app = Captain('cpt-http', 'localhost', self_port)
     server.debug = True
-    server.run(port=port)
+    server.run(port=self_port, use_debugger = True, use_reloader = False)

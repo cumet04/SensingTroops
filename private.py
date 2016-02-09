@@ -141,16 +141,14 @@ def get_info():
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
     if len(sys.argv) == 4:
-        self_port = sys.argv[1]
+        self_port = int(sys.argv[1])
         su_addr = sys.argv[2]
         su_port = sys.argv[3]
     else:
         logger.error('superior addr/port required')
         sys.exit()
 
-    if os.getppid() != 1:
-        app = Private('pvt-http', 'localhost', self_port)
-        app.join(su_addr, su_port)
-
+    app = Private('pvt-http', 'localhost', self_port)
+    app.join(su_addr, su_port)
     server.debug = True
-    server.run(port=int(self_port))
+    server.run(port=self_port, use_debugger = True, use_reloader = False)
