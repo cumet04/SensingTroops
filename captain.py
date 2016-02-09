@@ -62,6 +62,8 @@ class Captain(object):
 
     def generate_troops_info(self):
         cpt = self.get_info()
+
+        # generate sgt list
         sgt_list = []
         for sgt in self._sgt_list.values():
             # get pvt id list
@@ -86,8 +88,13 @@ class Captain(object):
             sgt['pvt_list'] = pvt_list
             sgt['cache_text'] = cache_text
             sgt_list.append(sgt.copy())
-
         cpt['sgt_list'] = sgt_list
+
+        # generate cpt's cache
+        cache_text = ''
+        for cache in self._cache:
+            cache_text = cache_text + str(cache) + '\n'
+        cpt['cache_text'] = cache_text
         return cpt
 
 
