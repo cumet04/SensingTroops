@@ -9,6 +9,7 @@ import requests
 from common import get_dict
 from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
+
 logger = getLogger(__name__)
 handler = StreamHandler()
 handler.setLevel(DEBUG)
@@ -42,7 +43,7 @@ class Sergeant(object):
         m.update(info_unicode)
         self._id = m.hexdigest()
 
-# soldier functions
+    # soldier functions
 
     def join(self, addr, port):
         """
@@ -78,7 +79,7 @@ class Sergeant(object):
 
         # TODO: reportが受理可能なものであるかのチェック
         event = threading.Event()
-        t = threading.Thread(target = self._report_thread, args = (report, event))
+        t = threading.Thread(target=self._report_thread, args=(report, event))
         t.start()
         self.job_wait_events['report'] = event
         self.job_list['report'] = report
@@ -99,7 +100,7 @@ class Sergeant(object):
         for command in command_list:
             # TODO: commandが受理可能なものであるかのチェック
             event = threading.Event()
-            t = threading.Thread(target = self._command_thread, args = (command, event))
+            t = threading.Thread(target=self._command_thread, args=(command, event))
             t.start()
             self.job_wait_events['command'].append(event)
             accepted.append(command)
@@ -126,12 +127,12 @@ class Sergeant(object):
         # encoding = command['encoding']
 
         # if event is set, exit the loop
-        while not event.wait(timeout = interval):
+        while not event.wait(timeout=interval):
             path = 'http://{0}/sgt/{1}/report'.format(self._superior_ep, self._id)
             requests.post(path, json=self._cache)
             self._cache = []
 
-# superior functions
+    # superior functions
 
     def accept_work(self, pvt_id, work):
         if pvt_id not in self._pvt_list:
@@ -252,4 +253,4 @@ if __name__ == "__main__":
     app = Sergeant('sgt-http', 'localhost', self_port)
     app.join(su_addr, su_port)
     server.debug = True
-    server.run(port=self_port, use_debugger = True, use_reloader = False)
+    server.run(port=self_port, use_debugger=True, use_reloader=False)
