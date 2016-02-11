@@ -12,21 +12,11 @@ frisby.create('GET info')
         info: {
             name: 'pvt-http',
             addr: addr,
-            port: port,
-            sensors: [] // 配列を順不同でテストはできなさそうだったので中身は見ない
+            port: Number(port),
         }
     })
-    .toss();
-
-frisby.create('GET order')
-    .get(ep + '/order')
-    .addHeader('Content-Type', 'application/json')
-    .expectStatus(200)
-    .expectHeaderContains('Content-Type', 'application/json')
-    .expectJSON({
-        result: 'success',
-        orders: [{sensor: "random", interval: 2}]
-    })
+    .expectJSON('info.sensors.?', new String("random"))
+    .expectJSON('info.sensors.?', new String("zero"))
     .toss();
 
 frisby.create('PUT order (single object)')
@@ -72,7 +62,24 @@ frisby.create("PUT order (multiple object's list)")
             {sensor: "zero", interval: 5}
         ]
     })
+    .after(function(err, res, body)
+    {
+        frisby.create('GET order')
+            .get(ep + '/order')
+            .addHeader('Content-Type', 'application/json')
+            .expectStatus(200)
+            .expectHeaderContains('Content-Type', 'application/json')
+            .expectJSON({
+                result: 'success',
+                orders: [
+                    {sensor: "random", interval: 2},
+                    {sensor: "zero", interval: 5}
+                ]
+            })
+            .toss();
+    })
     .toss();
+
 
 frisby.create('PUT order (request header failure)')
     .put(ep + '/order', {
@@ -80,6 +87,10 @@ frisby.create('PUT order (request header failure)')
         }, {json: true})
     .addHeader('Content-Type', 'application/xml') // not json
     .expectStatus(406)
+    .expectJSON({
+        result: 'failed',
+        msg: 'application/json required'
+    })
     .toss();
 
 frisby.create('PUT order (request method failure)')
