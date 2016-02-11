@@ -6,7 +6,6 @@ import sys
 import hashlib
 import threading
 import requests
-import os
 from common import get_dict
 from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
@@ -167,7 +166,7 @@ def pvt_join():
         return value
 
     res = app.accept_pvt(value[0])
-    return jsonify(res)
+    return jsonify(result='success', accepted=res)
 
 
 @server.route('/pvt/<pvt_id>/work', methods=['POST'])
@@ -186,7 +185,7 @@ def pvt_work(pvt_id):
 @server.route('/pvt/list', methods=['GET'])
 def pvt_list():
     res = app.get_pvt_list()
-    return jsonify({'pvt_list': res})
+    return jsonify(result='success', pvt_list=res)
 
 
 @server.route('/pvt/<pvt_id>/info', methods=['GET'])
@@ -194,7 +193,7 @@ def pvt_info(pvt_id):
     try:
         res = app.get_pvt_info(pvt_id)
     except KeyError:
-        return jsonify(msg='the pvt is not my soldier'), 404
+        return jsonify(result='failed', msg='the pvt is not my soldier'), 404
     return jsonify(res)
 
 
@@ -210,7 +209,7 @@ def setjob_report():
         input = value[0]['report_job']
         report = app.set_report(input)
 
-    return jsonify(result='success', report=report), 200
+    return jsonify(result='success', report_job=report), 200
 
 
 @server.route('/sgt/job/command', methods=['GET', 'PUT'])
@@ -225,7 +224,7 @@ def setjob_command():
         input = value[0]['command_jobs']
         commands = app.set_commands(input)
 
-    return jsonify(result='success', commands=commands), 200
+    return jsonify(result='success', command_jobs=commands), 200
 
 
 # 自身の情報を返す
@@ -237,7 +236,7 @@ def get_info():
 
 @server.route('/dev/cache', methods=['GET'])
 def dev_cache():
-    return jsonify(cache=app._cache)
+    return jsonify(result='success', cache=app._cache)
 
 
 # entry point ------------------------------------------------------------------

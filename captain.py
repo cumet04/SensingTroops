@@ -109,7 +109,7 @@ def sgt_join():
         return value
 
     res = app.accept_sgt(value[0])
-    return jsonify(res)
+    return jsonify(result='success', accepted=res)
 
 
 @server.route('/sgt/<sgt_id>/report', methods=['POST'])
@@ -128,7 +128,7 @@ def sgt_report(sgt_id):
 @server.route('/sgt/list', methods=['GET'])
 def pvt_list():
     res = app.get_sgt_list()
-    return jsonify({'sgt_list': res})
+    return jsonify(result='success', sgt_list=res)
 
 
 @server.route('/sgt/<sgt_id>/info', methods=['GET'])
@@ -136,13 +136,13 @@ def sgt_info(sgt_id):
     try:
         res = app.get_sgt_info(sgt_id)
     except KeyError:
-        return jsonify(msg='the pvt is not my soldier'), 404
+        return jsonify(result='failed', msg='the pvt is not my soldier'), 404
     return jsonify(res)
 
 
 @server.route('/dev/cache', methods=['GET'])
 def dev_cache():
-    return jsonify(cache=app._cache)
+    return jsonify(result='success', cache=app._cache)
 
 
 @server.route('/web/status', methods=['GET'])
