@@ -5,7 +5,7 @@ import sys
 import requests
 import json
 import copy
-from common import get_dict, SergeantInfo, PrivateInfo, CaptainInfo
+from common import get_dict, generate_info, SergeantInfo, PrivateInfo, CaptainInfo
 from flask import Flask, jsonify, render_template
 from logging import getLogger, StreamHandler, DEBUG
 logger = getLogger(__name__)
@@ -22,7 +22,7 @@ logger.addHandler(handler)
 class Captain(object):
     
     def __init__(self, name, addr, port):
-        self.info = SergeantInfo.generate(name, addr, port)
+        self.info = generate_info(CaptainInfo, name=name, addr=addr, port=port)
         self._cache = []
         self._sgt_list = {}
 

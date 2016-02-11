@@ -5,7 +5,7 @@
 import sys
 import threading
 import requests
-from common import get_dict, SergeantInfo, PrivateInfo
+from common import get_dict, generate_info,SergeantInfo, PrivateInfo
 from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -16,10 +16,9 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
-
 class Sergeant(object):
     def __init__(self, name, addr, port):
-        self.info = SergeantInfo.generate(name, addr, port)
+        self.info = generate_info(SergeantInfo, name=name, addr=addr, port=port)
         self._superior_ep = ''
 
         self._cache = []

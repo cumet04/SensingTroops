@@ -6,7 +6,7 @@ import sys
 import threading
 import requests
 import random
-from common import get_dict, SergeantInfo, PrivateInfo
+from common import get_dict, generate_info, PrivateInfo
 from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -23,7 +23,7 @@ class Private(object):
             'random': Sensor(random.random, 0),
             'zero': Sensor(lambda: 0, 0)
         }
-        self.info = PrivateInfo.generate(name, addr, port, list(self._sensors.keys()))
+        self.info = generate_info(PrivateInfo, name=name, addr=addr, port=port, sensors=list(self._sensors.keys()))
         self._superior_ep = ''
 
     def join(self, addr, port):
