@@ -1,12 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import os
 import sys
 import requests
 import json
 import copy
-from common import get_dict
+from common import get_dict, SergeantInfo, PrivateInfo, CaptainInfo
 from flask import Flask, jsonify, render_template
 from logging import getLogger, StreamHandler, DEBUG
 logger = getLogger(__name__)
@@ -23,22 +22,9 @@ logger.addHandler(handler)
 class Captain(object):
     
     def __init__(self, name, addr, port):
-        self._id = None
-        self._name = name
-        self._addr = addr
-        self._port = port
+        self.info = SergeantInfo.generate(name, addr, port)
         self._cache = []
         self._sgt_list = {}
-
-    def get_info(self):
-        logger.info('get self info')
-        info = {
-            'id': self._id,
-            'name': self._name,
-            'addr': self._addr,
-            'port': self._port,
-        }
-        return info
 
     def accept_report(self, sgt_id, report):
         if sgt_id not in self._sgt_list:
@@ -62,7 +48,7 @@ class Captain(object):
         return list(self._sgt_list.keys())
 
     def generate_troops_info(self):
-        cpt = self.get_info()
+        cpt = self.info
 
         # generate sgt list
         sgt_list = []
@@ -153,7 +139,7 @@ def show_status():
 # 自身の情報を返す
 @server.route('/info', methods=['GET'])
 def get_info():
-    info = app.get_info()
+    info = app.info
     return jsonify(result='success', info=info), 200
 
 

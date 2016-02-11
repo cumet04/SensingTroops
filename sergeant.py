@@ -3,13 +3,12 @@
 
 
 import sys
-import hashlib
 import threading
 import requests
-import os
-from common import get_dict
+from common import get_dict, SergeantInfo, PrivateInfo
 from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
+
 logger = getLogger(__name__)
 handler = StreamHandler()
 handler.setLevel(DEBUG)
@@ -17,12 +16,10 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
+
 class Sergeant(object):
     def __init__(self, name, addr, port):
-        self._id = ''
-        self._name = name
-        self._addr = addr
-        self._port = port
+        self.info = SergeantInfo.generate(name, addr, port)
         self._superior_ep = ''
 
         self._cache = []
@@ -35,15 +32,8 @@ class Sergeant(object):
             'report': None,
             'command': [],
         }
-        # IDを生成する
-        info = self.get_info()
-        del info['id']
-        info_unicode = str(info).encode()
-        m = hashlib.md5()
-        m.update(info_unicode)
-        self._id = m.hexdigest()
 
-# soldier functions
+    # soldier functions
 
     def join(self, addr, port):
         """
@@ -57,19 +47,9 @@ class Sergeant(object):
         logger.info('join into the captain: {0}'.format(self._superior_ep))
 
         path = 'http://{0}/sgt/join'.format(self._superior_ep)
-        requests.post(path, json=self.get_info()).json()
+        requests.post(path, json=self.info._asdict()).json()
 
-        return self._id
-
-    def get_info(self):
-        logger.info('get self info')
-        info = {
-            'id': self._id,
-            'name': self._name,
-            'addr': self._addr,
-            'port': self._port,
-        }
-        return info
+        return True
 
     def set_report(self, report):
         # 既存のreportスレッドを消す
@@ -79,7 +59,7 @@ class Sergeant(object):
 
         # TODO: reportが受理可能なものであるかのチェック
         event = threading.Event()
-        t = threading.Thread(target = self._report_thread, args = (report, event))
+        t = threading.Thread(target=self._report_thread, args=(report, event))
         t.start()
         self.job_wait_events['report'] = event
         self.job_list['report'] = report
@@ -100,7 +80,7 @@ class Sergeant(object):
         for command in command_list:
             # TODO: commandが受理可能なものであるかのチェック
             event = threading.Event()
-            t = threading.Thread(target = self._command_thread, args = (command, event))
+            t = threading.Thread(target=self._command_thread, args=(command, event))
             t.start()
             self.job_wait_events['command'].append(event)
             accepted.append(command)
@@ -117,7 +97,7 @@ class Sergeant(object):
             target = self.get_pvt_list()
         order = command['order']
 
-        for pvt in [self._pvt_list[id] for id in target]:
+        for pvt in [self._pvt_list[pvt_id] for pvt_id in target]:
             path = 'http://{0}:{1}/order'.format(pvt['addr'], pvt['port'])
             requests.put(path, json={'orders': order})
 
@@ -127,12 +107,12 @@ class Sergeant(object):
         # encoding = command['encoding']
 
         # if event is set, exit the loop
-        while not event.wait(timeout = interval):
-            path = 'http://{0}/sgt/{1}/report'.format(self._superior_ep, self._id)
+        while not event.wait(timeout=interval):
+            path = 'http://{0}/sgt/{1}/report'.format(self._superior_ep, self.info.id)
             requests.post(path, json=self._cache)
             self._cache = []
 
-# superior functions
+    # superior functions
 
     def accept_work(self, pvt_id, work):
         if pvt_id not in self._pvt_list:
@@ -231,7 +211,7 @@ def setjob_command():
 # 自身の情報を返す
 @server.route('/info', methods=['GET'])
 def get_info():
-    info = app.get_info()
+    info = app.info
     return jsonify(result='success', info=info), 200
 
 
@@ -253,4 +233,4 @@ if __name__ == "__main__":
     app = Sergeant('sgt-http', 'localhost', self_port)
     app.join(su_addr, su_port)
     server.debug = True
-    server.run(port=self_port, use_debugger = True, use_reloader = False)
+    server.run(port=self_port, use_debugger=True, use_reloader=False)
