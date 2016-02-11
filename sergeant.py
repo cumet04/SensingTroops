@@ -120,11 +120,8 @@ class Sergeant(object):
         logger.info('accept work from pvt: {0}'.format(pvt_id))
 
     def accept_pvt(self, info):
-        id = info['id']
-        name = info['name']
-
-        self._pvt_list[id] = info
-        logger.info('accept a new private: {0}, {1}'.format(name, id))
+        self._pvt_list[info.id] = info
+        logger.info('accept a new private: {0}, {1}'.format(info.name, info.id))
         return info
 
     def get_pvt_info(self, pvt_id):
@@ -145,8 +142,8 @@ def pvt_join():
     if value[1] != 200:
         return value
 
-    res = app.accept_pvt(value[0])
-    return jsonify(res)
+    res = app.accept_pvt(PrivateInfo(**value[0]))
+    return jsonify(res._asdict())
 
 
 @server.route('/pvt/<pvt_id>/work', methods=['POST'])
@@ -174,7 +171,7 @@ def pvt_info(pvt_id):
         res = app.get_pvt_info(pvt_id)
     except KeyError:
         return jsonify(msg='the pvt is not my soldier'), 404
-    return jsonify(res)
+    return jsonify(res._asdict())
 
 
 @server.route('/sgt/job/report', methods=['GET', 'PUT'])

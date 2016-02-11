@@ -48,7 +48,7 @@ class Captain(object):
         return list(self._sgt_list.keys())
 
     def generate_troops_info(self):
-        cpt = self.info
+        cpt = self.info._asdict()
 
         # generate sgt list
         sgt_list = []
