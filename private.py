@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
+import hashlib
 import os
 import sys
 import threading
@@ -28,6 +29,13 @@ class Private(object):
             'random': Sensor(random.random, 0),
             'zero': Sensor(lambda: 0, 0)
         }
+        # IDを生成する
+        info = self.get_info()
+        del info['id']
+        info_unicode = str(info).encode()
+        m = hashlib.md5()
+        m.update(info_unicode)
+        self._id = m.hexdigest()
 
     def join(self, addr, port):
         """
@@ -41,10 +49,7 @@ class Private(object):
         logger.info('join into the sergeant: {0}'.format(self._superior_ep))
 
         path = 'http://{0}/pvt/join'.format(self._superior_ep)
-        res = requests.post(path, json=self.get_info()).json()
-
-        self._id = res['id']
-        logger.info('get my pvt-id: {0}'.format(self._id))
+        requests.post(path, json=self.get_info()).json()
         return self._id
 
     def get_info(self):

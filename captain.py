@@ -47,11 +47,10 @@ class Captain(object):
         logger.info('accept work from pvt: {0}'.format(sgt_id))
 
     def accept_sgt(self, info):
-        new_id = str(id(info))
-        info['id'] = new_id
+        id = info['id']
 
-        self._sgt_list[new_id] = info
-        logger.info('accept a new sergeant: {0}, {1}'.format(info['name'], new_id))
+        self._sgt_list[id] = info
+        logger.info('accept a new sergeant: {0}, {1}'.format(info['name'], id))
         return info
 
     def get_sgt_info(self, sgt_id):

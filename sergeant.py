@@ -3,6 +3,7 @@
 
 
 import sys
+import hashlib
 import threading
 import requests
 import os
@@ -34,6 +35,13 @@ class Sergeant(object):
             'report': None,
             'command': [],
         }
+        # IDを生成する
+        info = self.get_info()
+        del info['id']
+        info_unicode = str(info).encode()
+        m = hashlib.md5()
+        m.update(info_unicode)
+        self._id = m.hexdigest()
 
 # soldier functions
 
@@ -49,10 +57,8 @@ class Sergeant(object):
         logger.info('join into the captain: {0}'.format(self._superior_ep))
 
         path = 'http://{0}/sgt/join'.format(self._superior_ep)
-        res = requests.post(path, json=self.get_info()).json()
+        requests.post(path, json=self.get_info()).json()
 
-        self._id = res['id']
-        logger.info('get my sgt-id: {0}'.format(self._id))
         return self._id
 
     def get_info(self):
@@ -135,12 +141,11 @@ class Sergeant(object):
         logger.info('accept work from pvt: {0}'.format(pvt_id))
 
     def accept_pvt(self, info):
-        new_id = str(id(info))
+        id = info['id']
         name = info['name']
-        info['id'] = new_id
 
-        self._pvt_list[new_id] = info
-        logger.info('accept a new private: {0}, {1}'.format(name, new_id))
+        self._pvt_list[id] = info
+        logger.info('accept a new private: {0}, {1}'.format(name, id))
         return info
 
     def get_pvt_info(self, pvt_id):
