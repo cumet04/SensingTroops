@@ -100,3 +100,15 @@ frisby.create('PUT order (request method failure)')
     .addHeader('Content-Type', 'application/json')
     .expectStatus(405)
     .toss();
+
+var invalid_json = '"orders": {"sensor": "random", "interval": 2}}'
+frisby.create('PUT order (invalid json data failure)')
+    .put(ep + '/order', new Buffer(invalid_json))
+    .addHeader('Content-Type', 'application/json') // not json
+    .expectStatus(400)
+    .expectJSON({
+        result: 'failed',
+        msg: "param couldn't decode to json"
+    })
+    .toss();
+
