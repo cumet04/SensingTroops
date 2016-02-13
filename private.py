@@ -2,15 +2,14 @@
 # -*- coding: utf-8 -*-
 
 
-import hashlib
-import os
 import sys
 import threading
 import requests
 import random
-from common import json_input
+from common import json_input, generate_info, PrivateInfo
 from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
+
 logger = getLogger(__name__)
 handler = StreamHandler()
 handler.setLevel(DEBUG)
@@ -20,22 +19,12 @@ logger.addHandler(handler)
 
 class Private(object):
     def __init__(self, name, addr, port):
-        self._id = None
-        self._name = name
-        self._addr = addr
-        self._port = port
-        self._superior_ep = ''
         self._sensors = {
             'random': Sensor(random.random, 0),
             'zero': Sensor(lambda: 0, 0)
         }
-        # IDを生成する
-        info = self.get_info()
-        del info['id']
-        info_unicode = str(info).encode()
-        m = hashlib.md5()
-        m.update(info_unicode)
-        self._id = m.hexdigest()
+        self.info = generate_info(PrivateInfo, name=name, addr=addr, port=port, sensors=list(self._sensors.keys()))
+        self._superior_ep = ''
 
     def join(self, addr, port):
         """
@@ -49,19 +38,8 @@ class Private(object):
         logger.info('join into the sergeant: {0}'.format(self._superior_ep))
 
         path = 'http://{0}/pvt/join'.format(self._superior_ep)
-        requests.post(path, json=self.get_info()).json()
-        return self._id
-
-    def get_info(self):
-        logger.info('get self info')
-        info = {
-            'id': self._id,
-            'name': self._name,
-            'addr': self._addr,
-            'port': self._port,
-            'sensors': list(self._sensors.keys())
-        }
-        return info
+        requests.post(path, json=self.info._asdict()).json()
+        return True
 
     def set_order(self, order):
         """
@@ -97,11 +75,11 @@ class Private(object):
 
         if timer is not None:
             timer.cancel()
-        t = threading.Timer(interval, self.__working, args=(sensor, ))
+        t = threading.Timer(interval, self.__working, args=(sensor,))
         t.start()
         self._sensors[sensor].timer = t
 
-        path = 'http://{0}/pvt/{1}/work'.format(self._superior_ep, self._id)
+        path = 'http://{0}/pvt/{1}/work'.format(self._superior_ep, self.info.id)
         return requests.post(path, json={'sensor': sensor, 'value': value})
 
 
@@ -123,6 +101,7 @@ server = Flask(__name__)
 @server.route('/order', methods=['GET', 'PUT'])
 @json_input
 def get_order():
+    orders = []
     if request.method == 'PUT':
         orders = request.json['orders']
         if not isinstance(orders, list):
@@ -137,8 +116,8 @@ def get_order():
 # 自身の情報を返す
 @server.route('/info', methods=['GET'])
 def get_info():
-    info = app.get_info()
-    return jsonify(result='success', info=info), 200
+    return jsonify(result='success', info=app.info._asdict()), 200
+
 
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
@@ -153,4 +132,4 @@ if __name__ == "__main__":
     app = Private('pvt-http', 'localhost', self_port)
     app.join(su_addr, su_port)
     server.debug = True
-    server.run(port=self_port, use_debugger = True, use_reloader = False)
+    server.run(port=self_port, use_debugger=True, use_reloader=False)

@@ -3,10 +3,9 @@
 
 
 import sys
-import hashlib
 import threading
 import requests
-from common import json_input
+from common import json_input, generate_info,SergeantInfo, PrivateInfo
 from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -19,10 +18,7 @@ logger.addHandler(handler)
 
 class Sergeant(object):
     def __init__(self, name, addr, port):
-        self._id = ''
-        self._name = name
-        self._addr = addr
-        self._port = port
+        self.info = generate_info(SergeantInfo, name=name, addr=addr, port=port)
         self._superior_ep = ''
 
         self._cache = []
@@ -35,13 +31,6 @@ class Sergeant(object):
             'report': None,
             'command': [],
         }
-        # IDを生成する
-        info = self.get_info()
-        del info['id']
-        info_unicode = str(info).encode()
-        m = hashlib.md5()
-        m.update(info_unicode)
-        self._id = m.hexdigest()
 
     # soldier functions
 
@@ -57,19 +46,9 @@ class Sergeant(object):
         logger.info('join into the captain: {0}'.format(self._superior_ep))
 
         path = 'http://{0}/sgt/join'.format(self._superior_ep)
-        requests.post(path, json=self.get_info()).json()
+        requests.post(path, json=self.info._asdict()).json()
 
-        return self._id
-
-    def get_info(self):
-        logger.info('get self info')
-        info = {
-            'id': self._id,
-            'name': self._name,
-            'addr': self._addr,
-            'port': self._port,
-        }
-        return info
+        return True
 
     def set_report(self, report):
         # 既存のreportスレッドを消す
@@ -117,7 +96,7 @@ class Sergeant(object):
             target = self.get_pvt_list()
         order = command['order']
 
-        for pvt in [self._pvt_list[id] for id in target]:
+        for pvt in [self._pvt_list[pvt_id] for pvt_id in target]:
             path = 'http://{0}:{1}/order'.format(pvt['addr'], pvt['port'])
             requests.put(path, json={'orders': order})
 
@@ -128,7 +107,7 @@ class Sergeant(object):
 
         # if event is set, exit the loop
         while not event.wait(timeout=interval):
-            path = 'http://{0}/sgt/{1}/report'.format(self._superior_ep, self._id)
+            path = 'http://{0}/sgt/{1}/report'.format(self._superior_ep, self.info.id)
             requests.post(path, json=self._cache)
             self._cache = []
 
@@ -141,11 +120,8 @@ class Sergeant(object):
         logger.info('accept work from pvt: {0}'.format(pvt_id))
 
     def accept_pvt(self, info):
-        id = info['id']
-        name = info['name']
-
-        self._pvt_list[id] = info
-        logger.info('accept a new private: {0}, {1}'.format(name, id))
+        self._pvt_list[info.id] = info
+        logger.info('accept a new private: {0}, {1}'.format(info.name, info.id))
         return info
 
     def get_pvt_info(self, pvt_id):
@@ -163,8 +139,8 @@ server = Flask(__name__)
 @server.route('/pvt/join', methods=['POST'])
 @json_input
 def pvt_join():
-    res = app.accept_pvt(request.json)
-    return jsonify(result='success', accepted=res)
+    res = app.accept_pvt(PrivateInfo(**request.json))
+    return jsonify(result='success', accepted=res._asdict())
 
 
 @server.route('/pvt/<pvt_id>/work', methods=['POST'])
@@ -189,7 +165,7 @@ def pvt_info(pvt_id):
         res = app.get_pvt_info(pvt_id)
     except KeyError:
         return jsonify(result='failed', msg='the pvt is not my soldier'), 404
-    return jsonify(res)
+    return jsonify(res._asdict())
 
 
 @server.route('/sgt/job/report', methods=['GET', 'PUT'])
@@ -221,8 +197,7 @@ def setjob_command():
 # 自身の情報を返す
 @server.route('/info', methods=['GET'])
 def get_info():
-    info = app.get_info()
-    return jsonify(result='success', info=info), 200
+    return jsonify(result='success', info=app.info._asdict()), 200
 
 
 @server.route('/dev/cache', methods=['GET'])
