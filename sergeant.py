@@ -6,7 +6,7 @@ import sys
 import hashlib
 import threading
 import requests
-from common import get_dict
+from common import json_input
 from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -161,23 +161,17 @@ server = Flask(__name__)
 
 
 @server.route('/pvt/join', methods=['POST'])
+@json_input
 def pvt_join():
-    value = get_dict()
-    if value[1] != 200:
-        return value
-
-    res = app.accept_pvt(value[0])
+    res = app.accept_pvt(request.json)
     return jsonify(result='success', accepted=res)
 
 
 @server.route('/pvt/<pvt_id>/work', methods=['POST'])
+@json_input
 def pvt_work(pvt_id):
-    value = get_dict()
-    if value[1] != 200:
-        return value
-
     try:
-        app.accept_work(pvt_id, value[0])
+        app.accept_work(pvt_id, request.json)
     except KeyError:
         return jsonify(msg='the pvt is not my soldier'), 404
     return jsonify(result='success')
@@ -199,30 +193,26 @@ def pvt_info(pvt_id):
 
 
 @server.route('/sgt/job/report', methods=['GET', 'PUT'])
+@json_input
 def setjob_report():
     report = None
     if request.method == 'GET':
         report = app.job_list['report']
     elif request.method == 'PUT':
-        value = get_dict()
-        if value[1] != 200:
-            return value
-        input = value[0]['report_job']
+        input = request.json['report_job']
         report = app.set_report(input)
 
     return jsonify(result='success', report_job=report), 200
 
 
 @server.route('/sgt/job/command', methods=['GET', 'PUT'])
+@json_input
 def setjob_command():
     commands = []
     if request.method == 'GET':
         commands = app.job_list['command']
     elif request.method == 'PUT':
-        value = get_dict()
-        if value[1] != 200:
-            return value
-        input = value[0]['command_jobs']
+        input = request.json['command_jobs']
         commands = app.set_commands(input)
 
     return jsonify(result='success', command_jobs=commands), 200

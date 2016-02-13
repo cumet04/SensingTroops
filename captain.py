@@ -6,8 +6,8 @@ import sys
 import requests
 import json
 import copy
-from common import get_dict
-from flask import Flask, jsonify, render_template
+from common import json_input
+from flask import Flask, jsonify, render_template, request
 from logging import getLogger, StreamHandler, DEBUG
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -103,23 +103,17 @@ server = Flask(__name__)
 
 
 @server.route('/sgt/join', methods=['POST'])
+@json_input
 def sgt_join():
-    value = get_dict()
-    if value[1] != 200:
-        return value
-
-    res = app.accept_sgt(value[0])
+    res = app.accept_sgt(request.json)
     return jsonify(result='success', accepted=res)
 
 
 @server.route('/sgt/<sgt_id>/report', methods=['POST'])
+@json_input
 def sgt_report(sgt_id):
-    value = get_dict()
-    if value[1] != 200:
-        return value
-
     try:
-        app.accept_report(sgt_id, value[0])
+        app.accept_report(sgt_id, request.json)
     except KeyError:
         return jsonify(msg='the sgt is not my soldier'), 404
     return jsonify(result='success')

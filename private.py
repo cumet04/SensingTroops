@@ -8,7 +8,7 @@ import sys
 import threading
 import requests
 import random
-from common import get_dict
+from common import json_input
 from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
 logger = getLogger(__name__)
@@ -121,13 +121,10 @@ server = Flask(__name__)
 
 # 新しい命令を受理する
 @server.route('/order', methods=['GET', 'PUT'])
+@json_input
 def get_order():
     if request.method == 'PUT':
-        value = get_dict()
-        if value[1] != 200:
-            return value
-
-        orders = value[0]['orders']
+        orders = request.json['orders']
         if not isinstance(orders, list):
             orders = [orders]
         orders = app.set_order(orders)
