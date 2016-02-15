@@ -6,6 +6,7 @@ import sys
 import threading
 import requests
 import random
+from collections import namedtuple
 from common import json_input, generate_info, PrivateInfo
 from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
@@ -17,13 +18,22 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
+Sensor = namedtuple('Sensor', ['name', 'func', 'unit'])
+
+# Sergeantでの利用の具合によっては、event指定せずの__init__や
+# eventを排除する_asdictをクラス内に実装したほうがよいかもしれない
+Order = namedtuple('Order', ['sensor', 'interval', 'event'])
+
+
 class Private(object):
     def __init__(self, name, addr, port):
         self._sensors = {
-            'random': Sensor(random.random, 0),
-            'zero': Sensor(lambda: 0, 0)
+            'random': Sensor(name='random', func=random.random, unit='-'),
+            'zero': Sensor(name='zero', func=lambda: 0, unit='-'),
         }
-        self.info = generate_info(PrivateInfo, name=name, addr=addr, port=port, sensors=list(self._sensors.keys()))
+        self.orders = []
+        self.info = generate_info(PrivateInfo, name=name, addr=addr, port=port,
+                                  sensors=list(self._sensors.keys()))
         self._superior_ep = ''
 
     def join(self, addr, port):
@@ -41,55 +51,39 @@ class Private(object):
         requests.post(path, json=self.info._asdict()).json()
         return True
 
-    def set_order(self, order):
+    def set_order(self, input_orders):
         """
         この兵士に割り当てられている命令を置き換える
-        :param order: 新規命令のリスト
-        :return: 受理した命令
+        :param input_orders: 新規命令のリスト
         """
-        # 既存の命令をリセットして上書きする仕様にすべきか
-        # 更に不正な情報が含まれていた場合や命令の差出人がおかしい場合にハネる必要がありそう
-        accepted = []
-        for item in order:
-            sensor = item['sensor']
-            interval = item['interval']
-            if sensor not in self._sensors:
+
+        # 既存の命令を消去
+        [order.event.set() for order in self.orders]
+        self.orders.clear()
+
+        # 新しい命令を受理
+        for order in input_orders:
+            if order.sensor not in self._sensors:
                 continue
 
-            self._sensors[sensor].interval = interval
-            self.__working(sensor)
-            accepted.append({'sensor': sensor, 'interval': interval})
+            t = threading.Thread(target=self._sensing_thread, args=(order, ))
+            t.start()
+            self.orders.append(order)
 
         logger.info('accepted new order')
-        logger.debug('new order: {0}'.format(str(accepted)))
-        return accepted
+        logger.debug('new order: {0}'.format(str(self.orders)))
 
-    def __working(self, sensor):
-        """
-        指定されたセンサー種別のセンサ値を送信するスレッド
-        :param sensor: センサー種別
-        """
-        value = self._sensors[sensor].func()
-        interval = self._sensors[sensor].interval
-        timer = self._sensors[sensor].timer
+    def _sensing_thread(self, order):
+        sensor = order.sensor
+        interval = order.interval
+        event = order.event
 
-        if timer is not None:
-            timer.cancel()
-        t = threading.Timer(interval, self.__working, args=(sensor,))
-        t.start()
-        self._sensors[sensor].timer = t
-
-        path = 'http://{0}/pvt/{1}/work'.format(self._superior_ep, self.info.id)
-        return requests.post(path, json={'sensor': sensor, 'value': value})
-
-
-class Sensor(object):
-    __slots__ = ['func', 'timer', 'interval']
-
-    def __init__(self, func, interval):
-        self.func = func
-        self.interval = interval
-        self.timer = None
+        # if event is set, exit the loop
+        while not event.wait(timeout=interval):
+            path = 'http://{0}/pvt/{1}/work'.format(self._superior_ep,
+                                                    self.info.id)
+            value = self._sensors[sensor].func()
+            requests.post(path, json={'sensor': sensor, 'value': value})
 
 
 # REST interface ---------------------------------------------------------------
@@ -101,15 +95,18 @@ server = Flask(__name__)
 @server.route('/order', methods=['GET', 'PUT'])
 @json_input
 def get_order():
-    orders = []
     if request.method == 'PUT':
         orders = request.json['orders']
         if not isinstance(orders, list):
             orders = [orders]
-        orders = app.set_order(orders)
+        app.set_order([Order(**o, event=threading.Event()) for o in orders])
+
     elif request.method == 'GET':
-        # TODO: impl
-        orders = []
+        pass
+
+    # Orderオブジェクトをdictに変換
+    orders = [order._asdict() for order in app.orders]
+    [order.pop('event') for order in orders]
     return jsonify(result='success', orders=orders), 200
 
 
