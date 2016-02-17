@@ -5,7 +5,7 @@
 import sys
 import threading
 import requests
-from common import json_input, generate_info,SergeantInfo, PrivateInfo
+from common import json_input, generate_info, SergeantInfo, PrivateInfo
 from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -79,7 +79,8 @@ class Sergeant(object):
         for command in command_list:
             # TODO: commandが受理可能なものであるかのチェック
             event = threading.Event()
-            t = threading.Thread(target=self._command_thread, args=(command, event))
+            t = threading.Thread(target=self._command_thread,
+                                 args=(command, event))
             t.start()
             self.job_wait_events['command'].append(event)
             accepted.append(command)
@@ -139,7 +140,7 @@ server = Flask(__name__)
 @server.route('/pvt/join', methods=['POST'])
 @json_input
 def pvt_join():
-    res = app.accept_pvt(PrivateInfo(**request.json))
+    res = app.accept_pvt(PrivateInfo._make(request.json))
     return jsonify(result='success', accepted=res._asdict())
 
 
