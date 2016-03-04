@@ -20,4 +20,4 @@ sleep 0.5
 
 cd ../test
 jasmine-node .
-echo ${kill_list[@]} | xargs kill > /dev/null
+echo ${kill_list[@]} | xargs kill >/dev/null
