@@ -140,7 +140,7 @@ server = Flask(__name__)
 @server.route('/pvt/join', methods=['POST'])
 @json_input
 def pvt_join():
-    res = app.accept_pvt(PrivateInfo._make(request.json))
+    res = app.accept_pvt(PrivateInfo(**request.json))
     return jsonify(result='success', accepted=res._asdict())
 
 
