@@ -1,6 +1,9 @@
 var frisby = require('frisby');
-var addr = 'localhost'
-var port = '50000'
+
+var addr = process.env.addr
+var port = process.env.port
+if(addr == undefined) addr = 'localhost'
+if(port == undefined) port = '50000'
 var ep = 'http://' + addr + ':' + port
 
 frisby.create('GET info')
@@ -11,10 +14,10 @@ frisby.create('GET info')
         result: 'success',
         info: {
             name: 'pvt-http',
-            addr: addr,
             port: Number(port),
         }
     })
+    .expectJSONTypes('info.addr', String)
     .expectJSON('info.sensors.?', new String("random"))
     .expectJSON('info.sensors.?', new String("zero"))
     .toss();
