@@ -6,6 +6,7 @@ import sys
 import threading
 import requests
 import random
+import socket
 from collections import namedtuple
 from common import json_input, generate_info, PrivateInfo
 from flask import Flask, jsonify, request
@@ -126,7 +127,11 @@ if __name__ == "__main__":
         logger.error('superior addr/port required')
         sys.exit()
 
-    app = Private('pvt-http', 'localhost', self_port)
+    # FIXME: この方法だと環境によっては'127.0.0.1'が取得されるらしい
+    addr = socket.gethostbyname(socket.gethostname())
+
+    app = Private('pvt-http', addr, self_port)
     app.join(su_addr, su_port)
     server.debug = True
-    server.run(port=self_port, use_debugger=True, use_reloader=False)
+    server.run(host='0.0.0.0', port=self_port, 
+                use_debugger=True, use_reloader=False)

@@ -1,8 +1,14 @@
 #!/bin/bash
 
-cd ..
-python captain.py 52000 &
+pvt_port=50000
+sgt_port=51000
+cpt_port=52000
+
+cd $(dirname "${0}")
+cd ../troops
+
+python captain.py $cpt_port &
 sleep 0.2
-python sergeant.py 51000 localhost 52000 &
+python sergeant.py $sgt_port localhost $cpt_port &
 sleep 0.2
-python private.py 50000 localhost 51000 &
+python private.py $pvt_port localhost $sgt_port &

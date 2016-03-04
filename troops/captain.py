@@ -146,4 +146,5 @@ if __name__ == "__main__":
 
     app = Captain('cpt-http', 'localhost', self_port)
     server.debug = True
-    server.run(port=self_port, use_debugger = True, use_reloader = False)
+    server.run(host='0.0.0.0', port=self_port, 
+                use_debugger = True, use_reloader = False)
