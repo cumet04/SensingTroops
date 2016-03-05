@@ -5,8 +5,10 @@ import sys
 import requests
 import json
 import copy
+from flask_cors import cross_origin
 from common import json_input, generate_info, SergeantInfo, CaptainInfo
 from flask import Flask, jsonify, render_template, request
+from flask_swagger import swagger
 from logging import getLogger, StreamHandler, DEBUG
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -133,9 +135,62 @@ def show_status():
 # 自身の情報を返す
 @server.route('/info', methods=['GET'])
 def get_info():
+    """
+    Create a new user
+    ---
+    tags:
+      - users
+    definitions:
+      - schema:
+          id: Group
+          properties:
+            name:
+             type: string
+             description: the group's name
+    parameters:
+      - in: body
+        name: body
+        schema:
+          id: User
+          required:
+            - email
+            - name
+          properties:
+            email:
+              type: string
+              description: email for user
+            name:
+              type: string
+              description: name for user
+            address:
+              description: address for user
+              schema:
+                id: Address
+                properties:
+                  street:
+                    type: string
+                  state:
+                    type: string
+                  country:
+                    type: string
+                  postalcode:
+                    type: string
+            groups:
+              type: array
+              description: list of groups
+              items:
+                $ref: "#/definitions/Group"
+    responses:
+      201:
+        description: User created
+    """
     info = app.info
     return jsonify(result='success', info=info), 200
 
+@server.route("/spec")
+@cross_origin()
+def spec():
+    return jsonify(swagger(server))
 
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
