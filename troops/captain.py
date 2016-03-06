@@ -88,7 +88,37 @@ class Captain(object):
 # REST interface ---------------------------------------------------------------
 
 server = Flask(__name__)
+url_prefix = '/captain'
 
+# 自身の情報を返す
+@server.route(url_prefix, methods=['GET'])
+def get_info():
+    """
+    Get this captain's information
+    ---
+    tags:
+      - info
+    definitions:
+      - schema:
+          id: CaptainInfo
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            addr:
+              type: string
+            port:
+              type: int
+    parameters: []
+    responses:
+      200:
+        description: Captain's information
+        schema:
+          $ref: '#/definitions/CaptainInfo'
+    """
+    info = app.info
+    return jsonify(result='success', info=info), 200
 
 @server.route('/sgt/join', methods=['POST'])
 @json_input
@@ -132,62 +162,8 @@ def show_status():
     return render_template("captain_ui.html", cpt = app.generate_troops_info())
 
 
-# 自身の情報を返す
-@server.route('/info', methods=['GET'])
-def get_info():
-    """
-    Create a new user
-    ---
-    tags:
-      - users
-    definitions:
-      - schema:
-          id: Group
-          properties:
-            name:
-             type: string
-             description: the group's name
-    parameters:
-      - in: body
-        name: body
-        schema:
-          id: User
-          required:
-            - email
-            - name
-          properties:
-            email:
-              type: string
-              description: email for user
-            name:
-              type: string
-              description: name for user
-            address:
-              description: address for user
-              schema:
-                id: Address
-                properties:
-                  street:
-                    type: string
-                  state:
-                    type: string
-                  country:
-                    type: string
-                  postalcode:
-                    type: string
-            groups:
-              type: array
-              description: list of groups
-              items:
-                $ref: "#/definitions/Group"
-    responses:
-      201:
-        description: User created
-    """
-    info = app.info
-    return jsonify(result='success', info=info), 200
 
-@server.route("/spec")
+@server.route(url_prefix + '/spec')
 @cross_origin()
 def spec():
     return jsonify(swagger(server))
