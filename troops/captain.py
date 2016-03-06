@@ -5,6 +5,7 @@ import sys
 import requests
 import json
 import copy
+from functools import wraps
 from flask_cors import cross_origin
 from common import json_input, generate_info, SergeantInfo, CaptainInfo
 from flask import Flask, jsonify, render_template, request
@@ -27,6 +28,9 @@ class Captain(object):
         self.info = generate_info(CaptainInfo, name=name, addr=addr, port=port)
         self._cache = []
         self._sgt_list = {}
+
+    def check_sgt_exist(self, sgt_id):
+        return sgt_id in self._sgt_list
 
     def accept_report(self, sgt_id, report):
         if sgt_id not in self._sgt_list:
@@ -120,47 +124,84 @@ def get_info():
     info = app.info
     return jsonify(result='success', info=info), 200
 
-@server.route('/sgt/join', methods=['POST'])
-@json_input
-def sgt_join():
-    res = app.accept_sgt(request.json)
-    return jsonify(result='success', accepted=res)
 
-
-@server.route('/sgt/<sgt_id>/report', methods=['POST'])
-@json_input
-def sgt_report(sgt_id):
-    try:
-        app.accept_report(sgt_id, request.json)
-    except KeyError:
-        return jsonify(msg='the sgt is not my soldier'), 404
-    return jsonify(result='success')
-
-
-@server.route('/sgt/list', methods=['GET'])
-def pvt_list():
-    res = app.get_sgt_list()
-    return jsonify(result='success', sgt_list=res)
-
-
-@server.route('/sgt/<sgt_id>/info', methods=['GET'])
-def sgt_info(sgt_id):
-    try:
-        res = app.get_sgt_info(sgt_id)
-    except KeyError:
-        return jsonify(result='failed', msg='the pvt is not my soldier'), 404
-    return jsonify(res)
-
-
-@server.route('/dev/cache', methods=['GET'])
+@server.route(url_prefix + '/cache', methods=['GET'])
 def dev_cache():
+    """
+    Get current cached report data
+    ---
+    tags:
+      - cache
+    definitions:
+      - schema:
+          id: ReportList
+          description: 'a list of report'
+          type: 'array'
+          items:
+            $ref: '#/definitions/Report'
+    parameters: []
+    responses:
+      200:
+        description: Captain's current cache data
+        schema:
+          $ref: '#/definitions/ReportList'
+    """
     return jsonify(result='success', cache=app._cache)
 
 
-@server.route('/web/status', methods=['GET'])
+@server.route(url_prefix + '/ui/status', methods=['GET'])
 def show_status():
+    """
+    show status UI
+    ---
+    tags:
+      - UI
+    parameters: []
+    responses:
+      200:
+        description: Captain's status UI
+    """
     return render_template("captain_ui.html", cpt = app.generate_troops_info())
 
+
+@server.route(url_prefix + '/soldiers', methods=['GET', 'POST'])
+@json_input
+def pvt_list():
+    if request.method == 'GET':
+        res = app.get_sgt_list()
+        return jsonify(result='success', sgt_list=res)
+    elif request.method == 'POST':
+        res = app.accept_sgt(request.json)
+        return jsonify(result='success', accepted=res)
+
+
+# TODO: このデコレータが正しく動作しているかチェック
+def access_sergeant(f):
+    """
+    個別のsgtにアクセスするための存在チェック用デコレータ
+    """
+    @wraps(f)
+    def check_sgt(sgt_id, *args, **kwargs):
+        if not app.check_sgt_exist(sgt_id):
+            return jsonify(result='failed',
+                           msg='the pvt is not my soldier'), 404
+        return f(sgt_id, *args, **kwargs)
+    return check_sgt
+
+
+@server.route(url_prefix + '/soldiers/<sgt_id>', methods=['GET'])
+@access_sergeant
+def sgt_info(sgt_id):
+    res = app.get_sgt_info(sgt_id)
+    return jsonify(res)
+
+
+@server.route(url_prefix + '/soldiers/<sgt_id>/report', methods=['POST'])
+@access_sergeant
+@json_input
+def sgt_report(sgt_id):
+    app.accept_report(sgt_id, request.json)
+    return jsonify(result='success')
 
 
 @server.route(url_prefix + '/spec')
