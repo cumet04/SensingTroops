@@ -175,7 +175,6 @@ def pvt_list():
         return jsonify(result='success', accepted=res)
 
 
-# TODO: このデコレータが正しく動作しているかチェック
 def access_sergeant(f):
     """
     個別のsgtにアクセスするための存在チェック用デコレータ
@@ -184,7 +183,7 @@ def access_sergeant(f):
     def check_sgt(sgt_id, *args, **kwargs):
         if not app.check_sgt_exist(sgt_id):
             return jsonify(result='failed',
-                           msg='the pvt is not my soldier'), 404
+                           msg='the sgt is not my soldier'), 404
         return f(sgt_id, *args, **kwargs)
     return check_sgt
 
