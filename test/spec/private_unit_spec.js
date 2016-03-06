@@ -4,10 +4,10 @@ var addr = process.env.addr
 var port = process.env.port
 if(addr == undefined) addr = 'localhost'
 if(port == undefined) port = '50000'
-var ep = 'http://' + addr + ':' + port
+var ep = 'http://' + addr + ':' + port + '/private'
 
 frisby.create('GET info')
-    .get(ep + '/info')
+    .get(ep)
     .expectStatus(200)
     .expectHeaderContains('Content-Type', 'application/json')
     .expectJSON({

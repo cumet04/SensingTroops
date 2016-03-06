@@ -4,10 +4,10 @@ var addr = process.env.addr
 var port = process.env.port
 if(addr == undefined) addr = 'localhost'
 if(port == undefined) port = '51000'
-var ep = 'http://' + addr + ':' + port;
+var ep = 'http://' + addr + ':' + port + '/sergeant';
 
 frisby.create('GET info')
-    .get(ep + '/info')
+    .get(ep)
     .expectStatus(200)
     .expectHeaderContains('Content-Type', 'application/json')
     .expectJSON({
@@ -22,8 +22,8 @@ frisby.create('GET info')
 
 var test_id = "test_id";
 
-frisby.create('POST join')
-    .post(ep + '/pvt/join', {
+frisby.create('POST soldiers')
+    .post(ep + '/soldiers', {
             id: test_id,
             name: "test-name",
             addr: addr,
@@ -45,8 +45,8 @@ frisby.create('POST join')
     })
     .after(function(err, res, body)
     {
-        frisby.create('GET pvt/list')
-            .get(ep + '/pvt/list')
+        frisby.create('GET soldiers')
+            .get(ep + '/soldiers')
             .addHeader('Content-Type', 'application/json')
             .expectStatus(200)
             .expectHeaderContains('Content-Type', 'application/json')
@@ -54,7 +54,7 @@ frisby.create('POST join')
             .toss()
 
         frisby.create('POST work')
-            .post(ep + '/pvt/' + test_id + '/work', {
+            .post(ep + '/soldiers/' + test_id + '/work', {
                     sensor: "random",
                     value: 0.11
                 }, {json: true})
@@ -64,8 +64,8 @@ frisby.create('POST join')
             .expectJSON({result: "success"})
             .toss()
 
-        frisby.create('GET pvt/{id}/info')
-            .get(ep + '/pvt/' + test_id + '/info')
+        frisby.create("GET pvt's info")
+            .get(ep + '/soldiers/' + test_id)
             .addHeader('Content-Type', 'application/json')
             .expectStatus(200)
             .expectHeaderContains('Content-Type', 'application/json')
@@ -87,7 +87,7 @@ var report_job = {
         filter: [{include: "random"}]
     }
 frisby.create('PUT job/report')
-    .put(ep + '/sgt/job/report', {
+    .put(ep + '/job/report', {
         report_job: report_job
     }, {json: true})
     .expectStatus(200)
@@ -99,7 +99,7 @@ frisby.create('PUT job/report')
     .after(function(err, res, body)
     {
         frisby.create('GET job/report')
-            .get(ep + '/sgt/job/report')
+            .get(ep + '/job/report')
             .expectStatus(200)
             .expectHeaderContains('Content-Type', 'application/json')
             .expectJSON({
@@ -114,7 +114,7 @@ frisby.create('PUT job/report')
 // invalid id test ----------------------------------------
 
 frisby.create('POST work (invalid id)')
-    .post(ep + '/pvt/invalid-id/work', {
+    .post(ep + '/soldiers/invalid-id/work', {
             sensor: "random",
             value: 0.11
         }, {json: true})
@@ -124,8 +124,8 @@ frisby.create('POST work (invalid id)')
     .expectJSON({msg: 'the pvt is not my soldier'})
     .toss()
 
-frisby.create('GET pvt/info (invalid id)')
-    .get(ep + '/pvt/invalid-id/info')
+frisby.create("GET pvt's info (invalid id)")
+    .get(ep + '/soldiers/invalid-id')
     .addHeader('Content-Type', 'application/json')
     .expectStatus(404)
     .expectHeaderContains('Content-Type', 'application/json')
@@ -142,7 +142,7 @@ var command_jobs = [
         }
     ]
 frisby.create('PUT job/command')
-    .put(ep + '/sgt/job/command', {
+    .put(ep + '/job/command', {
         command_jobs: command_jobs
     }, {json: true})
     .expectStatus(200)
@@ -154,7 +154,7 @@ frisby.create('PUT job/command')
     .after(function(err, res, body)
     {
         frisby.create('GET job/command')
-            .get(ep + '/sgt/job/command')
+            .get(ep + '/job/command')
             .expectStatus(200)
             .expectHeaderContains('Content-Type', 'application/json')
             .expectJSON({
@@ -169,7 +169,7 @@ frisby.create('PUT job/command')
 // content-type test ----------------------------------------
 
 frisby.create('PUT job/command (invalid content-type)')
-    .put(ep + '/sgt/job/command', {
+    .put(ep + '/job/command', {
             sensor: "random",
             value: 0.11
         }, {json: true})
@@ -183,7 +183,7 @@ frisby.create('PUT job/command (invalid content-type)')
     .toss()
 
 frisby.create('PUT job/report (invalid content-type)')
-    .put(ep + '/sgt/job/report', {
+    .put(ep + '/job/report', {
             sensor: "random",
             value: 0.11
         }, {json: true})

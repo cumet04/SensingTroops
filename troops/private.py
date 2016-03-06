@@ -48,7 +48,7 @@ class Private(object):
         self._superior_ep = addr + ':' + port
         logger.info('join into the sergeant: {0}'.format(self._superior_ep))
 
-        path = 'http://{0}/pvt/join'.format(self._superior_ep)
+        path = 'http://{0}/sergeant/soldiers'.format(self._superior_ep)
         requests.post(path, json=self.info._asdict()).json()
         return True
 
@@ -81,8 +81,8 @@ class Private(object):
 
         # if event is set, exit the loop
         while not event.wait(timeout=interval):
-            path = 'http://{0}/pvt/{1}/work'.format(self._superior_ep,
-                                                    self.info.id)
+            path = 'http://{0}/sergeant/soldiers/{1}/work'.\
+                    format(self._superior_ep, self.info.id)
             value = self._sensors[sensor].func()
             requests.post(path, json={'sensor': sensor, 'value': value})
 
@@ -90,10 +90,17 @@ class Private(object):
 # REST interface ---------------------------------------------------------------
 
 server = Flask(__name__)
+url_prefix = '/private'
+
+
+# 自身の情報を返す
+@server.route(url_prefix, methods=['GET'])
+def get_info():
+    return jsonify(result='success', info=app.info._asdict()), 200
 
 
 # 新しい命令を受理する
-@server.route('/order', methods=['GET', 'PUT'])
+@server.route(url_prefix + '/order', methods=['GET', 'PUT'])
 @json_input
 def get_order():
     if request.method == 'PUT':
@@ -111,10 +118,6 @@ def get_order():
     return jsonify(result='success', orders=orders), 200
 
 
-# 自身の情報を返す
-@server.route('/info', methods=['GET'])
-def get_info():
-    return jsonify(result='success', info=app.info._asdict()), 200
 
 
 # entry point ------------------------------------------------------------------

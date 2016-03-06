@@ -6,6 +6,7 @@ import sys
 import threading
 import requests
 import socket
+from functools import wraps
 from common import json_input, generate_info, SergeantInfo, PrivateInfo
 from flask import Flask, jsonify, request
 from logging import getLogger, StreamHandler, DEBUG
@@ -46,7 +47,7 @@ class Sergeant(object):
         self._superior_ep = addr + ':' + port
         logger.info('join into the captain: {0}'.format(self._superior_ep))
 
-        path = 'http://{0}/sgt/join'.format(self._superior_ep)
+        path = 'http://{0}/captain/soldiers'.format(self._superior_ep)
         requests.post(path, json=self.info._asdict()).json()
 
         return True
@@ -99,7 +100,8 @@ class Sergeant(object):
         order = command['order']
 
         for pvt in [self._pvt_list[pvt_id] for pvt_id in target]:
-            path = 'http://{0}:{1}/order'.format(pvt['addr'], pvt['port'])
+            path = 'http://{0}:{1}/private/order'.\
+                    format(pvt['addr'], pvt['port'])
             requests.put(path, json={'orders': order})
 
     def _report_thread(self, command, event):
@@ -109,11 +111,15 @@ class Sergeant(object):
 
         # if event is set, exit the loop
         while not event.wait(timeout=interval):
-            path = 'http://{0}/sgt/{1}/report'.format(self._superior_ep, self.info.id)
+            path = 'http://{0}/captain/soldiers/{1}/report'.\
+                    format(self._superior_ep, self.info.id)
             requests.post(path, json=self._cache)
             self._cache = []
 
     # superior functions
+
+    def check_pvt_exist(self, pvt_id):
+        return pvt_id in self._pvt_list
 
     def accept_work(self, pvt_id, work):
         if pvt_id not in self._pvt_list:
@@ -136,41 +142,21 @@ class Sergeant(object):
 # REST interface ---------------------------------------------------------------
 
 server = Flask(__name__)
+url_prefix = '/sergeant'
 
 
-@server.route('/pvt/join', methods=['POST'])
-@json_input
-def pvt_join():
-    res = app.accept_pvt(PrivateInfo(**request.json))
-    return jsonify(result='success', accepted=res._asdict())
+# 自身の情報を返す
+@server.route(url_prefix, methods=['GET'])
+def get_info():
+    return jsonify(result='success', info=app.info._asdict()), 200
 
 
-@server.route('/pvt/<pvt_id>/work', methods=['POST'])
-@json_input
-def pvt_work(pvt_id):
-    try:
-        app.accept_work(pvt_id, request.json)
-    except KeyError:
-        return jsonify(msg='the pvt is not my soldier'), 404
-    return jsonify(result='success')
+@server.route(url_prefix + '/cache', methods=['GET'])
+def dev_cache():
+    return jsonify(result='success', cache=app._cache)
 
 
-@server.route('/pvt/list', methods=['GET'])
-def pvt_list():
-    res = app.get_pvt_list()
-    return jsonify(result='success', pvt_list=res)
-
-
-@server.route('/pvt/<pvt_id>/info', methods=['GET'])
-def pvt_info(pvt_id):
-    try:
-        res = app.get_pvt_info(pvt_id)
-    except KeyError:
-        return jsonify(result='failed', msg='the pvt is not my soldier'), 404
-    return jsonify(res._asdict())
-
-
-@server.route('/sgt/job/report', methods=['GET', 'PUT'])
+@server.route(url_prefix + '/job/report', methods=['GET', 'PUT'])
 @json_input
 def setjob_report():
     report = None
@@ -183,7 +169,7 @@ def setjob_report():
     return jsonify(result='success', report_job=report), 200
 
 
-@server.route('/sgt/job/command', methods=['GET', 'PUT'])
+@server.route(url_prefix + '/job/command', methods=['GET', 'PUT'])
 @json_input
 def setjob_command():
     commands = []
@@ -196,15 +182,43 @@ def setjob_command():
     return jsonify(result='success', command_jobs=commands), 200
 
 
-# 自身の情報を返す
-@server.route('/info', methods=['GET'])
-def get_info():
-    return jsonify(result='success', info=app.info._asdict()), 200
+@server.route(url_prefix + '/soldiers', methods=['GET', 'POST'])
+@json_input
+def soldiers():
+    if request.method == 'GET':
+        res = app.get_pvt_list()
+        return jsonify(result='success', pvt_list=res)
+    elif request.method == 'POST':
+        res = app.accept_pvt(PrivateInfo(**request.json))
+        return jsonify(result='success', accepted=res._asdict())
 
 
-@server.route('/dev/cache', methods=['GET'])
-def dev_cache():
-    return jsonify(result='success', cache=app._cache)
+def access_private(f):
+    """
+    個別のpvtにアクセスするための存在チェック用デコレータ
+    """
+    @wraps(f)
+    def check_pvt(pvt_id, *args, **kwargs):
+        if not app.check_pvt_exist(pvt_id):
+            return jsonify(result='failed',
+                           msg='the pvt is not my soldier'), 404
+        return f(pvt_id, *args, **kwargs)
+    return check_pvt
+
+
+@server.route(url_prefix + '/soldiers/<pvt_id>', methods=['GET'])
+@access_private
+def pvt_info(pvt_id):
+    res = app.get_pvt_info(pvt_id)
+    return jsonify(res._asdict())
+
+
+@server.route(url_prefix + '/soldiers/<pvt_id>/work', methods=['POST'])
+@access_private
+@json_input
+def pvt_work(pvt_id):
+    app.accept_work(pvt_id, request.json)
+    return jsonify(result='success')
 
 
 # entry point ------------------------------------------------------------------
