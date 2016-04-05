@@ -1,0 +1,19 @@
+troops:
+  - commander: cxxx0
+    subordinates:
+      - lxxx0
+      - lxxx1
+      - lxxx2
+squads:
+  - leader: lxxx0
+    subordinates:
+      - sxxx0
+      - sxxx1
+  - leader: lxxx1
+    subordinates:
+      - sxxx2
+      - sxxx3
+  - leader: lxxx2
+    subordinates:
+      - sxxx4
+      - sxxx5
