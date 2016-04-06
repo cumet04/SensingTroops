@@ -57,19 +57,17 @@ Order = namedtuple('Order', [
         'destination'
     ])
 
+Report = namedtuple('Report', [
+        'time',
+        'purpose',
+        'values'
+    ])
 
-def generate_info(cls, **kwargs):
-    """
-    namedtupleをid以外のパラメータ指定で生成する
-    :param cls: 生成するnamedtupleのクラス
-    :param kwargs: 初期化パラメータ
-    :return: ID付きで生成されたインスタンス
-    """
-    no_id = cls(id=None, **kwargs)
-    m = hashlib.md5()
-    m.update(str(no_id).encode())
-    new_id = m.hexdigest()
-    return no_id._replace(id=new_id)
+Work = namedtuple('Work', [
+    'time',
+    'purpose',
+    'value'
+])
 
 
 def json_input(f):
@@ -86,9 +84,11 @@ def json_input(f):
             try:
                 print(request.data.decode('utf-8'))
                 if request.json is None:
-                    return jsonify(result='failed', msg='application/json required'), 406
+                    return jsonify(result='failed',
+                                   msg='application/json required'), 406
             except BadRequest as e:
-                return jsonify(result='failed', msg="param couldn't decode to json"), 400
+                return jsonify(result='failed',
+                               msg="param couldn't decode to json"), 400
         return f(*args, **kwargs)
     return check_json
 
