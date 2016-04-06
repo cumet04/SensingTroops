@@ -126,6 +126,37 @@ def show_status():
     return jsonify(msg='this function is not implemented.'), 500
 
 
+@server.route(url_prefix + '/campaigns', methods=['GET'])
+def get_campaigns():
+    """
+    get accepted campaigns
+    ---
+    tags:
+      - campaigns
+    parameters: []
+    responses:
+      200:
+        description: aaa
+    """
+    pass
+
+
+@server.route(url_prefix + '/campaigns', methods=['POST'])
+def accept_campaigns():
+    """
+    add new campaigns
+    ---
+    tags:
+      - campaigns
+    parameters: []
+    responses:
+      200:
+        description: aaa
+        schema:
+          $ref: '#/definitions/TestObj'
+    """
+    pass
+
 @server.route(url_prefix + '/subordinates', methods=['GET', 'POST'])
 @json_input
 def subordinates():
@@ -175,7 +206,19 @@ def access_report(sgt_id):
 @server.route(url_prefix + '/spec')
 @cross_origin()
 def spec():
-    return jsonify(swagger(server))
+
+    cap = {}
+    cap['type'] = 'object'
+    cap['properties'] = {
+        'id': {'type': 'string'},
+        'name': {'type': 'string'}
+    }
+
+    definitions = {
+        'TestObj': cap
+    }
+
+    return jsonify(swagger(server, template={'definitions': definitions}))
 
 
 # entry point ------------------------------------------------------------------
