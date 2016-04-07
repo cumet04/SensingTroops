@@ -27,7 +27,7 @@ definitions[_name] = _info
 SoldierInfo = namedtuple(_name, _to_list(_info))
 
 _name = 'LeaderInfo'
-_leader_info = {
+_info = {
     'type': 'object',
     'properties': {
         'id': {'description': "the man's ID",
@@ -42,7 +42,7 @@ definitions[_name] = _info
 LeaderInfo = namedtuple(_name, _to_list(_info))
 
 _name = 'CommanderInfo'
-_commander_info = {
+_info = {
     'type': 'object',
     'properties': {
         'id': {'description': "the man's ID",
@@ -57,7 +57,7 @@ definitions[_name] = _info
 CommanderInfo = namedtuple(_name, _to_list(_info))
 
 _name = 'Campaign'
-_campaign = {
+_info = {
     'type': 'object',
     'properties': {
         'author': {'type': 'string'},
@@ -72,7 +72,7 @@ definitions[_name] = _info
 Campaign = namedtuple(_name, _to_list(_info))
 
 _name = 'Mission'
-_mission = {
+_info = {
     'type': 'object',
     'properties': {
         'author': {'type': 'string'},
@@ -87,7 +87,7 @@ definitions[_name] = _info
 Mission = namedtuple(_name, _to_list(_info))
 
 _name = 'Order'
-_order = {
+_info = {
     'type': 'object',
     'properties': {
         'author': {'type': 'string'},
@@ -102,7 +102,7 @@ definitions[_name] = _info
 Order = namedtuple(_name, _to_list(_info))
 
 _name = 'Report'
-_report = {
+_info = {
     'type': 'object',
     'properties': {
         'time': {'type': 'string'},
@@ -114,7 +114,7 @@ definitions[_name] = _info
 Report = namedtuple(_name, _to_list(_info))
 
 _name = 'Work'
-_work = {
+_info = {
     'type': 'object',
     'properties': {
         'time': {'type': 'string'},

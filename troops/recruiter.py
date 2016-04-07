@@ -5,6 +5,7 @@ import json
 import requests
 import yaml
 import argparse
+import os
 from collections import namedtuple
 from flask_cors import cross_origin
 from objects import definitions, LeaderInfo, CommanderInfo
@@ -26,13 +27,13 @@ Troop = namedtuple('Troop', ['commander', 'subordinates'])
 
 class Recruiter(object):
     
-    def __init__(self):
+    def __init__(self, config_file):
         self.SquadList = []
         self.TroopList = []
         self.CommanderList = {}
         self.leader_cache = {}
         self.commander_cache = {}
-        self.load_config('recruit.yml')
+        self.load_config(config_file)
 
     def load_config(self, filename):
         """
@@ -180,7 +181,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     ep = 'http://localhost:{0}{1}'.format(args.port, url_prefix)
-    app = Recruiter()
+    app = Recruiter(os.path.dirname(__file__) + '/recruit.yml')
 
     # output swagger-spec
     if args.swagger_spec:
