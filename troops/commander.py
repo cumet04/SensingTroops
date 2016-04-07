@@ -2,9 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import json
+import argparse
 from functools import wraps
 from flask_cors import cross_origin
-from common import json_input, LeaderInfo, CommanderInfo, Report
+from objects import LeaderInfo, CommanderInfo, Report
+from utils import json_input
 from flask import Flask, jsonify, request
 from flask_swagger import swagger
 from logging import getLogger, StreamHandler, DEBUG
@@ -157,6 +160,7 @@ def accept_campaigns():
     """
     pass
 
+
 @server.route(url_prefix + '/subordinates', methods=['GET', 'POST'])
 @json_input
 def subordinates():
@@ -206,30 +210,36 @@ def access_report(sgt_id):
 @server.route(url_prefix + '/spec')
 @cross_origin()
 def spec():
-
-    cap = {}
-    cap['type'] = 'object'
-    cap['properties'] = {
-        'id': {'type': 'string'},
-        'name': {'type': 'string'}
-    }
-
-    definitions = {
-        'TestObj': cap
-    }
-
     return jsonify(swagger(server, template={'definitions': definitions}))
 
 
+cap = {}
+cap['type'] = 'object'
+cap['properties'] = {
+    'id': {'type': 'string'},
+    'name': {'type': 'string'}
+}
+
+definitions = {
+    'TestObj': cap
+}
+
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        self_port = int(sys.argv[1])
-    else:
-        self_port = 52000
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-P', '--port', default=52000,
+                        help='port')
+    parser.add_argument('-S', '--swagger-spec', action='store_true',
+                        default=False, help='output swagger-spec json')
+    args = parser.parse_args()
 
-    ep = 'http://localhost:{0}{1}'.format(self_port, url_prefix)
+    # output swagger-spec
+    if args.swagger_spec:
+        print(json.dumps(swagger(server, template={'definitions': definitions})))
+        exit()
+
+    ep = 'http://localhost:{0}{1}'.format(args.port, url_prefix)
     app = Commander('com-http', ep)
     server.debug = True
-    server.run(host='0.0.0.0', port=self_port,
+    server.run(host='0.0.0.0', port=args.port,
                use_debugger=True, use_reloader=False)

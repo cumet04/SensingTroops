@@ -6,7 +6,8 @@ import requests
 import yaml
 from collections import namedtuple
 from flask_cors import cross_origin
-from common import json_input, LeaderInfo, CommanderInfo
+from objects import LeaderInfo, CommanderInfo
+from utils import json_input
 from flask import Flask, jsonify, request
 from flask_swagger import swagger
 from logging import getLogger, StreamHandler, DEBUG
