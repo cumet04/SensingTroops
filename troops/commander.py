@@ -6,7 +6,7 @@ import json
 import argparse
 from functools import wraps
 from flask_cors import cross_origin
-from objects import LeaderInfo, CommanderInfo, Report
+from objects import definitions, LeaderInfo, CommanderInfo, Report
 from utils import json_input
 from flask import Flask, jsonify, request
 from flask_swagger import swagger
@@ -210,19 +210,15 @@ def access_report(sgt_id):
 @server.route(url_prefix + '/spec')
 @cross_origin()
 def spec():
-    return jsonify(swagger(server, template={'definitions': definitions}))
+    return jsonify(gen_spec(app))
 
 
-cap = {}
-cap['type'] = 'object'
-cap['properties'] = {
-    'id': {'type': 'string'},
-    'name': {'type': 'string'}
-}
+def gen_spec(app_obj):
+    spec_dict = swagger(server, template={'definitions': definitions})
+    class_name = app_obj.__class__.__name__
+    spec_dict['info']['title'] = 'SensingTroops - ' + class_name
+    return spec_dict
 
-definitions = {
-    'TestObj': cap
-}
 
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
@@ -233,13 +229,14 @@ if __name__ == "__main__":
                         default=False, help='output swagger-spec json')
     args = parser.parse_args()
 
-    # output swagger-spec
-    if args.swagger_spec:
-        print(json.dumps(swagger(server, template={'definitions': definitions})))
-        exit()
-
     ep = 'http://localhost:{0}{1}'.format(args.port, url_prefix)
     app = Commander('com-http', ep)
+
+    # output swagger-spec
+    if args.swagger_spec:
+        print(json.dumps(gen_spec(app)))
+        exit()
+
     server.debug = True
     server.run(host='0.0.0.0', port=args.port,
                use_debugger=True, use_reloader=False)

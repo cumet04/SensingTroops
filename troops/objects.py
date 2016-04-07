@@ -4,64 +4,123 @@
 from collections import namedtuple
 
 
-SoldierInfo = namedtuple('SoldierInfo', [
-        'id',
-        'name',
-        'endpoint',
-        'weapons',
-        'orders'
-    ])
-LeaderInfo = namedtuple('LeaderInfo', [
-        'id',
-        'name',
-        'endpoint',
-        'subordinates',
-        'missions'
-    ])
-CommanderInfo = namedtuple('CommanderInfo', [
-        'id',
-        'name',
-        'endpoint',
-        'subordinates',
-        'campaigns'
-    ])
+def _to_list(info):
+    return list(info['properties'].keys())
 
-Campaign = namedtuple('Campaign', [
-        'author',
-        'requirements',
-        'trigger',
-        'place',
-        'purpose',
-        'destination'
-    ])
 
-Mission = namedtuple('Mission', [
-        'author',
-        'requirements',
-        'trigger',
-        'place',
-        'purpose',
-        'destination'
-    ])
+definitions = {}
 
-Order = namedtuple('Order', [
-        'author',
-        'requirements',
-        'trigger',
-        'place',
-        'purpose',
-        'destination'
-    ])
 
-Report = namedtuple('Report', [
-        'time',
-        'purpose',
-        'values'
-    ])
+_name = 'SoldierInfo'
+_info = {
+    'type': 'object',
+    'properties': {
+        'id': {'description': "the man's ID",
+               'type': 'string'},
+        'name': {'type': 'string'},
+        'endpoint': {'type': 'string'},
+        'weapons': {},
+        'orders': {}
+    }
+}
+definitions[_name] = _info
+SoldierInfo = namedtuple(_name, _to_list(_info))
 
-Work = namedtuple('Work', [
-    'time',
-    'purpose',
-    'value'
-])
+_name = 'LeaderInfo'
+_leader_info = {
+    'type': 'object',
+    'properties': {
+        'id': {'description': "the man's ID",
+               'type': 'string'},
+        'name': {'type': 'string'},
+        'endpoint': {'type': 'string'},
+        'subordinates': {},
+        'missions': {}
+    }
+}
+definitions[_name] = _info
+LeaderInfo = namedtuple(_name, _to_list(_info))
 
+_name = 'CommanderInfo'
+_commander_info = {
+    'type': 'object',
+    'properties': {
+        'id': {'description': "the man's ID",
+               'type': 'string'},
+        'name': {'type': 'string'},
+        'endpoint': {'type': 'string'},
+        'subordinates': {},
+        'campaigns': {}
+    }
+}
+definitions[_name] = _info
+CommanderInfo = namedtuple(_name, _to_list(_info))
+
+_name = 'Campaign'
+_campaign = {
+    'type': 'object',
+    'properties': {
+        'author': {'type': 'string'},
+        'requirements': {'type': 'string'},
+        'trigger': {'type': 'string'},
+        'place': {'type': 'string'},
+        'purpose': {'type': 'string'},
+        'destination': {'type': 'string'}
+    }
+}
+definitions[_name] = _info
+Campaign = namedtuple(_name, _to_list(_info))
+
+_name = 'Mission'
+_mission = {
+    'type': 'object',
+    'properties': {
+        'author': {'type': 'string'},
+        'requirements': {'type': 'string'},
+        'trigger': {'type': 'string'},
+        'place': {'type': 'string'},
+        'purpose': {'type': 'string'},
+        'destination': {'type': 'string'}
+    }
+}
+definitions[_name] = _info
+Mission = namedtuple(_name, _to_list(_info))
+
+_name = 'Order'
+_order = {
+    'type': 'object',
+    'properties': {
+        'author': {'type': 'string'},
+        'requirements': {'type': 'string'},
+        'trigger': {'type': 'string'},
+        'place': {'type': 'string'},
+        'purpose': {'type': 'string'},
+        'destination': {'type': 'string'}
+    }
+}
+definitions[_name] = _info
+Order = namedtuple(_name, _to_list(_info))
+
+_name = 'Report'
+_report = {
+    'type': 'object',
+    'properties': {
+        'time': {'type': 'string'},
+        'purpose': {'type': 'string'},
+        'values': {'type': 'string'}
+    }
+}
+definitions[_name] = _info
+Report = namedtuple(_name, _to_list(_info))
+
+_name = 'Work'
+_work = {
+    'type': 'object',
+    'properties': {
+        'time': {'type': 'string'},
+        'purpose': {'type': 'string'},
+        'values': {'type': 'string'}
+    }
+}
+definitions[_name] = _info
+Work = namedtuple(_name, _to_list(_info))

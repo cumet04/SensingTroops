@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import sys
+import json
 import requests
 import yaml
+import argparse
 from collections import namedtuple
 from flask_cors import cross_origin
-from objects import LeaderInfo, CommanderInfo
+from objects import definitions, LeaderInfo, CommanderInfo
 from utils import json_input
 from flask import Flask, jsonify, request
 from flask_swagger import swagger
@@ -159,16 +160,34 @@ def add_commander():
 @server.route(url_prefix + '/spec', methods=['GET'])
 @cross_origin()
 def spec():
-    return jsonify(swagger(server))
+    return jsonify(gen_spec(app))
+
+
+def gen_spec(app_obj):
+    spec_dict = swagger(server, template={'definitions': definitions})
+    class_name = app_obj.__class__.__name__
+    spec_dict['info']['title'] = 'SensingTroops - ' + class_name
+    return spec_dict
+
 
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        self_port = int(sys.argv[1])
-    else:
-        self_port = 52000
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-P', '--port', default=52000,
+                        help='port')
+    parser.add_argument('-S', '--swagger-spec', action='store_true',
+                        default=False, help='output swagger-spec json')
+    args = parser.parse_args()
 
+    ep = 'http://localhost:{0}{1}'.format(args.port, url_prefix)
     app = Recruiter()
+
+    # output swagger-spec
+    if args.swagger_spec:
+        print(json.dumps(gen_spec(app)))
+        exit()
+
     server.debug = True
-    server.run(host='0.0.0.0', port=self_port,
+    server.run(host='0.0.0.0', port=args.port,
                use_debugger=True, use_reloader=False)
+
