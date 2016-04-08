@@ -84,21 +84,6 @@ def get_info():
     """
     Get this commander's information
     ---
-    definitions:
-      - schema:
-          id: CommanderInfo
-          properties:
-            id:
-              type: string
-            name:
-              type: string
-            endpoint:
-              type: string
-            subordinates:
-              type: list
-              # TODO: リストを表記する方法が不明なので要調査
-            campaigns:
-              type: list
     parameters: []
     responses:
       200:
@@ -196,6 +181,7 @@ def accept_subordinate():
     ---
     parameters:
       - name: sub_id
+        type: string
         description: The report's author-id
     responses:
       200:
@@ -233,6 +219,7 @@ def get_sub_info(sub_id):
     ---
     parameters:
       - name: sub_id
+        type: string
         description: The report's author-id
     responses:
       200:
@@ -256,6 +243,7 @@ def accept_report(sub_id):
     ---
     parameters:
       - name: sub_id
+        type: string
         description: The report's author-id
       - name: report
         description: A report to be accepted
@@ -285,6 +273,7 @@ def get_mission(sub_id):
     ---
     parameters:
       - name: sub_id
+        type: string
         description: A leader-id
     responses:
       200:
