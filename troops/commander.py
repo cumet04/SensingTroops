@@ -6,7 +6,7 @@ import json
 import argparse
 from functools import wraps
 from flask_cors import cross_origin
-from objects import definitions, LeaderInfo, CommanderInfo, Report
+from objects import definitions, LeaderInfo, CommanderInfo, Report, Mission
 from utils import json_input
 from flask import Flask, jsonify, request
 from flask_swagger import swagger
@@ -84,8 +84,6 @@ def get_info():
     """
     Get this commander's information
     ---
-    tags:
-      - info
     definitions:
       - schema:
           id: CommanderInfo
@@ -115,10 +113,8 @@ def get_info():
 @server.route(url_prefix + '/ui', methods=['GET'])
 def show_status():
     """
-    show status UI
+    Show status UI
     ---
-    tags:
-      - UI
     parameters: []
     responses:
       200:
@@ -132,14 +128,18 @@ def show_status():
 @server.route(url_prefix + '/campaigns', methods=['GET'])
 def get_campaigns():
     """
-    get accepted campaigns
+    Get accepted campaigns
     ---
-    tags:
-      - campaigns
     parameters: []
     responses:
       200:
-        description: aaa
+        description: A list of campaign that is accepted by the commander
+        schema:
+          properties:
+            campaigns:
+              type: array
+              items:
+                $ref: '#/definitions/Campaign'
     """
     pass
 
@@ -147,28 +147,67 @@ def get_campaigns():
 @server.route(url_prefix + '/campaigns', methods=['POST'])
 def accept_campaigns():
     """
-    add new campaigns
+    Add new campaigns
     ---
-    tags:
-      - campaigns
-    parameters: []
+    parameters:
+      - name: campaign
+        description: A campaign to be accepted
+        schema:
+          $ref: '#/definitions/Campaign'
     responses:
       200:
-        description: aaa
+        description: The report is accepted
         schema:
-          $ref: '#/definitions/TestObj'
+          properties:
+            result:
+              description: The result of process; 'success' or 'failed'
+              type: string
+            accepted:
+              description: The accepted campaign
+              $ref: '#/definitions/Campaign'
     """
     pass
 
 
-@server.route(url_prefix + '/subordinates', methods=['GET', 'POST'])
+@server.route(url_prefix + '/subordinates', methods=['GET'])
 @json_input
-def subordinates():
-    if request.method == 'GET':
-        return jsonify(result='success', subordinates=app.subordinates)
-    elif request.method == 'POST':
-        res = app.accept_subordinate(LeaderInfo(**request.json))
-        return jsonify(result='success', accepted=res)
+def get_subordinates():
+    """
+    Get all subordinates of this commander
+    ---
+    parameters: []
+    responses:
+      200:
+        description: The subordinate is found
+        schema:
+          properties:
+            info:
+              description: Information object of the subordinate
+              $ref: '#/definitions/LeaderInfo'
+    """
+    return jsonify(result='success', subordinates=app.subordinates)
+
+
+@server.route(url_prefix + '/subordinates', methods=['POST'])
+@json_input
+def accept_subordinate():
+    """
+    aaaa
+    ---
+    parameters:
+      - name: sub_id
+        description: The report's author-id
+    responses:
+      200:
+        description: The subordinate is found
+        schema:
+          properties:
+            info:
+              description: Information object of the subordinate
+              $ref: '#/definitions/LeaderInfo'
+    """
+    res = app.accept_subordinate(LeaderInfo(**request.json))
+    return jsonify(result='success', accepted=res)
 
 
 def access_subordinate(f):
@@ -189,22 +228,78 @@ def access_subordinate(f):
 @server.route(url_prefix + '/subordinates/<sub_id>', methods=['GET'])
 @access_subordinate
 def get_sub_info(sub_id):
+    """
+    Get information of a subordinate
+    ---
+    parameters:
+      - name: sub_id
+        description: The report's author-id
+    responses:
+      200:
+        description: The subordinate is found
+        schema:
+          properties:
+            info:
+              description: Information object of the subordinate
+              $ref: '#/definitions/LeaderInfo'
+    """
     res = app.get_sub_info(sub_id)
     return jsonify(info=res)
 
 
-@server.route(url_prefix + '/subordinates/<sub_id>/report',
-              methods=['GET', 'POST'])
+@server.route(url_prefix + '/subordinates/<sub_id>/report', methods=['POST'])
 @access_subordinate
 @json_input
-def access_report(sgt_id):
-    if request.method == 'GET':
-        return jsonify(result='success', reports=app.report_cache)
-    elif request.method == 'POST':
-        res = app.accept_report(Report(**request.json))
-        return jsonify(result='success', accepted=res)
-    app.accept_report(sgt_id, request.json)
-    return jsonify(result='success')
+def accept_report(sub_id):
+    """
+    Accept new report
+    ---
+    parameters:
+      - name: sub_id
+        description: The report's author-id
+      - name: report
+        description: A report to be accepted
+        schema:
+          $ref: '#/definitions/Report'
+    responses:
+      200:
+        description: The report is accepted
+        schema:
+          properties:
+            result:
+              description: The result of process; 'success' or 'failed'
+              type: string
+            accepted:
+              description: The accepted report
+              $ref: '#/definitions/Report'
+    """
+    res = app.accept_report(Report(**request.json))
+    return jsonify(result='success', accepted=res)
+
+
+@server.route(url_prefix + '/subordinates/<sub_id>/mission', methods=['GET'])
+@access_subordinate
+def get_mission(sub_id):
+    """
+    Get the subordinate's latest mission
+    ---
+    parameters:
+      - name: sub_id
+        description: A leader-id
+    responses:
+      200:
+        description: A list of mission
+        schema:
+          properties:
+            missions:
+              type: array
+              items:
+                $ref: '#/definitions/Mission'
+        headers:
+          ETag:
+            type: string
+    """
+    return jsonify(missions=[Mission()])
 
 
 @server.route(url_prefix + '/spec')
