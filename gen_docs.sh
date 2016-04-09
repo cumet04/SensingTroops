@@ -11,6 +11,7 @@ function output_doc() {
 
 output_doc recruiter
 output_doc commander
+output_doc leader
 
 rm $tmp_file
 
