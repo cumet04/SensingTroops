@@ -343,6 +343,10 @@ def spec():
 
 
 def gen_spec(app_obj):
+    # swagger-specのdictを生成する関数
+    # 全アクタで共通になるようにコーディングしているが
+    # server変数やdefinitions変数にアクセスする必要があるため
+    # utils.pyには含んでいない
     spec_dict = swagger(server, template={'definitions': definitions})
     class_name = app_obj.__class__.__name__
     spec_dict['info']['title'] = 'SensingTroops - ' + class_name

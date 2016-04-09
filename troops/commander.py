@@ -141,7 +141,7 @@ def accept_campaigns():
           $ref: '#/definitions/Campaign'
     responses:
       200:
-        description: The report is accepted
+        description: The campaign is accepted
         schema:
           properties:
             result:
@@ -200,7 +200,7 @@ def access_subordinate(f):
     """
     個別の部下にアクセスするための存在チェック用デコレータ
     """
-
+    # leaderのものと全く同一
     @wraps(f)
     def check_subordinate(sub_id, *args, **kwargs):
         if not app.check_subordinate(sub_id):
@@ -220,7 +220,7 @@ def get_sub_info(sub_id):
     parameters:
       - name: sub_id
         type: string
-        description: The report's author-id
+        description: ID of a requested subordinate
     responses:
       200:
         description: The subordinate is found
@@ -298,11 +298,14 @@ def spec():
 
 
 def gen_spec(app_obj):
+    # swagger-specのdictを生成する関数
+    # 全アクタで共通になるようにコーディングしているが
+    # server変数やdefinitions変数にアクセスする必要があるため
+    # utils.pyには含んでいない
     spec_dict = swagger(server, template={'definitions': definitions})
     class_name = app_obj.__class__.__name__
     spec_dict['info']['title'] = 'SensingTroops - ' + class_name
     return spec_dict
-
 
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
