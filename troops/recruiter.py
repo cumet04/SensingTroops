@@ -8,10 +8,9 @@ import argparse
 import os
 from collections import namedtuple
 from flask_cors import cross_origin
-from objects import definitions, LeaderInfo, CommanderInfo
-from utils import json_input
+from objects import LeaderInfo, CommanderInfo
+from utils import json_input, gen_spec
 from flask import Flask, jsonify, request
-from flask_swagger import swagger
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -338,19 +337,7 @@ def add_commander():
 @server.route(url_prefix + '/spec', methods=['GET'])
 @cross_origin()
 def spec():
-    logger.info('aaa')
-    return jsonify(gen_spec(app))
-
-
-def gen_spec(app_obj):
-    # swagger-specのdictを生成する関数
-    # 全アクタで共通になるようにコーディングしているが
-    # server変数やdefinitions変数にアクセスする必要があるため
-    # utils.pyには含んでいない
-    spec_dict = swagger(server, template={'definitions': definitions})
-    class_name = app_obj.__class__.__name__
-    spec_dict['info']['title'] = 'SensingTroops - ' + class_name
-    return spec_dict
+    return jsonify(gen_spec(app.__class__.__name__, server))
 
 
 # entry point ------------------------------------------------------------------
@@ -367,7 +354,7 @@ if __name__ == "__main__":
 
     # output swagger-spec
     if args.swagger_spec:
-        print(json.dumps(gen_spec(app)))
+        print(json.dumps(gen_spec(app.__class__.__name__, server)))
         exit()
 
     server.debug = True
