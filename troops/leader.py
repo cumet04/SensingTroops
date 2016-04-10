@@ -68,7 +68,9 @@ class Leader(object):
         return True
 
 
+# ------------------------------------------------------------------------------
 # REST interface ---------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 server = Flask(__name__)
 url_prefix = '/leader'
@@ -77,7 +79,7 @@ url_prefix = '/leader'
 @server.route(url_prefix + '/', methods=['GET'])
 def get_info():
     """
-    Get this leader's information
+    Information of this leader
     ---
     parameters: []
     responses:
@@ -93,7 +95,7 @@ def get_info():
 @server.route(url_prefix + '/missions', methods=['GET'])
 def get_missions():
     """
-    Get accepted missions
+    Accepted missions
     ---
     parameters: []
     responses:
@@ -138,7 +140,7 @@ def accept_missions():
 @json_input
 def get_subordinates():
     """
-    Get all subordinates of this leader
+    All subordinates of this leader
     ---
     parameters: []
     responses:
@@ -195,7 +197,7 @@ def access_subordinate(f):
 @access_subordinate
 def get_sub_info(sub_id):
     """
-    Get information of a subordinate
+    Information of a subordinate
     ---
     parameters:
       - name: sub_id
@@ -245,11 +247,11 @@ def accept_work(sub_id):
     return jsonify(result='success', accepted=res)
 
 
-@server.route(url_prefix + '/subordinates/<sub_id>/order', methods=['GET'])
+@server.route(url_prefix + '/subordinates/<sub_id>/orders', methods=['GET'])
 @access_subordinate
 def get_order(sub_id):
     """
-    Get the subordinate's latest order
+    Latest orders assigned to the subordinate
     ---
     parameters:
       - name: sub_id

@@ -72,7 +72,9 @@ class Commander(object):
         return True
 
 
+# ------------------------------------------------------------------------------
 # REST interface ---------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 server = Flask(__name__)
 url_prefix = '/commander'
@@ -81,7 +83,7 @@ url_prefix = '/commander'
 @server.route(url_prefix + '/', methods=['GET'])
 def get_info():
     """
-    Get this commander's information
+    Information of this commander
     ---
     parameters: []
     responses:
@@ -97,7 +99,7 @@ def get_info():
 @server.route(url_prefix + '/ui', methods=['GET'])
 def show_status():
     """
-    Show status UI
+    Status UI
     ---
     parameters: []
     responses:
@@ -112,7 +114,7 @@ def show_status():
 @server.route(url_prefix + '/campaigns', methods=['GET'])
 def get_campaigns():
     """
-    Get accepted campaigns
+    Accepted campaigns
     ---
     parameters: []
     responses:
@@ -157,7 +159,7 @@ def accept_campaigns():
 @json_input
 def get_subordinates():
     """
-    Get all subordinates of this commander
+    All subordinates of this commander
     ---
     parameters: []
     responses:
@@ -214,7 +216,7 @@ def access_subordinate(f):
 @access_subordinate
 def get_sub_info(sub_id):
     """
-    Get information of a subordinate
+    Information of a subordinate
     ---
     parameters:
       - name: sub_id
@@ -264,11 +266,11 @@ def accept_report(sub_id):
     return jsonify(result='success', accepted=res)
 
 
-@server.route(url_prefix + '/subordinates/<sub_id>/mission', methods=['GET'])
+@server.route(url_prefix + '/subordinates/<sub_id>/missions', methods=['GET'])
 @access_subordinate
 def get_mission(sub_id):
     """
-    Get the subordinate's latest mission
+    Latest missions assigned to the subordinate
     ---
     parameters:
       - name: sub_id

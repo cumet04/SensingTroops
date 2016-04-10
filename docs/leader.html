@@ -34,7 +34,7 @@
                             <a href="#operation--leader--get">GET</a>
                         </td>
                         <td>
-                            <p>Get this leader&#39;s information</p>
+                            <p>Information of this leader</p>
         
                         </td>
                     </tr>
@@ -46,7 +46,7 @@
                             <a href="#operation--leader-missions-get">GET</a>
                         </td>
                         <td>
-                            <p>Get accepted missions</p>
+                            <p>Accepted missions</p>
         
                         </td>
                     </tr>
@@ -67,7 +67,7 @@
                             <a href="#operation--leader-subordinates-get">GET</a>
                         </td>
                         <td>
-                            <p>Get all subordinates of this leader</p>
+                            <p>All subordinates of this leader</p>
         
                         </td>
                     </tr>
@@ -88,19 +88,19 @@
                             <a href="#operation--leader-subordinates--sub_id--get">GET</a>
                         </td>
                         <td>
-                            <p>Get information of a subordinate</p>
+                            <p>Information of a subordinate</p>
         
                         </td>
                     </tr>
                     <tr>
                             <td class="swagger--summary-path" rowspan="1">
-                                <a href="#path--leader-subordinates--sub_id--order">/leader/subordinates/{sub_id}/order</a>
+                                <a href="#path--leader-subordinates--sub_id--orders">/leader/subordinates/{sub_id}/orders</a>
                             </td>
                         <td>
-                            <a href="#operation--leader-subordinates--sub_id--order-get">GET</a>
+                            <a href="#operation--leader-subordinates--sub_id--orders-get">GET</a>
                         </td>
                         <td>
-                            <p>Get the subordinate&#39;s latest order</p>
+                            <p>Latest orders assigned to the subordinate</p>
         
                         </td>
                     </tr>
@@ -127,7 +127,7 @@
         <span id="path--leader-"></span>
             <div id="operation--leader--get" class="swagger--panel-operation-get panel">
                 <div class="panel-heading">
-                    <div class="operation-summary">Get this leader&apos;s information</div>
+                    <div class="operation-summary">Information of this leader</div>
                     <h3 class="panel-title"><span class="operation-name">GET</span> <strong>/leader/</strong></h3>
                 </div>
                 <div class="panel-body">
@@ -167,7 +167,7 @@
         <span id="path--leader-missions"></span>
             <div id="operation--leader-missions-get" class="swagger--panel-operation-get panel">
                 <div class="panel-heading">
-                    <div class="operation-summary">Get accepted missions</div>
+                    <div class="operation-summary">Accepted missions</div>
                     <h3 class="panel-title"><span class="operation-name">GET</span> <strong>/leader/missions</strong></h3>
                 </div>
                 <div class="panel-body">
@@ -328,7 +328,7 @@
         <span id="path--leader-subordinates"></span>
             <div id="operation--leader-subordinates-get" class="swagger--panel-operation-get panel">
                 <div class="panel-heading">
-                    <div class="operation-summary">Get all subordinates of this leader</div>
+                    <div class="operation-summary">All subordinates of this leader</div>
                     <h3 class="panel-title"><span class="operation-name">GET</span> <strong>/leader/subordinates</strong></h3>
                 </div>
                 <div class="panel-body">
@@ -470,7 +470,7 @@
         <span id="path--leader-subordinates--sub_id-"></span>
             <div id="operation--leader-subordinates--sub_id--get" class="swagger--panel-operation-get panel">
                 <div class="panel-heading">
-                    <div class="operation-summary">Get information of a subordinate</div>
+                    <div class="operation-summary">Information of a subordinate</div>
                     <h3 class="panel-title"><span class="operation-name">GET</span> <strong>/leader/subordinates/{sub_id}</strong></h3>
                 </div>
                 <div class="panel-body">
@@ -553,11 +553,11 @@
                         </section>
                 </div>
             </div>    
-        <span id="path--leader-subordinates--sub_id--order"></span>
-            <div id="operation--leader-subordinates--sub_id--order-get" class="swagger--panel-operation-get panel">
+        <span id="path--leader-subordinates--sub_id--orders"></span>
+            <div id="operation--leader-subordinates--sub_id--orders-get" class="swagger--panel-operation-get panel">
                 <div class="panel-heading">
-                    <div class="operation-summary">Get the subordinate&apos;s latest order</div>
-                    <h3 class="panel-title"><span class="operation-name">GET</span> <strong>/leader/subordinates/{sub_id}/order</strong></h3>
+                    <div class="operation-summary">Latest orders assigned to the subordinate</div>
+                    <h3 class="panel-title"><span class="operation-name">GET</span> <strong>/leader/subordinates/{sub_id}/orders</strong></h3>
                 </div>
                 <div class="panel-body">
                     <section class="sw-operation-description">
@@ -825,8 +825,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="author">
-                                                    <span class="json-property-name">author:</span>
+                                                <dt data-property-name="trigger">
+                                                    <span class="json-property-name">trigger:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -837,8 +837,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="requirements">
-                                                    <span class="json-property-name">requirements:</span>
+                                                <dt data-property-name="author">
+                                                    <span class="json-property-name">author:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -861,8 +861,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="trigger">
-                                                    <span class="json-property-name">trigger:</span>
+                                                <dt data-property-name="requirements">
+                                                    <span class="json-property-name">requirements:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -890,33 +890,20 @@
                             
                                     <section class="json-schema-properties">
                                         <dl>
-                                                <dt data-property-name="id">
-                                                    <span class="json-property-name">id:</span>
+                                                <dt data-property-name="name">
+                                                    <span class="json-property-name">name:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
                                                 </dt>
                                                 <dd>
-                                                    <p>the man&#39;s ID</p>
-                                    
+                                                    
                                                     <div class="json-inner-schema">
                                                         
                                                     </div>
                                                 </dd>
                                                 <dt data-property-name="endpoint">
                                                     <span class="json-property-name">endpoint:</span>
-                                                    <span class="json-property-type">string</span>
-                                                    <span class="json-property-range" title="Value limits"></span>
-                                                    
-                                                </dt>
-                                                <dd>
-                                                    
-                                                    <div class="json-inner-schema">
-                                                        
-                                                    </div>
-                                                </dd>
-                                                <dt data-property-name="name">
-                                                    <span class="json-property-name">name:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -935,6 +922,19 @@
                                                 </dt>
                                                 <dd>
                                                     
+                                                    <div class="json-inner-schema">
+                                                        
+                                                    </div>
+                                                </dd>
+                                                <dt data-property-name="id">
+                                                    <span class="json-property-name">id:</span>
+                                                    <span class="json-property-type">string</span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                </dt>
+                                                <dd>
+                                                    <p>the man&#39;s ID</p>
+                                    
                                                     <div class="json-inner-schema">
                                                         
                                                     </div>
@@ -968,15 +968,14 @@
                             
                                     <section class="json-schema-properties">
                                         <dl>
-                                                <dt data-property-name="id">
-                                                    <span class="json-property-name">id:</span>
+                                                <dt data-property-name="name">
+                                                    <span class="json-property-name">name:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
                                                 </dt>
                                                 <dd>
-                                                    <p>the man&#39;s ID</p>
-                                    
+                                                    
                                                     <div class="json-inner-schema">
                                                         
                                                     </div>
@@ -993,20 +992,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="name">
-                                                    <span class="json-property-name">name:</span>
-                                                    <span class="json-property-type">string</span>
-                                                    <span class="json-property-range" title="Value limits"></span>
-                                                    
-                                                </dt>
-                                                <dd>
-                                                    
-                                                    <div class="json-inner-schema">
-                                                        
-                                                    </div>
-                                                </dd>
-                                                <dt data-property-name="subordinates">
-                                                    <span class="json-property-name">subordinates:</span>
+                                                <dt data-property-name="missions">
+                                                    <span class="json-property-name">missions:</span>
                                                     <span class="json-property-type">object</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -1017,8 +1004,21 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="missions">
-                                                    <span class="json-property-name">missions:</span>
+                                                <dt data-property-name="id">
+                                                    <span class="json-property-name">id:</span>
+                                                    <span class="json-property-type">string</span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                </dt>
+                                                <dd>
+                                                    <p>the man&#39;s ID</p>
+                                    
+                                                    <div class="json-inner-schema">
+                                                        
+                                                    </div>
+                                                </dd>
+                                                <dt data-property-name="subordinates">
+                                                    <span class="json-property-name">subordinates:</span>
                                                     <span class="json-property-type">object</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -1070,8 +1070,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="author">
-                                                    <span class="json-property-name">author:</span>
+                                                <dt data-property-name="trigger">
+                                                    <span class="json-property-name">trigger:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -1082,8 +1082,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="requirements">
-                                                    <span class="json-property-name">requirements:</span>
+                                                <dt data-property-name="author">
+                                                    <span class="json-property-name">author:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -1106,8 +1106,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="trigger">
-                                                    <span class="json-property-name">trigger:</span>
+                                                <dt data-property-name="requirements">
+                                                    <span class="json-property-name">requirements:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -1159,8 +1159,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="author">
-                                                    <span class="json-property-name">author:</span>
+                                                <dt data-property-name="trigger">
+                                                    <span class="json-property-name">trigger:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -1171,8 +1171,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="requirements">
-                                                    <span class="json-property-name">requirements:</span>
+                                                <dt data-property-name="author">
+                                                    <span class="json-property-name">author:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -1195,8 +1195,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="trigger">
-                                                    <span class="json-property-name">trigger:</span>
+                                                <dt data-property-name="requirements">
+                                                    <span class="json-property-name">requirements:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -1236,8 +1236,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="time">
-                                                    <span class="json-property-name">time:</span>
+                                                <dt data-property-name="values">
+                                                    <span class="json-property-name">values:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -1248,8 +1248,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="values">
-                                                    <span class="json-property-name">values:</span>
+                                                <dt data-property-name="time">
+                                                    <span class="json-property-name">time:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -1277,33 +1277,20 @@
                             
                                     <section class="json-schema-properties">
                                         <dl>
-                                                <dt data-property-name="id">
-                                                    <span class="json-property-name">id:</span>
+                                                <dt data-property-name="name">
+                                                    <span class="json-property-name">name:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
                                                 </dt>
                                                 <dd>
-                                                    <p>the man&#39;s ID</p>
-                                    
+                                                    
                                                     <div class="json-inner-schema">
                                                         
                                                     </div>
                                                 </dd>
                                                 <dt data-property-name="endpoint">
                                                     <span class="json-property-name">endpoint:</span>
-                                                    <span class="json-property-type">string</span>
-                                                    <span class="json-property-range" title="Value limits"></span>
-                                                    
-                                                </dt>
-                                                <dd>
-                                                    
-                                                    <div class="json-inner-schema">
-                                                        
-                                                    </div>
-                                                </dd>
-                                                <dt data-property-name="name">
-                                                    <span class="json-property-name">name:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -1322,6 +1309,19 @@
                                                 </dt>
                                                 <dd>
                                                     
+                                                    <div class="json-inner-schema">
+                                                        
+                                                    </div>
+                                                </dd>
+                                                <dt data-property-name="id">
+                                                    <span class="json-property-name">id:</span>
+                                                    <span class="json-property-type">string</span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                </dt>
+                                                <dd>
+                                                    <p>the man&#39;s ID</p>
+                                    
                                                     <div class="json-inner-schema">
                                                         
                                                     </div>
@@ -1367,8 +1367,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="time">
-                                                    <span class="json-property-name">time:</span>
+                                                <dt data-property-name="values">
+                                                    <span class="json-property-name">values:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
@@ -1379,8 +1379,8 @@
                                                         
                                                     </div>
                                                 </dd>
-                                                <dt data-property-name="values">
-                                                    <span class="json-property-name">values:</span>
+                                                <dt data-property-name="time">
+                                                    <span class="json-property-name">time:</span>
                                                     <span class="json-property-type">string</span>
                                                     <span class="json-property-range" title="Value limits"></span>
                                                     
