@@ -159,20 +159,20 @@ def get_subordinates():
 @json_input
 def accept_subordinate():
     """
-    aaaa
+    Add new soldier
     ---
     parameters:
-      - name: sub_id
-        type: string
-        description: The report's author-id
+      - name: subordinate
+        $ref: '#/definitions/SoldierInfo'
+        description: Information of a soldier who is to join
     responses:
       200:
-        description: The subordinate is found
+        description: The soldier is accepted
         schema:
           properties:
-            info:
+            accepted:
               description: Information object of the subordinate
-              $ref: '#/definitions/LeaderInfo'
+              $ref: '#/definitions/SoldierInfo'
     """
     res = app.accept_subordinate(SoldierInfo(**request.json))
     return jsonify(result='success', accepted=res)

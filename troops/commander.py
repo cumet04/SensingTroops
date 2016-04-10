@@ -178,18 +178,18 @@ def get_subordinates():
 @json_input
 def accept_subordinate():
     """
-    aaaa
+    Add new leader
     ---
     parameters:
-      - name: sub_id
-        type: string
-        description: The report's author-id
+      - name: subordinate
+        $ref: '#/definitions/LeaderInfo'
+        description: Information of a leader who is to join
     responses:
       200:
-        description: The subordinate is found
+        description: The leader is accepted
         schema:
           properties:
-            info:
+            accepted:
               description: Information object of the subordinate
               $ref: '#/definitions/LeaderInfo'
     """
