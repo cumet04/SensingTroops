@@ -109,7 +109,9 @@ class Recruiter(object):
         return self.commander_cache[commander_id]
 
 
+# ------------------------------------------------------------------------------
 # REST interface ---------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 server = Flask(__name__)
 url_prefix = '/recruiter'
@@ -163,7 +165,7 @@ def get_squad_leader():
 @server.route(url_prefix + '/department/squad/soldiers', methods=['GET'])
 def get_squad_soldiers():
     """
-    A list of soldiers who is in a squad
+    A list of soldiers who are in a squad
     ---
     parameters:
       - name: leader_id
@@ -244,7 +246,7 @@ def get_troop_commander():
 @server.route(url_prefix + '/department/troop/leaders', methods=['GET'])
 def get_troop_leaders():
     """
-    A list of leaders who is in a troop
+    A list of leaders who are in a troop
     ---
     parameters:
       - name: commander_id
@@ -295,7 +297,7 @@ def add_troop_error():
 @json_input
 def get_commanders():
     """
-    Commanders info that are registered
+    Commanders info who are registered
     ---
     parameters: []
     responses:
