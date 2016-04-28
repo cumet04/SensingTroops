@@ -309,7 +309,6 @@ def spec():
 
 
 @server.route(url_prefix + '/spec.html')
-@cross_origin()
 def spec_html():
     return render_template('swagger_ui.html', spec_url=url_prefix + '/spec.json')
 
