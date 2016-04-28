@@ -356,7 +356,7 @@ def spec_html():
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-P', '--port', default=52000,
+    parser.add_argument('-P', '--port', default=53000,
                         help='port')
     parser.add_argument('-S', '--swagger-spec', action='store_true',
                         default=False, help='output swagger-spec json')
