@@ -124,9 +124,10 @@ def get_squad_leader():
     ---
     parameters:
       - name: soldier_id
-        in: query
-        type: string
         description: A soldier's ID who is under the requested leader
+        in: query
+        required: true
+        type: string
     responses:
       200:
         description: ok
@@ -169,9 +170,10 @@ def get_squad_soldiers():
     ---
     parameters:
       - name: leader_id
-        in: query
-        type: string
         description: A leader's ID who is top of the requested squad
+        in: query
+        required: true
+        type: string
     responses:
       200:
         description: ok
@@ -205,9 +207,10 @@ def get_troop_commander():
     ---
     parameters:
       - name: leader_id
-        in: query
-        type: string
         description: A leader's ID who is under the requested commander
+        in: query
+        required: true
+        type: string
     responses:
       200:
         description: ok
@@ -250,9 +253,10 @@ def get_troop_leaders():
     ---
     parameters:
       - name: commander_id
-        in: query
-        type: string
         description: A commander's ID who is top of the requested troop
+        in: query
+        required: true
+        type: string
     responses:
       200:
         description: ok
@@ -322,7 +326,9 @@ def add_commander():
     parameters:
       - name: commander
         in: body
-        $ref: '#/definitions/CommanderInfo'
+        required: true
+        schema:
+          $ref: '#/definitions/CommanderInfo'
     responses:
       200:
         description: ok

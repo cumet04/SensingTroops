@@ -119,6 +119,8 @@ def accept_missions():
     parameters:
       - name: mission
         description: A mission to be accepted
+        in: body
+        required: true
         schema:
           $ref: '#/definitions/Mission'
     responses:
@@ -163,8 +165,11 @@ def accept_subordinate():
     ---
     parameters:
       - name: subordinate
-        $ref: '#/definitions/SoldierInfo'
         description: Information of a soldier who is to join
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/SoldierInfo'
     responses:
       200:
         description: The soldier is accepted
@@ -182,6 +187,7 @@ def access_subordinate(f):
     """
     個別の部下にアクセスするための存在チェック用デコレータ
     """
+    # TODO: utilsに吸収
     # commanderのものと全く同一
     @wraps(f)
     def check_subordinate(sub_id, *args, **kwargs):
@@ -201,8 +207,9 @@ def get_sub_info(sub_id):
     ---
     parameters:
       - name: sub_id
-        type: string
         description: ID of a requested subordinate
+        in: path
+        type: string
     responses:
       200:
         description: The subordinate is found
@@ -225,10 +232,13 @@ def accept_work(sub_id):
     ---
     parameters:
       - name: sub_id
-        type: string
         description: The work's author-id
+        in: path
+        type: string
       - name: work
         description: A work to be accepted
+        in: body
+        required: true
         schema:
           $ref: '#/definitions/Work'
     responses:
@@ -255,8 +265,9 @@ def get_order(sub_id):
     ---
     parameters:
       - name: sub_id
-        type: string
         description: A soldier-id
+        in: path
+        type: string
     responses:
       200:
         description: A list of order

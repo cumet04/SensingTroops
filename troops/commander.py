@@ -138,6 +138,8 @@ def accept_campaigns():
     parameters:
       - name: campaign
         description: A campaign to be accepted
+        in: body
+        required: true
         schema:
           $ref: '#/definitions/Campaign'
     responses:
@@ -182,8 +184,11 @@ def accept_subordinate():
     ---
     parameters:
       - name: subordinate
-        $ref: '#/definitions/LeaderInfo'
         description: Information of a leader who is to join
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/LeaderInfo'
     responses:
       200:
         description: The leader is accepted
@@ -220,8 +225,9 @@ def get_sub_info(sub_id):
     ---
     parameters:
       - name: sub_id
-        type: string
         description: ID of a requested subordinate
+        in: path
+        type: string
     responses:
       200:
         description: The subordinate is found
@@ -244,10 +250,13 @@ def accept_report(sub_id):
     ---
     parameters:
       - name: sub_id
-        type: string
         description: The report's author-id
+        in: path
+        type: string
       - name: report
         description: A report to be accepted
+        in: body
+        required: true
         schema:
           $ref: '#/definitions/Report'
     responses:
@@ -274,8 +283,9 @@ def get_mission(sub_id):
     ---
     parameters:
       - name: sub_id
-        type: string
         description: A leader-id
+        in: path
+        type: string
     responses:
       200:
         description: A list of mission
