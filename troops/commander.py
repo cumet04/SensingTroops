@@ -8,7 +8,7 @@ from functools import wraps
 from flask_cors import cross_origin
 from objects import LeaderInfo, CommanderInfo, Report, Mission
 from utils import json_input, gen_spec
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -292,11 +292,16 @@ def get_mission(sub_id):
     return jsonify(missions=[Mission()])
 
 
-@server.route(url_prefix + '/spec')
+@server.route(url_prefix + '/spec.json')
 @cross_origin()
 def spec():
     return jsonify(gen_spec(app.__class__.__name__, server))
 
+
+@server.route(url_prefix + '/spec.html')
+@cross_origin()
+def spec_html():
+    return render_template('swagger_ui.html', spec_url=url_prefix + '/spec.json')
 
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
