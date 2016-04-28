@@ -108,7 +108,7 @@ def get_missions():
               items:
                 $ref: '#/definitions/Mission'
     """
-    pass
+    return jsonify(msg='this function is not implemented yet.'), 500
 
 
 @server.route(url_prefix + '/missions', methods=['POST'])
@@ -135,7 +135,7 @@ def accept_missions():
               description: The accepted mission
               $ref: '#/definitions/Mission'
     """
-    pass
+    return jsonify(msg='this function is not implemented yet.'), 500
 
 
 @server.route(url_prefix + '/subordinates', methods=['GET'])

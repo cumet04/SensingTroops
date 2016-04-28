@@ -197,7 +197,7 @@ def get_squad_soldiers():
     except ValueError:
         return jsonify(msg=msgs[400]), 400
 
-    return jsonify(msg='This function is not implemented'), 500
+    return jsonify(msg='this function is not implemented yet.'), 500
 
 
 @server.route(url_prefix + '/department/troop/commander', methods=['GET'])
@@ -280,21 +280,7 @@ def get_troop_leaders():
     except ValueError:
         return jsonify(msg=msgs[400]), 400
 
-    return jsonify(msg='This function is not implemented'), 500
-
-
-@server.route(url_prefix + '/error/squad', methods=['POST'])
-@json_input
-def add_squad_error():
-    # TODO
-    return jsonify(msg='This function is not implemented'), 500
-
-
-@server.route(url_prefix + '/error/troop', methods=['POST'])
-@json_input
-def add_troop_error():
-    # TODO
-    return jsonify(msg='This function is not implemented'), 500
+    return jsonify(msg='this function is not implemented yet.'), 500
 
 
 @server.route(url_prefix + '/commander', methods=['GET'])
@@ -314,7 +300,7 @@ def get_commanders():
               items:
                 $ref: '#/definitions/CommanderInfo'
     """
-    return jsonify(msg='This function is not implemented'), 500
+    return jsonify(msg='this function is not implemented yet.'), 500
 
 
 @server.route(url_prefix + '/commander', methods=['POST'])
@@ -340,6 +326,20 @@ def add_commander():
     com = CommanderInfo(**request.json)
     app.CommanderList[com.id] = com
     return jsonify(commander=com._asdict())
+
+
+@server.route(url_prefix + '/error/squad', methods=['POST'])
+@json_input
+def add_squad_error():
+    # TODO
+    return jsonify(msg='this function is not implemented yet.'), 500
+
+
+@server.route(url_prefix + '/error/troop', methods=['POST'])
+@json_input
+def add_troop_error():
+    # TODO
+    return jsonify(msg='this function is not implemented yet.'), 500
 
 
 @server.route(url_prefix + '/spec.json')

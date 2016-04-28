@@ -108,7 +108,7 @@ def show_status():
     """
     # TODO: implementation
     # return render_template("captain_ui.html", com=app.generate_ui())
-    return jsonify(msg='this function is not implemented.'), 500
+    return jsonify(msg='this function is not implemented yet.'), 500
 
 
 @server.route(url_prefix + '/campaigns', methods=['GET'])
@@ -127,7 +127,7 @@ def get_campaigns():
               items:
                 $ref: '#/definitions/Campaign'
     """
-    pass
+    return jsonify(msg='this function is not implemented yet.'), 500
 
 
 @server.route(url_prefix + '/campaigns', methods=['POST'])
@@ -154,7 +154,7 @@ def accept_campaigns():
               description: The accepted campaign
               $ref: '#/definitions/Campaign'
     """
-    pass
+    return jsonify(msg='this function is not implemented yet.'), 500
 
 
 @server.route(url_prefix + '/subordinates', methods=['GET'])
