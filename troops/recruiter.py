@@ -166,7 +166,7 @@ def get_squad_leader():
 @server.route(url_prefix + '/department/squad/soldiers', methods=['GET'])
 def get_squad_soldiers():
     """
-    A list of soldiers who are in a squad
+    [NIY] A list of soldiers who are in a squad
     ---
     parameters:
       - name: leader_id
@@ -249,7 +249,7 @@ def get_troop_commander():
 @server.route(url_prefix + '/department/troop/leaders', methods=['GET'])
 def get_troop_leaders():
     """
-    A list of leaders who are in a troop
+    [NIY] A list of leaders who are in a troop
     ---
     parameters:
       - name: commander_id
@@ -287,7 +287,7 @@ def get_troop_leaders():
 @json_input
 def get_commanders():
     """
-    Commanders info who are registered
+    [NIY] Commanders info who are registered
     ---
     parameters: []
     responses:

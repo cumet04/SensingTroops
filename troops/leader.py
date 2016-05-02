@@ -95,7 +95,7 @@ def get_info():
 @server.route(url_prefix + '/missions', methods=['GET'])
 def get_missions():
     """
-    Accepted missions
+    [NIY] Accepted missions
     ---
     parameters: []
     responses:
@@ -114,7 +114,7 @@ def get_missions():
 @server.route(url_prefix + '/missions', methods=['POST'])
 def accept_missions():
     """
-    Add new missions
+    [NIY] Add new missions
     ---
     parameters:
       - name: mission

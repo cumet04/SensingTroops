@@ -54,6 +54,9 @@ class Commander(object):
     def get_sub_info(self, sub_id):
         return self.subordinates[sub_id]
 
+    def accept_campaign(self, campaign):
+        pass
+
     def accept_subordinate(self, sub_info):
         """
         部下の入隊を受け入れる
@@ -99,7 +102,7 @@ def get_info():
 @server.route(url_prefix + '/ui', methods=['GET'])
 def show_status():
     """
-    Status UI
+    [NIY] Status UI
     ---
     parameters: []
     responses:
@@ -127,13 +130,13 @@ def get_campaigns():
               items:
                 $ref: '#/definitions/Campaign'
     """
-    return jsonify(msg='this function is not implemented yet.'), 500
+    return jsonify(campaigns=app.campaigns), 200
 
 
 @server.route(url_prefix + '/campaigns', methods=['POST'])
 def accept_campaigns():
     """
-    Add new campaigns
+    [NIY] Add new campaigns
     ---
     parameters:
       - name: campaign
