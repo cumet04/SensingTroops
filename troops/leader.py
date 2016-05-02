@@ -7,8 +7,8 @@ import argparse
 from functools import wraps
 from flask_cors import cross_origin
 from objects import LeaderInfo, SoldierInfo, Work, Order
-from utils import json_input, gen_spec
-from flask import Flask, jsonify, request, render_template
+from utils import json_input
+from flask import Flask, jsonify, request, render_template, Blueprint
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -19,10 +19,10 @@ logger.addHandler(handler)
 
 
 class Leader(object):
-    def __init__(self, name, endpoint):
-        self.id = ''  # テスト時はコマンドライン引数あたりから別途IDを割り当てる
-        self.name = name
-        self.endpoint = endpoint
+    def __init__(self):
+        self.id = ''
+        self.name = ''
+        self.endpoint = ''
         self.subordinates = {}
         self.missions = []
         self.work_cache = []
@@ -72,11 +72,11 @@ class Leader(object):
 # REST interface ---------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
-server = Flask(__name__)
-url_prefix = '/leader'
+server = Blueprint('leader', __name__)
+_app = Leader()
 
 
-@server.route(url_prefix + '/', methods=['GET'])
+@server.route('/', methods=['GET'])
 def get_info():
     """
     Information of this leader
@@ -88,11 +88,11 @@ def get_info():
         schema:
           $ref: '#/definitions/LeaderInfo'
     """
-    info = app.generate_info()._asdict()
+    info = _app.generate_info()._asdict()
     return jsonify(result='success', info=info), 200
 
 
-@server.route(url_prefix + '/missions', methods=['GET'])
+@server.route('/missions', methods=['GET'])
 def get_missions():
     """
     [NIY] Accepted missions
@@ -111,7 +111,7 @@ def get_missions():
     return jsonify(msg='this function is not implemented yet.'), 500
 
 
-@server.route(url_prefix + '/missions', methods=['POST'])
+@server.route('/missions', methods=['POST'])
 def accept_missions():
     """
     [NIY] Add new missions
@@ -138,7 +138,7 @@ def accept_missions():
     return jsonify(msg='this function is not implemented yet.'), 500
 
 
-@server.route(url_prefix + '/subordinates', methods=['GET'])
+@server.route('/subordinates', methods=['GET'])
 @json_input
 def get_subordinates():
     """
@@ -154,10 +154,10 @@ def get_subordinates():
               description: Information object of the subordinate
               $ref: '#/definitions/SoldierInfo'
     """
-    return jsonify(result='success', subordinates=app.subordinates)
+    return jsonify(result='success', subordinates=_app.subordinates)
 
 
-@server.route(url_prefix + '/subordinates', methods=['POST'])
+@server.route('/subordinates', methods=['POST'])
 @json_input
 def accept_subordinate():
     """
@@ -179,7 +179,7 @@ def accept_subordinate():
               description: Information object of the subordinate
               $ref: '#/definitions/SoldierInfo'
     """
-    res = app.accept_subordinate(SoldierInfo(**request.json))
+    res = _app.accept_subordinate(SoldierInfo(**request.json))
     return jsonify(result='success', accepted=res)
 
 
@@ -191,7 +191,7 @@ def access_subordinate(f):
     # commanderのものと全く同一
     @wraps(f)
     def check_subordinate(sub_id, *args, **kwargs):
-        if not app.check_subordinate(sub_id):
+        if not _app.check_subordinate(sub_id):
             return jsonify(result='failed',
                            msg='the man is not my subordinate'), 404
         return f(sub_id, *args, **kwargs)
@@ -199,7 +199,7 @@ def access_subordinate(f):
     return check_subordinate
 
 
-@server.route(url_prefix + '/subordinates/<sub_id>', methods=['GET'])
+@server.route('/subordinates/<sub_id>', methods=['GET'])
 @access_subordinate
 def get_sub_info(sub_id):
     """
@@ -219,11 +219,11 @@ def get_sub_info(sub_id):
               description: Information object of the subordinate
               $ref: '#/definitions/SoldierInfo'
     """
-    res = app.get_sub_info(sub_id)
+    res = _app.get_sub_info(sub_id)
     return jsonify(info=res)
 
 
-@server.route(url_prefix + '/subordinates/<sub_id>/work', methods=['POST'])
+@server.route('/subordinates/<sub_id>/work', methods=['POST'])
 @access_subordinate
 @json_input
 def accept_work(sub_id):
@@ -253,11 +253,11 @@ def accept_work(sub_id):
               description: The accepted work
               $ref: '#/definitions/Work'
     """
-    res = app.accept_work(Work(**request.json))
+    res = _app.accept_work(Work(**request.json))
     return jsonify(result='success', accepted=res)
 
 
-@server.route(url_prefix + '/subordinates/<sub_id>/orders', methods=['GET'])
+@server.route('/subordinates/<sub_id>/orders', methods=['GET'])
 @access_subordinate
 def get_order(sub_id):
     """
@@ -284,33 +284,7 @@ def get_order(sub_id):
     return jsonify(missions=[Order()])
 
 
-@server.route(url_prefix + '/spec.json')
-@cross_origin()
-def spec():
-    return jsonify(gen_spec(app.__class__.__name__, server))
-
-
-@server.route(url_prefix + '/spec.html')
-def spec_html():
-    return render_template('swagger_ui.html', spec_url=url_prefix + '/spec.json')
-
-# entry point ------------------------------------------------------------------
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-P', '--port', default=51000,
-                        help='port')
-    parser.add_argument('-S', '--swagger-spec', action='store_true',
-                        default=False, help='output swagger-spec json')
-    args = parser.parse_args()
-
-    ep = 'http://localhost:{0}{1}'.format(args.port, url_prefix)
-    app = Leader('lea-http', ep)
-
-    # output swagger-spec
-    if args.swagger_spec:
-        print(json.dumps(gen_spec(app.__class__.__name__, server)))
-        exit()
-
-    server.debug = True
-    server.run(host='0.0.0.0', port=args.port,
-               use_debugger=True, use_reloader=False)
+def set_params(leader_id, leader_name, endpoint):
+    _app.id = leader_id
+    _app.name = leader_name
+    _app.endpoint = endpoint

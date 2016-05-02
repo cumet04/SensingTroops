@@ -7,8 +7,8 @@ import argparse
 from functools import wraps
 from flask_cors import cross_origin
 from objects import LeaderInfo, CommanderInfo, Report, Mission
-from utils import json_input, gen_spec
-from flask import Flask, jsonify, request, render_template
+from utils import json_input
+from flask import Flask, jsonify, request, render_template, Blueprint
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -19,10 +19,10 @@ logger.addHandler(handler)
 
 
 class Commander(object):
-    def __init__(self, name, endpoint):
-        self.id = ''  # テスト時はコマンドライン引数あたりから別途IDを割り当てる
-        self.name = name
-        self.endpoint = endpoint
+    def __init__(self):
+        self.id = ''
+        self.name = ''
+        self.endpoint = ''
         self.subordinates = {}
         self.campaigns = []
         self.report_cache = []
@@ -79,11 +79,11 @@ class Commander(object):
 # REST interface ---------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
-server = Flask(__name__)
-url_prefix = '/commander'
+server = Blueprint('commander', __name__)
+_app = Commander()
 
 
-@server.route(url_prefix + '/', methods=['GET'])
+@server.route('/', methods=['GET'])
 def get_info():
     """
     Information of this commander
@@ -95,11 +95,11 @@ def get_info():
         schema:
           $ref: '#/definitions/CommanderInfo'
     """
-    info = app.generate_info()._asdict()
+    info = _app.generate_info()._asdict()
     return jsonify(result='success', info=info), 200
 
 
-@server.route(url_prefix + '/ui', methods=['GET'])
+@server.route('/ui', methods=['GET'])
 def show_status():
     """
     [NIY] Status UI
@@ -114,7 +114,7 @@ def show_status():
     return jsonify(msg='this function is not implemented yet.'), 500
 
 
-@server.route(url_prefix + '/campaigns', methods=['GET'])
+@server.route('/campaigns', methods=['GET'])
 def get_campaigns():
     """
     Accepted campaigns
@@ -133,7 +133,7 @@ def get_campaigns():
     return jsonify(campaigns=app.campaigns), 200
 
 
-@server.route(url_prefix + '/campaigns', methods=['POST'])
+@server.route('/campaigns', methods=['POST'])
 def accept_campaigns():
     """
     [NIY] Add new campaigns
@@ -160,7 +160,7 @@ def accept_campaigns():
     return jsonify(msg='this function is not implemented yet.'), 500
 
 
-@server.route(url_prefix + '/subordinates', methods=['GET'])
+@server.route('/subordinates', methods=['GET'])
 @json_input
 def get_subordinates():
     """
@@ -179,7 +179,7 @@ def get_subordinates():
     return jsonify(result='success', subordinates=app.subordinates)
 
 
-@server.route(url_prefix + '/subordinates', methods=['POST'])
+@server.route('/subordinates', methods=['POST'])
 @json_input
 def accept_subordinate():
     """
@@ -201,7 +201,7 @@ def accept_subordinate():
               description: Information object of the subordinate
               $ref: '#/definitions/LeaderInfo'
     """
-    res = app.accept_subordinate(LeaderInfo(**request.json))
+    res = _app.accept_subordinate(LeaderInfo(**request.json))
     return jsonify(result='success', accepted=res)
 
 
@@ -212,7 +212,7 @@ def access_subordinate(f):
     # leaderのものと全く同一
     @wraps(f)
     def check_subordinate(sub_id, *args, **kwargs):
-        if not app.check_subordinate(sub_id):
+        if not _app.check_subordinate(sub_id):
             return jsonify(result='failed',
                            msg='the man is not my subordinate'), 404
         return f(sub_id, *args, **kwargs)
@@ -220,7 +220,7 @@ def access_subordinate(f):
     return check_subordinate
 
 
-@server.route(url_prefix + '/subordinates/<sub_id>', methods=['GET'])
+@server.route('/subordinates/<sub_id>', methods=['GET'])
 @access_subordinate
 def get_sub_info(sub_id):
     """
@@ -240,11 +240,11 @@ def get_sub_info(sub_id):
               description: Information object of the subordinate
               $ref: '#/definitions/LeaderInfo'
     """
-    res = app.get_sub_info(sub_id)
+    res = _app.get_sub_info(sub_id)
     return jsonify(info=res)
 
 
-@server.route(url_prefix + '/subordinates/<sub_id>/report', methods=['POST'])
+@server.route('/subordinates/<sub_id>/report', methods=['POST'])
 @access_subordinate
 @json_input
 def accept_report(sub_id):
@@ -274,11 +274,11 @@ def accept_report(sub_id):
               description: The accepted report
               $ref: '#/definitions/Report'
     """
-    res = app.accept_report(Report(**request.json))
+    res = _app.accept_report(Report(**request.json))
     return jsonify(result='success', accepted=res)
 
 
-@server.route(url_prefix + '/subordinates/<sub_id>/missions', methods=['GET'])
+@server.route('/subordinates/<sub_id>/missions', methods=['GET'])
 @access_subordinate
 def get_mission(sub_id):
     """
@@ -305,33 +305,7 @@ def get_mission(sub_id):
     return jsonify(missions=[Mission()])
 
 
-@server.route(url_prefix + '/spec.json')
-@cross_origin()
-def spec():
-    return jsonify(gen_spec(app.__class__.__name__, server))
-
-
-@server.route(url_prefix + '/spec.html')
-def spec_html():
-    return render_template('swagger_ui.html', spec_url=url_prefix + '/spec.json')
-
-# entry point ------------------------------------------------------------------
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-P', '--port', default=52000,
-                        help='port')
-    parser.add_argument('-S', '--swagger-spec', action='store_true',
-                        default=False, help='output swagger-spec json')
-    args = parser.parse_args()
-
-    ep = 'http://localhost:{0}{1}'.format(args.port, url_prefix)
-    app = Commander('com-http', ep)
-
-    # output swagger-spec
-    if args.swagger_spec:
-        print(json.dumps(gen_spec(app.__class__.__name__, server)))
-        exit()
-
-    server.debug = True
-    server.run(host='0.0.0.0', port=args.port,
-               use_debugger=True, use_reloader=False)
+def set_params(commander_id, commander_name, endpoint):
+    _app.id = commander_id
+    _app.name = commander_name
+    _app.endpoint = endpoint
