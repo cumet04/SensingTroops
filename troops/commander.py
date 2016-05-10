@@ -172,7 +172,7 @@ def accept_campaigns():
 @json_input
 def get_subordinates():
     """
-    [NT] All subordinates of this commander
+    All subordinates of this commander
     ---
     parameters: []
     responses:
