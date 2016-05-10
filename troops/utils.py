@@ -5,6 +5,14 @@ from objects import definitions
 from functools import wraps
 from flask import jsonify, request
 from werkzeug.exceptions import BadRequest
+from logging import getLogger, StreamHandler, DEBUG, FileHandler
+
+logger = getLogger(__name__)
+handler = FileHandler('/tmp/troops/commander_test.log')
+# handler = StreamHandler()
+handler.setLevel(DEBUG)
+logger.setLevel(DEBUG)
+logger.addHandler(handler)
 
 
 def json_input(f):
@@ -19,7 +27,7 @@ def json_input(f):
             #   - bad content-type -> return None
             #   - can't decode -> raise BadRequest
             try:
-                print(request.data.decode('utf-8'))
+                logger.info(request.data.decode('utf-8'))
                 if request.json is None:
                     return jsonify(result='failed',
                                    msg='application/json required'), 406
