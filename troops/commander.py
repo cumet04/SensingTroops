@@ -6,13 +6,14 @@ import json
 import argparse
 from functools import wraps
 from flask_cors import cross_origin
-from objects import LeaderInfo, CommanderInfo, Report, Mission
+from objects import LeaderInfo, CommanderInfo, Report, Mission, Campaign
 from utils import json_input
 from flask import Flask, jsonify, request, render_template, Blueprint
-from logging import getLogger, StreamHandler, DEBUG
+from logging import getLogger, StreamHandler, DEBUG, FileHandler
 
 logger = getLogger(__name__)
-handler = StreamHandler()
+handler = FileHandler('/tmp/troops/commander.log')
+# handler = StreamHandler()
 handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
@@ -55,7 +56,8 @@ class Commander(object):
         return self.subordinates[sub_id]
 
     def accept_campaign(self, campaign):
-        pass
+        self.campaigns.append(campaign)
+        return campaign
 
     def accept_subordinate(self, sub_info):
         """
@@ -64,15 +66,16 @@ class Commander(object):
         :return bool:
         """
         if self.check_subordinate(sub_info.id):
-            return False
+            return None
         self.subordinates[sub_info.id] = sub_info
-        return True
+        return sub_info
 
     def accept_report(self, sub_id, report):
         if self.check_subordinate(sub_id):
             return False
         self.report_cache.append(report)
         return True
+
 
 
 # ------------------------------------------------------------------------------
@@ -130,13 +133,13 @@ def get_campaigns():
               items:
                 $ref: '#/definitions/Campaign'
     """
-    return jsonify(campaigns=app.campaigns), 200
+    return jsonify(campaigns=_app.campaigns), 200
 
 
 @server.route('/campaigns', methods=['POST'])
 def accept_campaigns():
     """
-    [NIY] Add new campaigns
+    Add new campaigns
     ---
     parameters:
       - name: campaign
@@ -157,7 +160,12 @@ def accept_campaigns():
               description: The accepted campaign
               $ref: '#/definitions/Campaign'
     """
-    return jsonify(msg='this function is not implemented yet.'), 500
+    campaign = Campaign(**request.json)
+    accepted = _app.accept_campaign(campaign)._asdict()
+    if accepted is None:
+        return jsonify(msg='accept_campaign failed.'), 500
+
+    return jsonify(result='success', accepted=accepted), 200
 
 
 @server.route('/subordinates', methods=['GET'])
@@ -176,7 +184,7 @@ def get_subordinates():
               description: Information object of the subordinate
               $ref: '#/definitions/LeaderInfo'
     """
-    return jsonify(result='success', subordinates=app.subordinates)
+    return jsonify(result='success', subordinates=_app.subordinates)
 
 
 @server.route('/subordinates', methods=['POST'])
@@ -201,8 +209,12 @@ def accept_subordinate():
               description: Information object of the subordinate
               $ref: '#/definitions/LeaderInfo'
     """
-    res = _app.accept_subordinate(LeaderInfo(**request.json))
-    return jsonify(result='success', accepted=res)
+    leader = LeaderInfo(**request.json)
+    accepted = _app.accept_subordinate(leader)._asdict()
+    if accepted is None:
+        return jsonify(msg='accept_subordinate failed.'), 500
+
+    return jsonify(result='success', accepted=accepted), 200
 
 
 def access_subordinate(f):
