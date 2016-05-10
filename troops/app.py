@@ -37,29 +37,30 @@ def spec():
 
 
 def spec_html():
-    return render_template('swagger_ui.html', spec_url=url_prefix + '/spec.json')
+    return render_template('swagger_ui.html',
+                           spec_url=url_prefix + '/spec.json')
 
 
 # entry point ------------------------------------------------------------------
 if __name__ == "__main__":
     # parameter set / parse
     parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers(dest='command',
-                                help='sub-command help')
-    s_parser = subparsers.add_parser('spec', 
-                                help='output swagger-spec (json)')
-    s_parser.add_argument('target', metavar='target', type=str,
-                            help='Target name of spec')
-    r_parser = subparsers.add_parser('run',
-                                help='run server')
-    r_parser.add_argument('target', metavar='class', type=str,
-                            help='Target class of server')
-    r_parser.add_argument('id', metavar='id', type=str,
-                            help='Target id of app')
-    r_parser.add_argument('name', metavar='name', type=str,
-                            help='Target name of app')
-    r_parser.add_argument('-P', '--port', default=50000,
-                            help='port')
+    subparsers = parser.add_subparsers(
+        dest='command', help='sub-command help')
+    s_parser = subparsers.add_parser(
+        'spec', help='output swagger-spec (json)')
+    s_parser.add_argument(
+        'target', metavar='target', type=str, help='Target name of spec')
+    r_parser = subparsers.add_parser(
+        'run', help='run server')
+    r_parser.add_argument(
+        'target', metavar='class', type=str, help='Target class of server')
+    r_parser.add_argument(
+        'id', metavar='id', type=str, help='Target id of app')
+    r_parser.add_argument(
+        'name', metavar='name', type=str, help='Target name of app')
+    r_parser.add_argument(
+        '-P', '--port', default=50000, help='port')
     args = parser.parse_args()
 
     # set target app's params
