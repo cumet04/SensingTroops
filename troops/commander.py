@@ -105,7 +105,7 @@ def get_info():
 @server.route('/ui', methods=['GET'])
 def show_status():
     """
-    [NIY] Status UI
+    [NIY][NT] Status UI
     ---
     parameters: []
     responses:
@@ -120,7 +120,7 @@ def show_status():
 @server.route('/campaigns', methods=['GET'])
 def get_campaigns():
     """
-    Accepted campaigns
+    [NT] Accepted campaigns
     ---
     parameters: []
     responses:
@@ -139,7 +139,7 @@ def get_campaigns():
 @server.route('/campaigns', methods=['POST'])
 def accept_campaigns():
     """
-    Add new campaigns
+    [NT] Add new campaigns
     ---
     parameters:
       - name: campaign
@@ -172,7 +172,7 @@ def accept_campaigns():
 @json_input
 def get_subordinates():
     """
-    All subordinates of this commander
+    [NT] All subordinates of this commander
     ---
     parameters: []
     responses:
@@ -180,11 +180,13 @@ def get_subordinates():
         description: The subordinate is found
         schema:
           properties:
-            info:
+            subordinates:
               description: Information object of the subordinate
               $ref: '#/definitions/LeaderInfo'
     """
-    return jsonify(result='success', subordinates=_app.subordinates)
+    subs_raw = _app.subordinates
+    subs_dicts = [sub._asdict() for sub in subs_raw.values()]
+    return jsonify(subordinates=subs_dicts)
 
 
 @server.route('/subordinates', methods=['POST'])
@@ -236,7 +238,7 @@ def access_subordinate(f):
 @access_subordinate
 def get_sub_info(sub_id):
     """
-    Information of a subordinate
+    [NT] Information of a subordinate
     ---
     parameters:
       - name: sub_id
@@ -261,7 +263,7 @@ def get_sub_info(sub_id):
 @json_input
 def accept_report(sub_id):
     """
-    Accept new report
+    [NT] Accept new report
     ---
     parameters:
       - name: sub_id
@@ -294,7 +296,7 @@ def accept_report(sub_id):
 @access_subordinate
 def get_mission(sub_id):
     """
-    Latest missions assigned to the subordinate
+    [NT] Latest missions assigned to the subordinate
     ---
     parameters:
       - name: sub_id
