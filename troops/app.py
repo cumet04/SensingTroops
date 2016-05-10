@@ -98,7 +98,9 @@ if __name__ == "__main__":
     elif args.command == 'run':
         parent.debug = True
         parent.run(host='0.0.0.0', port=args.port,
-                   use_debugger=True, use_reloader=False)
+                   use_debugger=True, use_reloader=True)
+        # reloader=Trueだとアプリが2回起動する？らしいが、module分離したので
+        # 問題なくなったかもしれない。要確認。
     else:
         logger.error('unknown command: {0}'.format(args.command))
         exit()
