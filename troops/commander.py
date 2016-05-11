@@ -139,7 +139,7 @@ def get_campaigns():
 @server.route('/campaigns', methods=['POST'])
 def accept_campaigns():
     """
-    [NT] Add a new campaigns
+    Add a new campaigns
     ---
     parameters:
       - name: campaign
