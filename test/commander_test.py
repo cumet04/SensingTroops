@@ -7,7 +7,7 @@ import commander
 import json
 from flask import Flask
 from logging import getLogger, StreamHandler, FileHandler, DEBUG
-from objects import LeaderInfo, CommanderInfo, Report, Mission
+from objects import LeaderInfo, CommanderInfo, Report, Mission, Campaign
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -31,9 +31,8 @@ class CommanderTestCase(unittest.TestCase):
         pass
 
     def test_get_info(self):
-        response = self.app.get('/commander/')
+        response = self.app.get('/commander', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
-        # follow_redirects=True)
         actual = json.loads(response.data.decode("utf-8"))
 
         commander = CommanderInfo(id='cxxx0',
@@ -45,6 +44,7 @@ class CommanderTestCase(unittest.TestCase):
 
         self.assertEqual(actual, expected)
 
+# [POST] /subordinates
     def test_add_subordinate(self):
         leader = LeaderInfo(id='lxxx0',
                             name='cmd_http',
@@ -116,6 +116,90 @@ class CommanderTestCase(unittest.TestCase):
 
         # assert
         expected_list = [dict(l._asdict()) for l in leader_list]
+        self.assertEqual(len(actual_list), len(expected_list))
+        for exp in expected_list:
+            if exp not in actual_list:
+                self.fail('{0} is not found.'.format(exp))
+
+# [POST] /campaigns
+    def test_add_campaign(self):
+        # 各種パラメータの詳細が決まっていないため、暫定値を採用。
+        # 最終的には、API自体に無効な入力パラメータをハネる機能を搭載したうえで
+        # TODO: 無効値を確認する用のテストを作成すべき
+        campaign = Campaign(author='cxxx0',
+                            destination='mongoserv',
+                            place='S101',
+                            purpose='A great app',
+                            requirements='brightness sound',
+                            trigger='a trigger')
+        response = self.app.post('/commander/campaigns',
+                                 data=json.dumps(campaign._asdict()),
+                                 content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        actual = json.loads(response.data.decode("utf-8"))
+
+        expected = {'result': 'success', "accepted": dict(campaign._asdict())}
+        self.assertEqual(actual, expected)
+
+# [GET] /campaigns
+    def test_get_campaigns_none(self):
+        response = self.app.get('/commander/campaigns')
+        self.assertEqual(response.status_code, 200)
+        actual = json.loads(response.data.decode("utf-8"))
+
+        # assert
+        expected = {'campaigns': []}
+        self.assertEqual(actual, expected)
+
+    def test_get_campaigns_single(self):
+        # add a campaigns
+        campaign = Campaign(author='cxxx0',
+                            destination='mongoserv',
+                            place='S101',
+                            purpose='A great app',
+                            requirements='brightness sound',
+                            trigger='a trigger')
+        response = self.app.post('/commander/campaigns',
+                                 data=json.dumps(campaign._asdict()),
+                                 content_type='application/json')
+
+        # get subordinates
+        response = self.app.get('/commander/subordinates')
+        self.assertEqual(response.status_code, 200)
+        actual = json.loads(response.data.decode("utf-8"))
+
+        # assert
+        expected = {'subordinates': [dict(campaign._asdict())]}
+        self.assertEqual(actual, expected)
+
+    def test_get_campaigns_multi(self):
+        # add some campaigns
+        campaign_base = Campaign(author='cxxx0',
+                                 destination='mongoserv',
+                                 place='S101',
+                                 purpose='A great app',
+                                 requirements='brightness sound',
+                                 trigger='a trigger')
+        campaign_list = [
+            campaign_base._replace(place='S101'),
+            campaign_base._replace(place='S102'),
+            campaign_base._replace(place='S103'),
+            campaign_base._replace(place='S104'),
+        ]
+        for c in campaign_list:
+            self.app.post('/commander/campaigns',
+                          data=json.dumps(c._asdict()),
+                          content_type='application/json')
+
+        # get campaigns
+        response = self.app.get('/commander/campaigns')
+        self.assertEqual(response.status_code, 200)
+        actual = json.loads(response.data.decode("utf-8"))
+        actual_list = actual['campaigns']
+
+        # assert
+        expected_list = [dict(c._asdict()) for c in campaign_list]
+        self.assertEqual(len(actual_list), len(expected_list))
         for exp in expected_list:
             if exp not in actual_list:
                 self.fail('{0} is not found.'.format(exp))
