@@ -120,7 +120,7 @@ def show_status():
 @server.route('/campaigns', methods=['GET'])
 def get_campaigns():
     """
-    [NT] Accepted campaigns
+    Accepted campaigns
     ---
     parameters: []
     responses:
@@ -133,7 +133,9 @@ def get_campaigns():
               items:
                 $ref: '#/definitions/Campaign'
     """
-    return jsonify(campaigns=_app.campaigns), 200
+    camps_raw = _app.campaigns
+    camps_dicts = [camp._asdict() for camp in camps_raw]
+    return jsonify(campaigns=camps_dicts), 200
 
 
 @server.route('/campaigns', methods=['POST'])

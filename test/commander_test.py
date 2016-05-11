@@ -164,12 +164,12 @@ class CommanderTestCase(unittest.TestCase):
                                  content_type='application/json')
 
         # get subordinates
-        response = self.app.get('/commander/subordinates')
+        response = self.app.get('/commander/campaigns')
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
 
         # assert
-        expected = {'subordinates': [dict(campaign._asdict())]}
+        expected = {'campaigns': [dict(campaign._asdict())]}
         self.assertEqual(actual, expected)
 
     def test_get_campaigns_multi(self):
