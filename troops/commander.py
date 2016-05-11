@@ -139,7 +139,7 @@ def get_campaigns():
 @server.route('/campaigns', methods=['POST'])
 def accept_campaigns():
     """
-    [NT] Add new campaigns
+    [NT] Add a new campaigns
     ---
     parameters:
       - name: campaign
@@ -193,7 +193,7 @@ def get_subordinates():
 @json_input
 def accept_subordinate():
     """
-    Add new leader
+    Add a new leader
     ---
     parameters:
       - name: subordinate
