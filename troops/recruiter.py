@@ -9,7 +9,7 @@ import os
 from collections import namedtuple
 from flask_cors import cross_origin
 from objects import LeaderInfo, CommanderInfo
-from utils import json_input
+from utils import json_input, asdict
 from flask import Flask, jsonify, request, render_template, Blueprint
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -93,7 +93,7 @@ class Recruiter(object):
             com = self.commander_cache[com_id]
 
             path = 'http://{0}/subordinates/{1}'.format(com.endpoint, leader_id)
-            res = requests.post(path, json=self.info._asdict()).json()
+            res = requests.post(path, json=asdict(self.info)).json()
 
             leader = LeaderInfo(**res)
             self.leader_cache[leader.id] = leader
@@ -324,7 +324,7 @@ def add_commander():
     """
     com = CommanderInfo(**request.json)
     _app.CommanderList[com.id] = com
-    return jsonify(commander=com._asdict())
+    return jsonify(commander=asdict(com))
 
 
 @server.route('/error/squad', methods=['POST'])

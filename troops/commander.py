@@ -7,7 +7,7 @@ import argparse
 from functools import wraps
 from flask_cors import cross_origin
 from objects import LeaderInfo, CommanderInfo, Report, Mission, Campaign
-from utils import json_input
+from utils import json_input, asdict
 from flask import Flask, jsonify, request, render_template, Blueprint
 from logging import getLogger, StreamHandler, DEBUG, FileHandler
 
@@ -98,7 +98,7 @@ def get_info():
         schema:
           $ref: '#/definitions/CommanderInfo'
     """
-    info = _app.generate_info()._asdict()
+    info = asdict(_app.generate_info())
     return jsonify(result='success', info=info), 200
 
 
@@ -134,7 +134,7 @@ def get_campaigns():
                 $ref: '#/definitions/Campaign'
     """
     camps_raw = _app.campaigns
-    camps_dicts = [camp._asdict() for camp in camps_raw]
+    camps_dicts = [asdict(camp) for camp in camps_raw]
     return jsonify(campaigns=camps_dicts), 200
 
 
@@ -163,7 +163,7 @@ def accept_campaigns():
               $ref: '#/definitions/Campaign'
     """
     campaign = Campaign(**request.json)
-    accepted = _app.accept_campaign(campaign)._asdict()
+    accepted = asdict(_app.accept_campaign(campaign))
     if accepted is None:
         return jsonify(msg='accept_campaign failed.'), 500
 
@@ -187,7 +187,7 @@ def get_subordinates():
               $ref: '#/definitions/LeaderInfo'
     """
     subs_raw = _app.subordinates
-    subs_dicts = [sub._asdict() for sub in subs_raw.values()]
+    subs_dicts = [asdict(sub) for sub in subs_raw.values()]
     return jsonify(subordinates=subs_dicts)
 
 
@@ -214,7 +214,7 @@ def accept_subordinate():
               $ref: '#/definitions/LeaderInfo'
     """
     leader = LeaderInfo(**request.json)
-    accepted = _app.accept_subordinate(leader)._asdict()
+    accepted = asdict(_app.accept_subordinate(leader))
     if accepted is None:
         return jsonify(msg='accept_subordinate failed.'), 500
 

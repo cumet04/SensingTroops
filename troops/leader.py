@@ -7,7 +7,7 @@ import argparse
 from functools import wraps
 from flask_cors import cross_origin
 from objects import LeaderInfo, SoldierInfo, Work, Order
-from utils import json_input
+from utils import json_input, asdict
 from flask import Flask, jsonify, request, render_template, Blueprint
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -88,7 +88,7 @@ def get_info():
         schema:
           $ref: '#/definitions/LeaderInfo'
     """
-    info = _app.generate_info()._asdict()
+    info = asdict(_app.generate_info())
     return jsonify(result='success', info=info), 200
 
 
