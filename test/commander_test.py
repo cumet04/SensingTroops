@@ -60,6 +60,16 @@ class CommanderTestCase(unittest.TestCase):
         expected = {'result': 'success', "accepted": dict(leader._asdict())}
         self.assertEqual(actual, expected)
 
+# [GET] /subordinates
+    def test_get_subordinates_none(self):
+        response = self.app.get('/commander/subordinates')
+        self.assertEqual(response.status_code, 200)
+        actual = json.loads(response.data.decode("utf-8"))
+
+        # assert
+        expected = {'subordinates': []}
+        self.assertEqual(actual, expected)
+
     def test_get_subordinates_single(self):
         # add a leader
         leader = LeaderInfo(id='lxxx0',
