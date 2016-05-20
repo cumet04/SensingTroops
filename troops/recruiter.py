@@ -287,6 +287,7 @@ def get_troop_leaders():
 def get_commanders():
     """
     [NIY] Commanders info who are registered
+    このrecruiterに実登録されたCommander情報のリストを返す
     ---
     parameters: []
     responses:
@@ -306,7 +307,8 @@ def get_commanders():
 @json_input
 def add_commander():
     """
-    [NIY] Add a commander for actual troop-info
+    [NIY] Register a commander
+    Leaderからの上官問い合わせへの返答及びLeaderの情報解決のため、実際のCommanderの情報を登録する
     ---
     parameters:
       - name: commander

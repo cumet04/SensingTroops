@@ -90,6 +90,7 @@ _app = Commander()
 def get_info():
     """
     Information of this commander
+    このCommanderの情報をjson形式で返す
     ---
     parameters: []
     responses:
@@ -106,6 +107,7 @@ def get_info():
 def show_status():
     """
     [NIY][NT] Status UI
+    このCommander及びTroopの各種情報をWebUIで表示する
     ---
     parameters: []
     responses:
@@ -121,6 +123,7 @@ def show_status():
 def get_campaigns():
     """
     Accepted campaigns
+    このCommanderが受理したCampaignsの一覧を返す
     ---
     parameters: []
     responses:
@@ -142,6 +145,7 @@ def get_campaigns():
 def accept_campaigns():
     """
     Add a new campaigns
+    このCommanderに新しいCampaignを一つだけ追加する
     ---
     parameters:
       - name: campaign
