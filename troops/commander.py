@@ -257,7 +257,7 @@ def get_sub_info(sub_id):
               $ref: '#/definitions/LeaderInfo'
     """
     res = _app.get_sub_info(sub_id)
-    return jsonify(info=res)
+    return jsonify(info=asdict(res))
 
 
 @server.route('/subordinates/<sub_id>/report', methods=['POST'])

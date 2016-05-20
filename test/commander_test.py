@@ -211,3 +211,27 @@ class CommanderTestCase(unittest.TestCase):
         expected = {'result': 'success', "accepted": asdict(leader)}
         self.assertEqual(actual, expected)
 
+# [GET] /subordinates/{sub_id}
+    def test_get_subordinate_info(self):
+        # add leader
+        leader = LeaderInfo(id='lxxx0',
+                            name='cmd_http',
+                            endpoint='http://localhost:50000',
+                            subordinates=[],
+                            missions=[])
+        self.app.post('/commander/subordinates',
+                      data=json.dumps(asdict(leader)),
+                      content_type='application/json')
+
+        response = self.app.get('/commander/subordinates/lxxx0')
+        self.assertEqual(response.status_code, 200)
+        actual = json.loads(response.data.decode("utf-8"))
+
+        # assert
+        expected = {'info': asdict(leader)}
+        self.assertEqual(actual, expected)
+
+# [GET] /subordinates/{sub_id}/missions
+
+
+# [GET] /subordinates/{sub_id}/report
