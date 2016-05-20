@@ -119,7 +119,7 @@ _app = Recruiter()
 @server.route('/department/squad/leader', methods=['GET'])
 def get_squad_leader():
     """
-    Leader's info, top of a squad
+    [NIY] Leader's info, top of a squad
     ---
     parameters:
       - name: soldier_id
@@ -202,7 +202,7 @@ def get_squad_soldiers():
 @server.route('/department/troop/commander', methods=['GET'])
 def get_troop_commander():
     """
-    Commander's info, top of a troop
+    [NIY] Commander's info, top of a troop
     ---
     parameters:
       - name: leader_id
@@ -306,7 +306,7 @@ def get_commanders():
 @json_input
 def add_commander():
     """
-    Add a commander for actual troop-info
+    [NIY] Add a commander for actual troop-info
     ---
     parameters:
       - name: commander
