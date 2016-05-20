@@ -4,6 +4,11 @@ troops:
       - lxxx0
       - lxxx1
       - lxxx2
+  - commander: cxxx1
+    subordinates:
+      - lxxx3
+      - lxxx4
+      - lxxx5
 squads:
   - leader: lxxx0
     subordinates:
@@ -17,3 +22,15 @@ squads:
     subordinates:
       - sxxx4
       - sxxx5
+  - leader: lxxx3
+    subordinates:
+      - sxxx6
+      - sxxx7
+  - leader: lxxx4
+    subordinates:
+      - sxxx8
+  - leader: lxxx5
+    subordinates:
+      - sxxx9
+      - sxx10
+      - sxx11
