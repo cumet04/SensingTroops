@@ -64,23 +64,24 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # set target app's params
-    url_prefix = ''
+    url_prefix = '/' + args.target
     server = None
     if args.target == 'commander':
-        url_prefix = '/commander'
-        ep = 'http://localhost:{0}{1}'.format(args.port, url_prefix)
-        commander.initialize_app(args.id, args.name, ep)
         server = commander.server
+        if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+            # flaskのuse_reloader=Trueのときの二重起動対策
+            ep = 'http://localhost:{0}{1}'.format(args.port, url_prefix)
+            commander.initialize_app(args.id, args.name, ep)
     elif args.target == 'leader':
-        url_prefix = '/leader'
-        ep = 'http://localhost:{0}{1}'.format(args.port, url_prefix)
-        leader.initialize_app(args.id, args.name, ep)
         server = leader.server
+        if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+            ep = 'http://localhost:{0}{1}'.format(args.port, url_prefix)
+            leader.initialize_app(args.id, args.name, ep)
     elif args.target == 'recruiter':
-        url_prefix = '/recruiter'
-        config_path = '{0}/recruit.yml'.format(os.path.dirname(__file__))
-        recruiter.initialize_app(config_path)
         server = recruiter.server
+        if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+            config_path = '{0}/recruit.yml'.format(os.path.dirname(__file__))
+            recruiter.initialize_app(config_path)
     else:
         logger.error('unknown target: {0}'.format(args.target))
         exit()
@@ -99,8 +100,6 @@ if __name__ == "__main__":
         parent.debug = True
         parent.run(host='0.0.0.0', port=args.port,
                    use_debugger=True, use_reloader=True)
-        # reloader=Trueだとアプリが2回起動する？らしいが、module分離したので
-        # 問題なくなったかもしれない。要確認。
     else:
         logger.error('unknown command: {0}'.format(args.command))
         exit()
