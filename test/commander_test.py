@@ -215,7 +215,7 @@ class CommanderTestCase(unittest.TestCase):
     def test_get_subordinate_info(self):
         # add leader
         leader = LeaderInfo(id='lxxx0',
-                            name='cmd_http',
+                            name='lea_http',
                             endpoint='http://localhost:50000',
                             subordinates=[],
                             missions=[])
@@ -223,6 +223,7 @@ class CommanderTestCase(unittest.TestCase):
                       data=json.dumps(asdict(leader)),
                       content_type='application/json')
 
+        # get the leader
         response = self.app.get('/commander/subordinates/lxxx0')
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))

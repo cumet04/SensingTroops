@@ -244,7 +244,7 @@ def access_subordinate(f):
 @access_subordinate
 def get_sub_info(sub_id):
     """
-    [NT] Information of a subordinate
+    Information of a subordinate
     ---
     parameters:
       - name: sub_id
