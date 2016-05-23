@@ -29,7 +29,6 @@ class Recruiter(object):
     def __init__(self):
         self.SquadList = []
         self.TroopList = []
-        self.CommanderList = {}
         self.leader_cache = {}
         self.commander_cache = {}
 
@@ -282,12 +281,11 @@ def get_troop_leaders():
     return jsonify(msg='this function is not implemented yet.'), 500
 
 
-@server.route('/commander', methods=['GET'])
+@server.route('/commanders', methods=['GET'])
 @json_input
 def get_commanders():
     """
-    [NIY] Commanders info who are registered
-    このrecruiterに実登録されたCommander情報のリストを返す
+    [NIY] A list of Commander's ID, that is registered in config
     ---
     parameters: []
     responses:
@@ -298,19 +296,50 @@ def get_commanders():
             commanders:
               type: array
               items:
-                $ref: '#/definitions/CommanderInfo'
+                type: string
     """
     return jsonify(msg='this function is not implemented yet.'), 500
 
 
-@server.route('/commander', methods=['POST'])
+@server.route('/commanders/<com_id>', methods=['GET'])
 @json_input
-def add_commander():
+def get_commander_info(com_id):
     """
-    [NIY] Register a commander
-    Leaderからの上官問い合わせへの返答及びLeaderの情報解決のため、実際のCommanderの情報を登録する
+    [NIY] Registered actual commander's info
     ---
     parameters:
+      - name: com_id
+        description: ID of a requested commander
+        in: path
+        type: string
+    responses:
+      200:
+        description: ok
+        schema:
+          properties:
+            commander:
+              $ref: '#/definitions/CommanderInfo'
+      404:
+        description: The commander's info is not registered
+        schema:
+          properties:
+            msg:
+              type: string
+    """
+    return jsonify(msg='this function is not implemented yet.'), 500
+
+
+@server.route('/commanders/<com_id>', methods=['PUT'])
+@json_input
+def register_commanders(com_id):
+    """
+    [NIY] Register a commander
+    ---
+    parameters:
+      - name: com_id
+        description: ID of a requested commander
+        in: path
+        type: string
       - name: commander
         in: body
         required: true
@@ -325,7 +354,7 @@ def add_commander():
               $ref: '#/definitions/CommanderInfo'
     """
     com = CommanderInfo(**request.json)
-    _app.CommanderList[com.id] = com
+    _app.commander_cache[com.id] = com
     return jsonify(commander=asdict(com))
 
 
