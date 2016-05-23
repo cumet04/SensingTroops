@@ -69,17 +69,17 @@ if __name__ == "__main__":
     if args.target == 'commander':
         url_prefix = '/commander'
         ep = 'http://localhost:{0}{1}'.format(args.port, url_prefix)
-        commander.set_params(args.id, args.name, ep)
+        commander.initialize_app(args.id, args.name, ep)
         server = commander.server
     elif args.target == 'leader':
         url_prefix = '/leader'
         ep = 'http://localhost:{0}{1}'.format(args.port, url_prefix)
-        leader.set_params(args.id, args.name, ep)
+        leader.initialize_app(args.id, args.name, ep)
         server = leader.server
     elif args.target == 'recruiter':
         url_prefix = '/recruiter'
         config_path = '{0}/recruit.yml'.format(os.path.dirname(__file__))
-        recruiter.set_params(config_path)
+        recruiter.initialize_app(config_path)
         server = recruiter.server
     else:
         logger.error('unknown target: {0}'.format(args.target))

@@ -83,7 +83,15 @@ class Commander(object):
 # ------------------------------------------------------------------------------
 
 server = Blueprint('commander', __name__)
-_app = Commander()
+_app = None
+
+
+def initialize_app(commander_id, commander_name, endpoint):
+    global _app
+    _app = Commander()
+    _app.id = commander_id
+    _app.name = commander_name
+    _app.endpoint = endpoint
 
 
 @server.route('/', methods=['GET'])
@@ -324,8 +332,3 @@ def get_mission(sub_id):
     """
     return jsonify(missions=[Mission()])
 
-
-def set_params(commander_id, commander_name, endpoint):
-    _app.id = commander_id
-    _app.name = commander_name
-    _app.endpoint = endpoint

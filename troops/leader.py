@@ -73,7 +73,15 @@ class Leader(object):
 # ------------------------------------------------------------------------------
 
 server = Blueprint('leader', __name__)
-_app = Leader()
+_app = None
+
+
+def initialize_app(leader_id, leader_name, endpoint):
+    global _app
+    _app = Leader()
+    _app.id = leader_id
+    _app.name = leader_name
+    _app.endpoint = endpoint
 
 
 @server.route('/', methods=['GET'])
@@ -283,8 +291,3 @@ def get_order(sub_id):
     """
     return jsonify(missions=[Order()])
 
-
-def set_params(leader_id, leader_name, endpoint):
-    _app.id = leader_id
-    _app.name = leader_name
-    _app.endpoint = endpoint

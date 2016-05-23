@@ -24,10 +24,8 @@ class RecruiterTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        del sys.modules['recruiter']
-        import recruiter
         config_path = '{0}/../troops/recruit.yml'.format(os.path.dirname(__file__))
-        recruiter.set_params(config_path)
+        recruiter.initialize_app(config_path)
         app = Flask(__name__)
         app.register_blueprint(recruiter.server, url_prefix="/recruiter")
         self.app = app.test_client()

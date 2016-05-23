@@ -112,7 +112,13 @@ class Recruiter(object):
 # ------------------------------------------------------------------------------
 
 server = Blueprint('recruiter', __name__)
-_app = Recruiter()
+_app = None
+
+
+def initialize_app(config_path):
+    global _app
+    _app = Recruiter()
+    _app.load_config(config_path)
 
 
 @server.route('/department/squad/leader', methods=['GET'])
@@ -371,6 +377,3 @@ def add_troop_error():
     # TODO
     return jsonify(msg='this function is not implemented yet.'), 500
 
-
-def set_params(config_path):
-    _app.load_config(config_path)

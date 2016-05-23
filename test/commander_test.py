@@ -24,9 +24,7 @@ class CommanderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        del sys.modules['commander']
-        import commander  # モジュールのリロードをしないと内部のappがリセットされないため
-        commander.set_params("cxxx0", "cmd_http", "http://localhost:50000")
+        commander.initialize_app("cxxx0", "cmd_http", "http://localhost:50000")
         app = Flask(__name__)
         app.register_blueprint(commander.server, url_prefix="/commander")
         self.app = app.test_client()
