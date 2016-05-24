@@ -326,33 +326,3 @@ def accept_report(sub_id):
     res = _app.accept_report(Report(**request.json))
     return jsonify(_status=ResponseStatus.Success, accepted=res)
 
-
-@server.route('/subordinates/<sub_id>/missions', methods=['GET'])
-@access_subordinate
-def get_mission(sub_id):
-    """
-    [NT] Latest missions assigned to the subordinate
-    ---
-    parameters:
-      - name: sub_id
-        description: A leader-id
-        in: path
-        type: string
-    responses:
-      200:
-        description: A list of mission
-        schema:
-          properties:
-            _status:
-              description: Response status
-              $ref: '#/definitions/ResponseStatus'
-            missions:
-              type: array
-              items:
-                $ref: '#/definitions/Mission'
-        headers:
-          ETag:
-            type: string
-    """
-    return jsonify(_status=ResponseStatus.Success, missions=[Mission()])
-
