@@ -8,7 +8,7 @@ import argparse
 import os
 from collections import namedtuple
 from flask_cors import cross_origin
-from objects import LeaderInfo, CommanderInfo
+from objects import LeaderInfo, CommanderInfo, ResponseStatus
 from utils import json_input, asdict
 from flask import Flask, jsonify, request, render_template, Blueprint
 from logging import getLogger, StreamHandler, DEBUG
@@ -121,172 +121,6 @@ def initialize_app(config_path):
     _app.load_config(config_path)
 
 
-@server.route('/department/squad/leader', methods=['GET'])
-def get_squad_leader():
-    """
-    [NIY] Leader's info, top of a squad
-    ---
-    parameters:
-      - name: soldier_id
-        description: A soldier's ID who is under the requested leader
-        in: query
-        required: true
-        type: string
-    responses:
-      200:
-        description: ok
-        schema:
-          properties:
-            leader:
-              $ref: '#/definitions/LeaderInfo'
-      400:
-        description: Query-param soldier_id is required.
-      404:
-        description: Specified soldier does not exist on database.
-      500:
-        description: LeaderID is found, but the instance is not resolved.
-    """
-    msgs = {
-        400: "Query param: soldier_id is required.",
-        404: "Specified soldier does not exist on database.",
-        500: "LeaderID is found, but the instance is not resolved."
-    }
-    try:
-        soldier_id = request.args.get('soldier_id', type=str)
-    except ValueError:
-        return jsonify(msg=msgs[400]), 400
-
-    leader_id = _app.get_squad_leader(soldier_id)
-    if leader_id is None:
-        return jsonify(msg=msgs[404]), 404
-
-    info = _app.resolve_leader(leader_id)
-    if info is None:
-        return jsonify(msg=msgs[500]), 500
-
-    return jsonify(leader=info)
-
-
-@server.route('/department/squad/soldiers', methods=['GET'])
-def get_squad_soldiers():
-    """
-    [NIY] A list of soldiers who are in a squad
-    ---
-    parameters:
-      - name: leader_id
-        description: A leader's ID who is top of the requested squad
-        in: query
-        required: true
-        type: string
-    responses:
-      200:
-        description: ok
-        schema:
-          properties:
-            soldiers:
-              type: array
-              items:
-                $ref: '#/definitions/SoldierInfo'
-      400:
-        description: Query-param leader_id is required.
-      404:
-        description: Specified leader does not exist on database.
-    """
-    msgs = {
-        400: "Query param: leader_id is required.",
-        404: "Specified leader does not exist on database.",
-    }
-    try:
-        leader_id = request.args.get('leader_id', type=str)
-    except ValueError:
-        return jsonify(msg=msgs[400]), 400
-
-    return jsonify(msg='this function is not implemented yet.'), 500
-
-
-@server.route('/department/troop/commander', methods=['GET'])
-def get_troop_commander():
-    """
-    [NIY] Commander's info, top of a troop
-    ---
-    parameters:
-      - name: leader_id
-        description: A leader's ID who is under the requested commander
-        in: query
-        required: true
-        type: string
-    responses:
-      200:
-        description: ok
-        schema:
-          properties:
-            leader:
-              $ref: '#/definitions/CommanderInfo'
-      400:
-        description: Query-param leader_id is required.
-      404:
-        description: Specified leader does not exist on database.
-      500:
-        description: CommanderID is found, but the instance is not resolved.
-    """
-    msgs = {
-        400: "Query param: leader_id is required.",
-        404: "Specified leader does not exist on database.",
-        500: "Commander is found, but the instance is not registered."
-    }
-    try:
-        leader_id = request.args.get('leader_id', type=str)
-    except ValueError:
-        return jsonify(msg=msgs[400]), 400
-
-    commander_id = _app.get_squad_leader(leader_id)
-    if commander_id is None:
-        return jsonify(msg=msgs[404]), 404
-
-    info = _app.resolve_leader(commander_id)
-    if info is None:
-        return jsonify(msg=msgs[500]), 500
-
-    return jsonify(leader=info)
-
-
-@server.route('/department/troop/leaders', methods=['GET'])
-def get_troop_leaders():
-    """
-    [NIY] A list of leaders who are in a troop
-    ---
-    parameters:
-      - name: commander_id
-        description: A commander's ID who is top of the requested troop
-        in: query
-        required: true
-        type: string
-    responses:
-      200:
-        description: ok
-        schema:
-          properties:
-            leaders:
-              type: array
-              items:
-                $ref: '#/definitions/LeaderInfo'
-      400:
-        description: Query-param commander_id is required.
-      404:
-        description: Specified commander does not exist on database.
-    """
-    msgs = {
-        400: "Query param: commander_id is required.",
-        404: "Specified commander does not exist on database.",
-    }
-    try:
-        commander_id = request.args.get('commander_id', type=str)
-    except ValueError:
-        return jsonify(msg=msgs[400]), 400
-
-    return jsonify(msg='this function is not implemented yet.'), 500
-
-
 @server.route('/commanders', methods=['GET'])
 @json_input
 def get_commanders():
@@ -299,12 +133,15 @@ def get_commanders():
         description: ok
         schema:
           properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             commanders:
               type: array
               items:
                 type: string
     """
-    return jsonify(msg='this function is not implemented yet.'), 500
+    return jsonify(_status=ResponseStatus.NotImplemented), 500
 
 
 @server.route('/commanders/<com_id>', methods=['GET'])
@@ -323,16 +160,20 @@ def get_commander_info(com_id):
         description: ok
         schema:
           properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             commander:
               $ref: '#/definitions/CommanderInfo'
       404:
         description: The commander's info is not registered
         schema:
           properties:
-            msg:
-              type: string
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
     """
-    return jsonify(msg='this function is not implemented yet.'), 500
+    return jsonify(_status=ResponseStatus.NotImplemented), 500
 
 
 @server.route('/commanders/<com_id>', methods=['PUT'])
@@ -356,12 +197,243 @@ def register_commanders(com_id):
         description: ok
         schema:
           properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             commander:
               $ref: '#/definitions/CommanderInfo'
     """
     com = CommanderInfo(**request.json)
     _app.commander_cache[com.id] = com
-    return jsonify(commander=asdict(com))
+    return jsonify(_status=ResponseStatus.Success, commander=asdict(com))
+
+
+@server.route('/department/squad/leader', methods=['GET'])
+def get_squad_leader():
+    """
+    [NIY] Leader's info, top of a squad
+    ---
+    parameters:
+      - name: soldier_id
+        description: A soldier's ID who is under the requested leader
+        in: query
+        required: true
+        type: string
+    responses:
+      200:
+        description: ok
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+            leader:
+              $ref: '#/definitions/LeaderInfo'
+      400:
+        description: Query-param soldier_id is required.
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+      404:
+        description: Specified soldier does not exist on database.
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+      500:
+        description: LeaderID is found, but the instance is not resolved.
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+    """
+    msgs = {
+        400: "Query param: soldier_id is required.",
+        404: "Specified soldier does not exist on database.",
+        500: "LeaderID is found, but the instance is not resolved."
+    }
+    try:
+        soldier_id = request.args.get('soldier_id', type=str)
+    except ValueError:
+        return jsonify(_status=ResponseStatus.make_error(msgs[400])), 400
+
+    leader_id = _app.get_squad_leader(soldier_id)
+    if leader_id is None:
+        return jsonify(_status=ResponseStatus.make_error(msgs[404])), 404
+
+    info = _app.resolve_leader(leader_id)
+    if info is None:
+        return jsonify(_status=ResponseStatus.make_error(msgs[500])), 500
+
+    return jsonify(_status=ResponseStatus.Success, leader=info)
+
+
+@server.route('/department/squad/soldiers', methods=['GET'])
+def get_squad_soldiers():
+    """
+    [NIY] A list of soldiers who are in a squad
+    ---
+    parameters:
+      - name: leader_id
+        description: A leader's ID who is top of the requested squad
+        in: query
+        required: true
+        type: string
+    responses:
+      200:
+        description: ok
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+            soldiers:
+              type: array
+              items:
+                $ref: '#/definitions/SoldierInfo'
+      400:
+        description: Query-param leader_id is required.
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+      404:
+        description: Specified leader does not exist on database.
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+    """
+    msgs = {
+        400: "Query param: leader_id is required.",
+        404: "Specified leader does not exist on database.",
+    }
+    try:
+        leader_id = request.args.get('leader_id', type=str)
+    except ValueError:
+        return jsonify(_status=ResponseStatus.make_error(msgs[400])), 400
+
+    return jsonify(_status=ResponseStatus.NotImplemented), 500
+
+
+@server.route('/department/troop/commander', methods=['GET'])
+def get_troop_commander():
+    """
+    [NIY] Commander's info, top of a troop
+    ---
+    parameters:
+      - name: leader_id
+        description: A leader's ID who is under the requested commander
+        in: query
+        required: true
+        type: string
+    responses:
+      200:
+        description: ok
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+            leader:
+              $ref: '#/definitions/CommanderInfo'
+      400:
+        description: Query-param leader_id is required.
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+      404:
+        description: Specified leader does not exist on database.
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+      500:
+        description: CommanderID is found, but the instance is not resolved.
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+    """
+    msgs = {
+        400: "Query param: leader_id is required.",
+        404: "Specified leader does not exist on database.",
+        500: "Commander is found, but the instance is not registered."
+    }
+    try:
+        leader_id = request.args.get('leader_id', type=str)
+    except ValueError:
+        return jsonify(_status=ResponseStatus.make_error(msgs[400])), 400
+
+    commander_id = _app.get_squad_leader(leader_id)
+    if commander_id is None:
+        return jsonify(_status=ResponseStatus.make_error(msgs[404])), 404
+
+    info = _app.resolve_leader(commander_id)
+    if info is None:
+        return jsonify(_status=ResponseStatus.make_error(msgs[500])), 500
+
+    return jsonify(_status=ResponseStatus.NotImplemented), 500
+
+
+@server.route('/department/troop/leaders', methods=['GET'])
+def get_troop_leaders():
+    """
+    [NIY] A list of leaders who are in a troop
+    ---
+    parameters:
+      - name: commander_id
+        description: A commander's ID who is top of the requested troop
+        in: query
+        required: true
+        type: string
+    responses:
+      200:
+        description: ok
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+            leaders:
+              type: array
+              items:
+                $ref: '#/definitions/LeaderInfo'
+      400:
+        description: Query-param commander_id is required.
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+      404:
+        description: Specified commander does not exist on database.
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+    """
+    msgs = {
+        400: "Query param: commander_id is required.",
+        404: "Specified commander does not exist on database.",
+    }
+    try:
+        commander_id = request.args.get('commander_id', type=str)
+    except ValueError:
+        return jsonify(_status=ResponseStatus.make_error(msgs[400])), 400
+
+    return jsonify(_status=ResponseStatus.NotImplemented), 500
 
 
 @server.route('/error/squad', methods=['POST'])
