@@ -20,11 +20,14 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
+# このテストクラスはRecruiter.load_configが正しく動作することを前提にしている
+
 class RecruiterTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        config_path = '{0}/../troops/recruit.yml'.format(os.path.dirname(__file__))
+        config_path = '{0}/../troops/recruit.yml'.format(
+            os.path.dirname(__file__))
         recruiter.initialize_app(config_path)
         app = Flask(__name__)
         app.register_blueprint(recruiter.server, url_prefix="/recruiter")
@@ -45,3 +48,57 @@ class RecruiterTestCase(unittest.TestCase):
             "commanders": config_id_list
         }
         self.assertEqual(actual, expected)
+
+# [GET] /commanders/{com_id}
+    def test_get_commander_info(self):
+        pass
+
+    def test_get_not_registered_commander_info(self):
+        pass
+
+    def test_get_invalid_commander_info(self):
+        pass
+
+# [PUT] /commanders/{com_id}
+    def test_replace_commander_info(self):
+        pass
+
+# [GET] /department/squad/leader
+    def test_get_squad_leader(self):
+        pass
+
+    def test_get_squad_leader_without_id(self):
+        pass
+
+    def test_get_squad_leader_with_invalid_id(self):
+        pass
+
+# [GET] /department/squad/soldiers
+    def test_get_squad_soldiers(self):
+        pass
+
+    def test_get_squad_soldiers_without_id(self):
+        pass
+
+    def test_get_squad_soldiers_with_invalid_id(self):
+        pass
+
+# [GET] /department/troop/commander
+    def test_get_troop_commander(self):
+        pass
+
+    def test_get_troop_commander_without_id(self):
+        pass
+
+    def test_get_troop_commander_with_invalid_id(self):
+        pass
+
+# [GET] /department/troop/leaders
+    def test_get_troop_leaders(self):
+        pass
+
+    def test_get_troop_leaders_without_id(self):
+        pass
+
+    def test_get_troop_leaders_with_invalid_id(self):
+        pass
