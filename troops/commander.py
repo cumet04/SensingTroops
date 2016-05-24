@@ -209,7 +209,9 @@ def get_subordinates():
               $ref: '#/definitions/ResponseStatus'
             subordinates:
               description: Information object of the subordinate
-              $ref: '#/definitions/LeaderInfo'
+              type: array
+              items:
+                $ref: '#/definitions/LeaderInfo'
     """
     subs_raw = _app.subordinates
     subs_dicts = [asdict(sub) for sub in subs_raw.values()]
