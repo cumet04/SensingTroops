@@ -6,7 +6,7 @@ import json
 import argparse
 from functools import wraps
 from flask_cors import cross_origin
-from objects import LeaderInfo, SoldierInfo, Work, Order
+from objects import LeaderInfo, SoldierInfo, Work, Order, ResponseStatus
 from utils import json_input, asdict
 from flask import Flask, jsonify, request, render_template, Blueprint
 from logging import getLogger, StreamHandler, DEBUG
@@ -88,16 +88,23 @@ def initialize_app(leader_id, leader_name, endpoint):
 def get_info():
     """
     Information of this leader
+    このLeaderの情報をjson形式で返す
     ---
     parameters: []
     responses:
       200:
         description: Leader's information
         schema:
-          $ref: '#/definitions/LeaderInfo'
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+            info:
+              description: Leader's information
+              $ref: '#/definitions/LeaderInfo'
     """
     info = asdict(_app.generate_info())
-    return jsonify(result='success', info=info), 200
+    return jsonify(_status=ResponseStatus.Success, info=info), 200
 
 
 @server.route('/missions', methods=['GET'])
@@ -111,12 +118,15 @@ def get_missions():
         description: A list of missions that is accepted by the leader
         schema:
           properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             missions:
               type: array
               items:
                 $ref: '#/definitions/Mission'
     """
-    return jsonify(msg='this function is not implemented yet.'), 500
+    return jsonify(_status=ResponseStatus.NotImplemented), 500
 
 
 @server.route('/missions', methods=['POST'])
@@ -136,14 +146,14 @@ def accept_missions():
         description: The mission is accepted
         schema:
           properties:
-            result:
-              description: The result of process; 'success' or 'failed'
-              type: string
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             accepted:
               description: The accepted mission
               $ref: '#/definitions/Mission'
     """
-    return jsonify(msg='this function is not implemented yet.'), 500
+    return jsonify(_status=ResponseStatus.NotImplemented), 500
 
 
 @server.route('/subordinates', methods=['GET'])
@@ -158,11 +168,18 @@ def get_subordinates():
         description: The subordinate is found
         schema:
           properties:
-            info:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+            subordinates:
               description: Information object of the subordinate
-              $ref: '#/definitions/SoldierInfo'
+              type: array
+              items:
+                $ref: '#/definitions/SoldierInfo'
     """
-    return jsonify(result='success', subordinates=_app.subordinates)
+    subs_raw = _app.subordinates
+    subs_dicts = [asdict(sub) for sub in subs_raw.values()]
+    return jsonify(_status=ResponseStatus.Success, subordinates=subs_dicts)
 
 
 @server.route('/subordinates', methods=['POST'])
@@ -183,12 +200,15 @@ def accept_subordinate():
         description: The soldier is accepted
         schema:
           properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             accepted:
               description: Information object of the subordinate
               $ref: '#/definitions/SoldierInfo'
     """
     res = _app.accept_subordinate(SoldierInfo(**request.json))
-    return jsonify(result='success', accepted=res)
+    return jsonify(_status=ResponseStatus.Success, accepted=res)
 
 
 def access_subordinate(f):
@@ -223,12 +243,15 @@ def get_sub_info(sub_id):
         description: The subordinate is found
         schema:
           properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             info:
               description: Information object of the subordinate
               $ref: '#/definitions/SoldierInfo'
     """
     res = _app.get_sub_info(sub_id)
-    return jsonify(info=res)
+    return jsonify(_status=ResponseStatus.Success, info=res)
 
 
 @server.route('/subordinates/<sub_id>/orders', methods=['GET'])
@@ -247,7 +270,11 @@ def get_order(sub_id):
         description: A list of order
         schema:
           properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             orders:
+              description: A list of orders
               type: array
               items:
                 $ref: '#/definitions/Order'
@@ -255,7 +282,7 @@ def get_order(sub_id):
           ETag:
             type: string
     """
-    return jsonify(missions=[Order()])
+    return jsonify(_status=ResponseStatus.Success, orders=[Order()])
 
 
 
@@ -282,12 +309,12 @@ def accept_work(sub_id):
         description: The work is accepted
         schema:
           properties:
-            result:
-              description: The result of process; 'success' or 'failed'
-              type: string
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             accepted:
               description: The accepted work
               $ref: '#/definitions/Work'
     """
     res = _app.accept_work(Work(**request.json))
-    return jsonify(result='success', accepted=res)
+    return jsonify(_status=ResponseStatus.Success, accepted=res)
