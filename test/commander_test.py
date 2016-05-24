@@ -43,8 +43,10 @@ class CommanderTestCase(unittest.TestCase):
                                   endpoint='http://localhost:50000',
                                   subordinates=[],
                                   campaigns=[])
-        expected = {"result": "success", "info": asdict(commander)}
-
+        expected = {
+            "_status": {'success': True, 'msg': "status is ok"},
+            "info": asdict(commander)
+        }
         self.assertEqual(actual, expected)
 
 # [GET] /campaigns
@@ -54,7 +56,10 @@ class CommanderTestCase(unittest.TestCase):
         actual = json.loads(response.data.decode("utf-8"))
 
         # assert
-        expected = {'campaigns': []}
+        expected = {
+            "_status": {'success': True, 'msg': "status is ok"},
+            'campaigns': []
+        }
         self.assertEqual(actual, expected)
 
     def test_get_campaigns_single(self):
@@ -75,7 +80,10 @@ class CommanderTestCase(unittest.TestCase):
         actual = json.loads(response.data.decode("utf-8"))
 
         # assert
-        expected = {'campaigns': [asdict(campaign)]}
+        expected = {
+            "_status": {'success': True, 'msg': "status is ok"},
+            'campaigns': [asdict(campaign)]
+        }
         self.assertEqual(actual, expected)
 
     def test_get_campaigns_multi(self):
@@ -103,7 +111,11 @@ class CommanderTestCase(unittest.TestCase):
         actual = json.loads(response.data.decode("utf-8"))
         actual_list = actual['campaigns']
 
-        # assert
+        # assert status
+        expected_status = {'success': True, 'msg': "status is ok"}
+        self.assertEqual(actual['_status'], expected_status)
+
+        # assert items
         expected_list = [asdict(c) for c in campaign_list]
         self.assertEqual(len(actual_list), len(expected_list))
         for exp in expected_list:
@@ -128,7 +140,10 @@ class CommanderTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
 
-        expected = {'result': 'success', "accepted": asdict(campaign)}
+        expected = {
+            "_status": {'success': True, 'msg': "status is ok"},
+            "accepted": asdict(campaign)
+        }
         self.assertEqual(actual, expected)
 
 # [GET] /subordinates
@@ -138,7 +153,10 @@ class CommanderTestCase(unittest.TestCase):
         actual = json.loads(response.data.decode("utf-8"))
 
         # assert
-        expected = {'subordinates': []}
+        expected = {
+            "_status": {'success': True, 'msg': "status is ok"},
+            'subordinates': []
+        }
         self.assertEqual(actual, expected)
 
     def test_get_subordinates_single(self):
@@ -158,7 +176,10 @@ class CommanderTestCase(unittest.TestCase):
         actual = json.loads(response.data.decode("utf-8"))
 
         # assert
-        expected = {'subordinates': [asdict(leader)]}
+        expected = {
+            "_status": {'success': True, 'msg': "status is ok"},
+            'subordinates': [asdict(leader)]
+        }
         self.assertEqual(actual, expected)
 
     def test_get_subordinates_multi(self):
@@ -185,7 +206,11 @@ class CommanderTestCase(unittest.TestCase):
         actual = json.loads(response.data.decode("utf-8"))
         actual_list = actual['subordinates']
 
-        # assert
+        # assert status
+        expected_status = {'success': True, 'msg': "status is ok"}
+        self.assertEqual(actual['_status'], expected_status)
+
+        # assert items
         expected_list = [asdict(l) for l in leader_list]
         self.assertEqual(len(actual_list), len(expected_list))
         for exp in expected_list:
@@ -206,7 +231,10 @@ class CommanderTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
 
-        expected = {'result': 'success', "accepted": asdict(leader)}
+        expected = {
+            "_status": {'success': True, 'msg': "status is ok"},
+            "accepted": asdict(leader)
+        }
         self.assertEqual(actual, expected)
 
 # [GET] /subordinates/{sub_id}
@@ -227,7 +255,10 @@ class CommanderTestCase(unittest.TestCase):
         actual = json.loads(response.data.decode("utf-8"))
 
         # assert
-        expected = {'info': asdict(leader)}
+        expected = {
+            "_status": {'success': True, 'msg': "status is ok"},
+            'info': asdict(leader)
+        }
         self.assertEqual(actual, expected)
 
 # [GET] /subordinates/{sub_id}/missions

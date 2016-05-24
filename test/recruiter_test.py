@@ -40,5 +40,8 @@ class RecruiterTestCase(unittest.TestCase):
         actual = json.loads(response.data.decode("utf-8"))
 
         config_id_list = [tr.commander for tr in recruiter._app.TroopList]
-        expected = {'result': 'success', "commanders": config_id_list}
+        expected = {
+            "_status": {'success': True, 'msg': "status is ok"},
+            "commanders": config_id_list
+        }
         self.assertEqual(actual, expected)
