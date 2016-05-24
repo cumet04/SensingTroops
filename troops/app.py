@@ -60,7 +60,7 @@ if __name__ == "__main__":
     r_parser.add_argument(
         'name', metavar='name', type=str, help='Target name of app')
     r_parser.add_argument(
-        '-P', '--port', default=50000, help='port')
+        '-P', '--port', type=int, default=50000, help='port')
     args = parser.parse_args()
 
     # set target app's params
