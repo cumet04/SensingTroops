@@ -36,6 +36,12 @@ class ResponseStatus():
         'success': False,
         'msg': 'this function is not implemented yet'
     }
+    @staticmethod
+    def make_error(msg):
+        return {
+            'success': False,
+            'msg': msg
+        }
 
 
 _name = 'SoldierInfo'
