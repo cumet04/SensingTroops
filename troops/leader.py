@@ -231,6 +231,34 @@ def get_sub_info(sub_id):
     return jsonify(info=res)
 
 
+@server.route('/subordinates/<sub_id>/orders', methods=['GET'])
+@access_subordinate
+def get_order(sub_id):
+    """
+    Latest orders assigned to the subordinate
+    ---
+    parameters:
+      - name: sub_id
+        description: A soldier-id
+        in: path
+        type: string
+    responses:
+      200:
+        description: A list of order
+        schema:
+          properties:
+            orders:
+              type: array
+              items:
+                $ref: '#/definitions/Order'
+        headers:
+          ETag:
+            type: string
+    """
+    return jsonify(missions=[Order()])
+
+
+
 @server.route('/subordinates/<sub_id>/work', methods=['POST'])
 @access_subordinate
 @json_input
@@ -263,31 +291,3 @@ def accept_work(sub_id):
     """
     res = _app.accept_work(Work(**request.json))
     return jsonify(result='success', accepted=res)
-
-
-@server.route('/subordinates/<sub_id>/orders', methods=['GET'])
-@access_subordinate
-def get_order(sub_id):
-    """
-    Latest orders assigned to the subordinate
-    ---
-    parameters:
-      - name: sub_id
-        description: A soldier-id
-        in: path
-        type: string
-    responses:
-      200:
-        description: A list of order
-        schema:
-          properties:
-            orders:
-              type: array
-              items:
-                $ref: '#/definitions/Order'
-        headers:
-          ETag:
-            type: string
-    """
-    return jsonify(missions=[Order()])
-
