@@ -10,6 +10,33 @@ def _to_list(info):
 
 definitions = {}
 
+_name = 'ResponseStatus'
+_info = {
+    'type': 'object',
+    'properties': {
+        'success': {'type': 'boolean'},
+        'msg': {'type': 'string'}
+    }
+}
+definitions[_name] = _info
+class ResponseStatus():
+    Success = {
+        'success': True,
+        'msg': "status is ok"
+    }
+    NotFound = {
+        'success': False,
+        'msg': 'resource not found'
+    }
+    Failed = {
+        'success': False,
+        'msg': 'action is failed'
+    }
+    NotImplemented = {
+        'success': False,
+        'msg': 'this function is not implemented yet'
+    }
+
 
 _name = 'SoldierInfo'
 _info = {
