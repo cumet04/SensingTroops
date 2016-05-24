@@ -6,7 +6,8 @@ import json
 import argparse
 from functools import wraps
 from flask_cors import cross_origin
-from objects import LeaderInfo, CommanderInfo, Report, Mission, Campaign
+from objects import LeaderInfo, CommanderInfo, Report,\
+    Mission, Campaign, ResponseStatus
 from utils import json_input, asdict
 from flask import Flask, jsonify, request, render_template, Blueprint
 from logging import getLogger, StreamHandler, DEBUG, FileHandler
@@ -105,10 +106,16 @@ def get_info():
       200:
         description: Commander's information
         schema:
-          $ref: '#/definitions/CommanderInfo'
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+            info:
+              description: Commander's information
+              $ref: '#/definitions/CommanderInfo'
     """
     info = asdict(_app.generate_info())
-    return jsonify(result='success', info=info), 200
+    return jsonify(_status=ResponseStatus.Success, info=info), 200
 
 
 @server.route('/ui', methods=['GET'])
@@ -124,7 +131,7 @@ def show_status():
     """
     # TODO: implementation
     # return render_template("captain_ui.html", com=app.generate_ui())
-    return jsonify(msg='this function is not implemented yet.'), 500
+    return jsonify(_status=ResponseStatus.NotImplemented), 500
 
 
 @server.route('/campaigns', methods=['GET'])
@@ -139,6 +146,9 @@ def get_campaigns():
         description: A list of campaign that is accepted by the commander
         schema:
           properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             campaigns:
               type: array
               items:
@@ -146,7 +156,7 @@ def get_campaigns():
     """
     camps_raw = _app.campaigns
     camps_dicts = [asdict(camp) for camp in camps_raw]
-    return jsonify(campaigns=camps_dicts), 200
+    return jsonify(_status=ResponseStatus.Success, campaigns=camps_dicts), 200
 
 
 @server.route('/campaigns', methods=['POST'])
@@ -167,9 +177,9 @@ def accept_campaigns():
         description: The campaign is accepted
         schema:
           properties:
-            result:
-              description: The result of process; 'success' or 'failed'
-              type: string
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             accepted:
               description: The accepted campaign
               $ref: '#/definitions/Campaign'
@@ -177,9 +187,9 @@ def accept_campaigns():
     campaign = Campaign(**request.json)
     accepted = asdict(_app.accept_campaign(campaign))
     if accepted is None:
-        return jsonify(msg='accept_campaign failed.'), 500
+        return jsonify(_status=ResponseStatus.Failed), 500
 
-    return jsonify(result='success', accepted=accepted), 200
+    return jsonify(_status=ResponseStatus.Success, accepted=accepted), 200
 
 
 @server.route('/subordinates', methods=['GET'])
@@ -194,13 +204,16 @@ def get_subordinates():
         description: The subordinate is found
         schema:
           properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             subordinates:
               description: Information object of the subordinate
               $ref: '#/definitions/LeaderInfo'
     """
     subs_raw = _app.subordinates
     subs_dicts = [asdict(sub) for sub in subs_raw.values()]
-    return jsonify(subordinates=subs_dicts)
+    return jsonify(_status=ResponseStatus.Success, subordinates=subs_dicts)
 
 
 @server.route('/subordinates', methods=['POST'])
@@ -221,6 +234,9 @@ def accept_subordinate():
         description: The leader is accepted
         schema:
           properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             accepted:
               description: Information object of the subordinate
               $ref: '#/definitions/LeaderInfo'
@@ -228,9 +244,9 @@ def accept_subordinate():
     leader = LeaderInfo(**request.json)
     accepted = asdict(_app.accept_subordinate(leader))
     if accepted is None:
-        return jsonify(msg='accept_subordinate failed.'), 500
+        return jsonify(_status=ResponseStatus.Failed), 500
 
-    return jsonify(result='success', accepted=accepted), 200
+    return jsonify(_status=ResponseStatus.Success, accepted=accepted), 200
 
 
 def access_subordinate(f):
@@ -264,12 +280,15 @@ def get_sub_info(sub_id):
         description: The subordinate is found
         schema:
           properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             info:
               description: Information object of the subordinate
               $ref: '#/definitions/LeaderInfo'
     """
     res = _app.get_sub_info(sub_id)
-    return jsonify(info=asdict(res))
+    return jsonify(_status=ResponseStatus.Success, info=asdict(res))
 
 
 @server.route('/subordinates/<sub_id>/report', methods=['POST'])
@@ -295,15 +314,15 @@ def accept_report(sub_id):
         description: The report is accepted
         schema:
           properties:
-            result:
-              description: The result of process; 'success' or 'failed'
-              type: string
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             accepted:
               description: The accepted report
               $ref: '#/definitions/Report'
     """
     res = _app.accept_report(Report(**request.json))
-    return jsonify(result='success', accepted=res)
+    return jsonify(_status=ResponseStatus.Success, accepted=res)
 
 
 @server.route('/subordinates/<sub_id>/missions', methods=['GET'])
@@ -322,6 +341,9 @@ def get_mission(sub_id):
         description: A list of mission
         schema:
           properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
             missions:
               type: array
               items:
@@ -330,5 +352,5 @@ def get_mission(sub_id):
           ETag:
             type: string
     """
-    return jsonify(missions=[Mission()])
+    return jsonify(_status=ResponseStatus.Success, missions=[Mission()])
 
