@@ -26,8 +26,8 @@ class RecruiterTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        config_path = '{0}/../troops/recruit.yml'.format(
-            os.path.dirname(__file__))
+        config_path = '{0}/recruit.yml'.format(os.path.dirname(__file__))
+        recruiter.logger.setLevel(ERROR)
         recruiter.initialize_app(config_path)
         app = Flask(__name__)
         app.register_blueprint(recruiter.server, url_prefix="/recruiter")
