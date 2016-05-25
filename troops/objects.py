@@ -52,8 +52,11 @@ _info = {
                'type': 'string'},
         'name': {'type': 'string'},
         'endpoint': {'type': 'string'},
-        'weapons': {},
-        'orders': {}
+        'weapons': {'description': "A list of weapon",
+                    'type': 'array',
+                    'items': {'type': 'object'}},
+        'orders': {'type': 'array',
+                   'items': {'$ref': '#/definitions/Order'}},
     }
 }
 definitions[_name] = _info
@@ -67,8 +70,11 @@ _info = {
                'type': 'string'},
         'name': {'type': 'string'},
         'endpoint': {'type': 'string'},
-        'subordinates': {},
-        'missions': {}
+        'subordinates': {'description': "A list of subordinates's ID",
+                         'type': 'array',
+                         'items': {'type': 'string'}},
+        'missions': {'type': 'array',
+                     'items': {'$ref': '#/definitions/Mission'}},
     }
 }
 definitions[_name] = _info
@@ -82,8 +88,11 @@ _info = {
                'type': 'string'},
         'name': {'type': 'string'},
         'endpoint': {'type': 'string'},
-        'subordinates': {},
-        'campaigns': {}
+        'subordinates': {'description': "A list of subordinates's ID",
+                         'type': 'array',
+                         'items': {'type': 'string'}},
+        'campaigns': {'type': 'array',
+                      'items': {'$ref': '#/definitions/Campaign'}},
     }
 }
 definitions[_name] = _info
