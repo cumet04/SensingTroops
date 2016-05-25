@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../troops')
 import unittest
 import commander
 import json
+from datetime import datetime
 from flask import Flask
 from logging import getLogger, StreamHandler, DEBUG, ERROR
 from objects import LeaderInfo, CommanderInfo, Report, Mission, Campaign
@@ -276,3 +277,30 @@ class CommanderTestCase(unittest.TestCase):
         self.assertEqual(actual, expected)
 
 # [POST] /subordinates/{sub_id}/report
+    def test_submit_report(self):
+        # add leader
+        leader = LeaderInfo(id='lxxx0',
+                            name='lea_http',
+                            endpoint='http://localhost:50000',
+                            subordinates=[],
+                            missions=[])
+        self.app.post('/commander/subordinates',
+                      data=json.dumps(asdict(leader)),
+                      content_type='application/json')
+
+        # submit a report
+        report = Report(purpose="some app",
+                        time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        values="some values")
+        response = self.app.post('/commander/subordinates/lxxx0/report',
+                                 data=json.dumps(asdict(report)),
+                                 content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        actual = json.loads(response.data.decode("utf-8"))
+
+        # assert
+        expected = {
+            "_status": {'success': True, 'msg': "status is ok"},
+            "accepted": asdict(report)
+        }
+        self.assertEqual(actual, expected)

@@ -338,6 +338,8 @@ def accept_report(sub_id):
               description: Response status
               $ref: '#/definitions/ResponseStatus'
     """
-    res = _app.accept_report(Report(**request.json))
-    return jsonify(_status=ResponseStatus.Success, accepted=res)
+    # TODO: report.valuesは少なくともstringではないと思う
+    input = Report(**request.json)
+    _app.accept_report(sub_id, input)
+    return jsonify(_status=ResponseStatus.Success, accepted=asdict(input))
 
