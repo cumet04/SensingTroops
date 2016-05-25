@@ -149,6 +149,8 @@ def get_commanders():
 def get_commander_info(com_id):
     """
     [NIY] Registered actual commander's info
+    指定されたIDに対応するCommanderInfoを返す
+    configには存在するが実体が未登録のIDを指定した場合は空オブジェクトを返す
     ---
     parameters:
       - name: com_id
@@ -166,7 +168,7 @@ def get_commander_info(com_id):
             commander:
               $ref: '#/definitions/CommanderInfo'
       404:
-        description: The commander's info is not registered
+        description: Specified Commander ID is not found on DB
         schema:
           properties:
             _status:
