@@ -73,16 +73,6 @@ class RecruiterTestCase(unittest.TestCase):
     def test_get_squad_leader_with_invalid_id(self):
         pass
 
-# [GET] /department/squad/soldiers
-    def test_get_squad_soldiers(self):
-        pass
-
-    def test_get_squad_soldiers_without_id(self):
-        pass
-
-    def test_get_squad_soldiers_with_invalid_id(self):
-        pass
-
 # [GET] /department/troop/commander
     def test_get_troop_commander(self):
         pass
@@ -93,12 +83,3 @@ class RecruiterTestCase(unittest.TestCase):
     def test_get_troop_commander_with_invalid_id(self):
         pass
 
-# [GET] /department/troop/leaders
-    def test_get_troop_leaders(self):
-        pass
-
-    def test_get_troop_leaders_without_id(self):
-        pass
-
-    def test_get_troop_leaders_with_invalid_id(self):
-        pass
