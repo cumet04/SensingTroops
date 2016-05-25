@@ -259,8 +259,9 @@ def access_subordinate(f):
     @wraps(f)
     def check_subordinate(sub_id, *args, **kwargs):
         if not _app.check_subordinate(sub_id):
-            return jsonify(result='failed',
-                           msg='the man is not my subordinate'), 404
+            return jsonify(_status=ResponseStatus.make_error(
+                "The subordinate is not found"
+            )), 404
         return f(sub_id, *args, **kwargs)
 
     return check_subordinate
@@ -288,6 +289,13 @@ def get_sub_info(sub_id):
             info:
               description: Information object of the subordinate
               $ref: '#/definitions/LeaderInfo'
+      404:
+        description: The subordinate is not found
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
     """
     res = _app.get_sub_info(sub_id)
     return jsonify(_status=ResponseStatus.Success, info=asdict(res))
@@ -322,6 +330,13 @@ def accept_report(sub_id):
             accepted:
               description: The accepted report
               $ref: '#/definitions/Report'
+      404:
+        description: The subordinate is not found
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
     """
     res = _app.accept_report(Report(**request.json))
     return jsonify(_status=ResponseStatus.Success, accepted=res)

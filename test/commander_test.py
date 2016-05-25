@@ -261,6 +261,19 @@ class CommanderTestCase(unittest.TestCase):
         }
         self.assertEqual(actual, expected)
 
+    def test_get_subordinate_info_with_invalid_id(self):
+        # get the leader
+        response = self.app.get('/commander/subordinates/bad_id')
+        self.assertEqual(response.status_code, 404)
+        actual = json.loads(response.data.decode("utf-8"))
+
+        # assert
+        expected = {
+            "_status": {'success': False,
+                        'msg': "The subordinate is not found"},
+        }
+        self.assertEqual(actual, expected)
+
 # [GET] /subordinates/{sub_id}/missions
 
 
