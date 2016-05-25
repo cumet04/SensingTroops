@@ -19,7 +19,9 @@ _info = {
     }
 }
 definitions[_name] = _info
-class ResponseStatus():
+
+
+class ResponseStatus(object):
     Success = {
         'success': True,
         'msg': "status is ok"
@@ -36,6 +38,7 @@ class ResponseStatus():
         'success': False,
         'msg': 'this function is not implemented yet'
     }
+
     @staticmethod
     def make_error(msg):
         return {
