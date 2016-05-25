@@ -293,7 +293,7 @@ def get_troop_commander():
             _status:
               description: Response status
               $ref: '#/definitions/ResponseStatus'
-            leader:
+            commander:
               $ref: '#/definitions/CommanderInfo'
       400:
         description: Query-param leader_id is required.
