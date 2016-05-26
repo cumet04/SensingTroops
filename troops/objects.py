@@ -19,7 +19,9 @@ _info = {
     }
 }
 definitions[_name] = _info
-class ResponseStatus():
+
+
+class ResponseStatus(object):
     Success = {
         'success': True,
         'msg': "status is ok"
@@ -36,6 +38,7 @@ class ResponseStatus():
         'success': False,
         'msg': 'this function is not implemented yet'
     }
+
     @staticmethod
     def make_error(msg):
         return {
@@ -52,8 +55,11 @@ _info = {
                'type': 'string'},
         'name': {'type': 'string'},
         'endpoint': {'type': 'string'},
-        'weapons': {},
-        'orders': {}
+        'weapons': {'description': "A list of weapon",
+                    'type': 'array',
+                    'items': {'type': 'object'}},
+        'orders': {'type': 'array',
+                   'items': {'$ref': '#/definitions/Order'}},
     }
 }
 definitions[_name] = _info
@@ -67,8 +73,11 @@ _info = {
                'type': 'string'},
         'name': {'type': 'string'},
         'endpoint': {'type': 'string'},
-        'subordinates': {},
-        'missions': {}
+        'subordinates': {'description': "A list of subordinates's ID",
+                         'type': 'array',
+                         'items': {'type': 'string'}},
+        'missions': {'type': 'array',
+                     'items': {'$ref': '#/definitions/Mission'}},
     }
 }
 definitions[_name] = _info
@@ -82,8 +91,11 @@ _info = {
                'type': 'string'},
         'name': {'type': 'string'},
         'endpoint': {'type': 'string'},
-        'subordinates': {},
-        'campaigns': {}
+        'subordinates': {'description': "A list of subordinates's ID",
+                         'type': 'array',
+                         'items': {'type': 'string'}},
+        'campaigns': {'type': 'array',
+                      'items': {'$ref': '#/definitions/Campaign'}},
     }
 }
 definitions[_name] = _info

@@ -8,8 +8,9 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../troops')
 import unittest
 import commander
 import json
+from datetime import datetime
 from flask import Flask
-from logging import getLogger, StreamHandler, FileHandler, DEBUG
+from logging import getLogger, StreamHandler, DEBUG, ERROR
 from objects import LeaderInfo, CommanderInfo, Report, Mission, Campaign
 from utils import asdict
 
@@ -24,6 +25,7 @@ class CommanderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
+        commander.logger.setLevel(ERROR)
         commander.initialize_app("cxxx0", "cmd_http", "http://localhost:50000")
         app = Flask(__name__)
         app.register_blueprint(commander.server, url_prefix="/commander")
@@ -70,9 +72,9 @@ class CommanderTestCase(unittest.TestCase):
                             purpose='A great app',
                             requirements='brightness sound',
                             trigger='a trigger')
-        response = self.app.post('/commander/campaigns',
-                                 data=json.dumps(asdict(campaign)),
-                                 content_type='application/json')
+        self.app.post('/commander/campaigns',
+                      data=json.dumps(asdict(campaign)),
+                      content_type='application/json')
 
         # get subordinates
         response = self.app.get('/commander/campaigns')
@@ -261,7 +263,44 @@ class CommanderTestCase(unittest.TestCase):
         }
         self.assertEqual(actual, expected)
 
-# [GET] /subordinates/{sub_id}/missions
+    def test_get_subordinate_info_with_invalid_id(self):
+        # get the leader
+        response = self.app.get('/commander/subordinates/bad_id')
+        self.assertEqual(response.status_code, 404)
+        actual = json.loads(response.data.decode("utf-8"))
 
+        # assert
+        expected = {
+            "_status": {'success': False,
+                        'msg': "The subordinate is not found"},
+        }
+        self.assertEqual(actual, expected)
 
-# [GET] /subordinates/{sub_id}/report
+# [POST] /subordinates/{sub_id}/report
+    def test_submit_report(self):
+        # add leader
+        leader = LeaderInfo(id='lxxx0',
+                            name='lea_http',
+                            endpoint='http://localhost:50000',
+                            subordinates=[],
+                            missions=[])
+        self.app.post('/commander/subordinates',
+                      data=json.dumps(asdict(leader)),
+                      content_type='application/json')
+
+        # submit a report
+        report = Report(purpose="some app",
+                        time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        values="some values")
+        response = self.app.post('/commander/subordinates/lxxx0/report',
+                                 data=json.dumps(asdict(report)),
+                                 content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        actual = json.loads(response.data.decode("utf-8"))
+
+        # assert
+        expected = {
+            "_status": {'success': True, 'msg': "status is ok"},
+            "accepted": asdict(report)
+        }
+        self.assertEqual(actual, expected)
