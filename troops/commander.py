@@ -251,7 +251,7 @@ def accept_subordinate():
     return jsonify(_status=ResponseStatus.Success, accepted=accepted), 200
 
 
-def access_subordinate(f):
+def access_subordinate(f, superior=None):
     """
     個別の部下にアクセスするための存在チェック用デコレータ
     """
@@ -259,8 +259,9 @@ def access_subordinate(f):
     @wraps(f)
     def check_subordinate(sub_id, *args, **kwargs):
         if not _app.check_subordinate(sub_id):
-            return jsonify(result='failed',
-                           msg='the man is not my subordinate'), 404
+            return jsonify(_status=ResponseStatus.make_error(
+                "The subordinate is not found"
+            )), 404
         return f(sub_id, *args, **kwargs)
 
     return check_subordinate
@@ -288,6 +289,13 @@ def get_sub_info(sub_id):
             info:
               description: Information object of the subordinate
               $ref: '#/definitions/LeaderInfo'
+      404:
+        description: The subordinate is not found
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
     """
     res = _app.get_sub_info(sub_id)
     return jsonify(_status=ResponseStatus.Success, info=asdict(res))
@@ -298,7 +306,7 @@ def get_sub_info(sub_id):
 @json_input
 def accept_report(sub_id):
     """
-    [NT] Accept new report
+    Accept new report
     ---
     parameters:
       - name: sub_id
@@ -322,37 +330,16 @@ def accept_report(sub_id):
             accepted:
               description: The accepted report
               $ref: '#/definitions/Report'
-    """
-    res = _app.accept_report(Report(**request.json))
-    return jsonify(_status=ResponseStatus.Success, accepted=res)
-
-
-@server.route('/subordinates/<sub_id>/missions', methods=['GET'])
-@access_subordinate
-def get_mission(sub_id):
-    """
-    [NT] Latest missions assigned to the subordinate
-    ---
-    parameters:
-      - name: sub_id
-        description: A leader-id
-        in: path
-        type: string
-    responses:
-      200:
-        description: A list of mission
+      404:
+        description: The subordinate is not found
         schema:
           properties:
             _status:
               description: Response status
               $ref: '#/definitions/ResponseStatus'
-            missions:
-              type: array
-              items:
-                $ref: '#/definitions/Mission'
-        headers:
-          ETag:
-            type: string
     """
-    return jsonify(_status=ResponseStatus.Success, missions=[Mission()])
+    # TODO: report.valuesは少なくともstringではないと思う
+    input = Report(**request.json)
+    _app.accept_report(sub_id, input)
+    return jsonify(_status=ResponseStatus.Success, accepted=asdict(input))
 
