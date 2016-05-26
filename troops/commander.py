@@ -251,7 +251,7 @@ def accept_subordinate():
     return jsonify(_status=ResponseStatus.Success, accepted=accepted), 200
 
 
-def access_subordinate(f):
+def access_subordinate(f, superior=None):
     """
     個別の部下にアクセスするための存在チェック用デコレータ
     """
@@ -306,7 +306,7 @@ def get_sub_info(sub_id):
 @json_input
 def accept_report(sub_id):
     """
-    [NT] Accept new report
+    Accept new report
     ---
     parameters:
       - name: sub_id
