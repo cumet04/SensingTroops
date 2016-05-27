@@ -112,7 +112,7 @@ class Recruiter(object):
 # ------------------------------------------------------------------------------
 
 server = Blueprint('recruiter', __name__)
-_app = None
+_app = None  # type:Recruiter
 
 
 def initialize_app(config_path):

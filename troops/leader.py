@@ -73,7 +73,7 @@ class Leader(object):
 # ------------------------------------------------------------------------------
 
 server = Blueprint('leader', __name__)
-_app = None
+_app = None  # type: Leader
 
 
 def initialize_app(leader_id, leader_name, endpoint):

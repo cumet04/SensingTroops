@@ -84,7 +84,7 @@ class Commander(object):
 # ------------------------------------------------------------------------------
 
 server = Blueprint('commander', __name__)
-_app = None
+_app = None  # type: Commander
 
 
 def initialize_app(commander_id, commander_name, endpoint):
