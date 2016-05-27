@@ -251,7 +251,7 @@ def accept_subordinate():
     return jsonify(_status=ResponseStatus.Success, accepted=accepted), 200
 
 
-def access_subordinate(f, superior=None):
+def access_subordinate(f):
     """
     個別の部下にアクセスするための存在チェック用デコレータ
     """
