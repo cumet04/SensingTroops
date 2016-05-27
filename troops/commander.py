@@ -244,14 +244,14 @@ def accept_subordinate():
               $ref: '#/definitions/LeaderInfo'
     """
     leader = LeaderInfo(**request.json)
-    accepted = asdict(_app.accept_subordinate(leader))
-    if accepted is None:
+    if _app.accept_subordinate(leader) == False:
         return jsonify(_status=ResponseStatus.Failed), 500
 
-    return jsonify(_status=ResponseStatus.Success, accepted=accepted), 200
+    return jsonify(_status=ResponseStatus.Success,
+                   accepted=asdict(leader)), 200
 
 
-def access_subordinate(f, superior=None):
+def access_subordinate(f):
     """
     個別の部下にアクセスするための存在チェック用デコレータ
     """

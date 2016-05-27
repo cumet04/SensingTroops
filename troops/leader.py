@@ -1,14 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import sys
-import json
-import argparse
 from functools import wraps
-from flask_cors import cross_origin
-from objects import LeaderInfo, SoldierInfo, Work, Order, ResponseStatus
+from objects import LeaderInfo, SoldierInfo, Work, Mission, ResponseStatus
 from utils import json_input, asdict
-from flask import Flask, jsonify, request, render_template, Blueprint
+from flask import jsonify, request, Blueprint
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -47,6 +43,10 @@ class Leader(object):
         """
         return sub_id in self.subordinates
 
+    def accept_mission(self, mission):
+        self.missions.append(mission)
+        return mission
+
     def get_sub_info(self, sub_id):
         return self.subordinates[sub_id]
 
@@ -56,6 +56,8 @@ class Leader(object):
         :param SoldierInfo sub_info: 受け入れるLeaderの情報
         :return bool:
         """
+        logger.debug('In accept_subordinate:')
+        logger.debug('> sub_info:{0}'.format(sub_info))
         if self.check_subordinate(sub_info.id):
             return False
         self.subordinates[sub_info.id] = sub_info
@@ -110,7 +112,7 @@ def get_info():
 @server.route('/missions', methods=['GET'])
 def get_missions():
     """
-    [NIY] Accepted missions
+    Accepted missions
     ---
     parameters: []
     responses:
@@ -126,13 +128,16 @@ def get_missions():
               items:
                 $ref: '#/definitions/Mission'
     """
-    return jsonify(_status=ResponseStatus.NotImplemented), 500
+    missions_raw = _app.missions
+    missions_dicts = [asdict(m) for m in missions_raw]
+    return jsonify(_status=ResponseStatus.Success,
+                   missions=missions_dicts), 200
 
 
 @server.route('/missions', methods=['POST'])
 def accept_missions():
     """
-    [NIY] Add new missions
+    Add new missions
     ---
     parameters:
       - name: mission
@@ -153,7 +158,12 @@ def accept_missions():
               description: The accepted mission
               $ref: '#/definitions/Mission'
     """
-    return jsonify(_status=ResponseStatus.NotImplemented), 500
+    mission = Mission(**request.json)
+    accepted = asdict(_app.accept_mission(mission))
+    if accepted is None:
+        return jsonify(_status=ResponseStatus.Failed), 500
+
+    return jsonify(_status=ResponseStatus.Success, accepted=accepted), 200
 
 
 @server.route('/subordinates', methods=['GET'])
@@ -207,8 +217,12 @@ def accept_subordinate():
               description: Information object of the subordinate
               $ref: '#/definitions/SoldierInfo'
     """
-    res = _app.accept_subordinate(SoldierInfo(**request.json))
-    return jsonify(_status=ResponseStatus.Success, accepted=res)
+    soldier = SoldierInfo(**request.json)
+    if _app.accept_subordinate(soldier) == False:
+        return jsonify(_status=ResponseStatus.Failed), 500
+
+    return jsonify(_status=ResponseStatus.Success,
+                   accepted=asdict(soldier)), 200
 
 
 def access_subordinate(f):
@@ -220,8 +234,9 @@ def access_subordinate(f):
     @wraps(f)
     def check_subordinate(sub_id, *args, **kwargs):
         if not _app.check_subordinate(sub_id):
-            return jsonify(result='failed',
-                           msg='the man is not my subordinate'), 404
+            return jsonify(_status=ResponseStatus.make_error(
+                "The subordinate is not found"
+            )), 404
         return f(sub_id, *args, **kwargs)
 
     return check_subordinate
@@ -251,7 +266,7 @@ def get_sub_info(sub_id):
               $ref: '#/definitions/SoldierInfo'
     """
     res = _app.get_sub_info(sub_id)
-    return jsonify(_status=ResponseStatus.Success, info=res)
+    return jsonify(_status=ResponseStatus.Success, info=asdict(res))
 
 
 @server.route('/subordinates/<sub_id>/work', methods=['POST'])
@@ -284,5 +299,6 @@ def accept_work(sub_id):
               description: The accepted work
               $ref: '#/definitions/Work'
     """
-    res = _app.accept_work(Work(**request.json))
-    return jsonify(_status=ResponseStatus.Success, accepted=res)
+    input = Work(**request.json)
+    _app.accept_work(sub_id, input)
+    return jsonify(_status=ResponseStatus.Success, accepted=asdict(input))

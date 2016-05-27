@@ -10,7 +10,7 @@ import leader
 import json
 from datetime import datetime
 from flask import Flask
-from logging import getLogger, StreamHandler, DEBUG
+from logging import getLogger, StreamHandler, DEBUG, ERROR
 from objects import LeaderInfo, SoldierInfo, Work, Mission
 from utils import asdict
 
@@ -25,6 +25,7 @@ class LeaderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
+        leader.logger.setLevel(ERROR)
         leader.initialize_app("lxxx0", "lea_http", "http://localhost:50000")
         app = Flask(__name__)
         app.register_blueprint(leader.server, url_prefix="/leader")
@@ -132,7 +133,7 @@ class LeaderTestCase(unittest.TestCase):
                           purpose='A great app',
                           requirements='brightness sound',
                           trigger='a trigger')
-        response = self.app.post('/leader/mission',
+        response = self.app.post('/leader/missions',
                                  data=json.dumps(asdict(mission)),
                                  content_type='application/json')
         self.assertEqual(response.status_code, 200)
@@ -169,7 +170,7 @@ class LeaderTestCase(unittest.TestCase):
                       content_type='application/json')
 
         # get subordinates
-        response = self.app.get('/commander/subordinates')
+        response = self.app.get('/leader/subordinates')
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
 
@@ -288,7 +289,7 @@ class LeaderTestCase(unittest.TestCase):
         work = Work(purpose="some app",
                     time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                     values="some values")
-        response = self.app.post('/commander/subordinates/sxxx0/work',
+        response = self.app.post('/leader/subordinates/sxxx0/work',
                                  data=json.dumps(asdict(work)),
                                  content_type='application/json')
         self.assertEqual(response.status_code, 200)
