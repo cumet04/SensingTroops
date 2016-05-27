@@ -27,8 +27,8 @@ Troop = namedtuple('Troop', ['commander', 'subordinates'])
 class Recruiter(object):
     
     def __init__(self):
-        self.SquadList = []
-        self.TroopList = []
+        self.SquadList = {}
+        self.TroopList = {}
         self.leader_cache = {}
         self.commander_cache = {}
 
@@ -42,14 +42,14 @@ class Recruiter(object):
         file.close()
 
         for tr in data['troops']:
-            troop = Troop(commander=tr['commander'],
-                          subordinates=tr['subordinates'])
-            self.TroopList.append(troop)
+            com_id = tr['commander']
+            subs = tr['subordinates']
+            self.TroopList[com_id] = subs
 
         for sq in data['squads']:
-            squad = Squad(leader=sq['leader'],
-                          subordinates=sq['subordinates'])
-            self.SquadList.append(squad)
+            lea_id = sq['leader']
+            subs = sq['subordinates']
+            self.SquadList[lea_id] = subs
 
         logger.info('load_config done')
         logger.info('Troops: {0}'.format(self.TroopList))
@@ -61,12 +61,10 @@ class Recruiter(object):
         :param str soldier_id: 取得したいLeaderの部下のID
         :return str: LeaderのID
         """
-        squads = list(filter(
-                    lambda l: soldier_id in l.subordinates,
-                    self.SquadList))
-        if len(squads) == 0:
-            return None
-        return squads[0].leader
+        for leader_id, subordinates in self.SquadList.items():
+            if soldier_id in subordinates:
+                return leader_id
+        return None
 
     def get_troop_commander(self, leader_id):
         """
@@ -74,12 +72,10 @@ class Recruiter(object):
         :param str leader_id: 取得したいCommanderの部下のID
         :return str: CommanderのID
         """
-        troops = list(filter(
-                    lambda l: leader_id in l.subordinates,
-                    self.TroopList))
-        if len(troops) == 0:
-            return None
-        return troops[0].commander
+        for commander_id, subordinates in self.TroopList.items():
+            if leader_id in subordinates:
+                return commander_id
+        return None
 
     def resolve_leader(self, leader_id, force_retrieve=False):
         """
@@ -104,6 +100,8 @@ class Recruiter(object):
         CommanderのInfoを返す
         :param str commander_id: 取得したいCommanderのID
         """
+        if commander_id not in self.commander_cache:
+            return None
         return self.commander_cache[commander_id]
 
 
@@ -125,7 +123,7 @@ def initialize_app(config_path):
 @json_input
 def get_commanders():
     """
-    [NIY] A list of Commander's ID, that is registered in config
+    A list of Commander's ID, that is registered in config
     ---
     parameters: []
     responses:
@@ -141,14 +139,15 @@ def get_commanders():
               items:
                 type: string
     """
-    return jsonify(_status=ResponseStatus.NotImplemented), 500
+    id_list = list(_app.TroopList.keys())
+    return jsonify(_status=ResponseStatus.Success, commanders=id_list)
 
 
 @server.route('/commanders/<com_id>', methods=['GET'])
 @json_input
 def get_commander_info(com_id):
     """
-    [NIY] Registered actual commander's info
+    Registered actual commander's info
     指定されたIDに対応するCommanderInfoを返す
     configには存在するが実体が未登録のIDを指定した場合は空オブジェクトを返す
     ---
@@ -175,14 +174,20 @@ def get_commander_info(com_id):
               description: Response status
               $ref: '#/definitions/ResponseStatus'
     """
-    return jsonify(_status=ResponseStatus.NotImplemented), 500
+    if com_id not in _app.TroopList:
+        return jsonify(_status=ResponseStatus.NotFound), 404
+
+    info = _app.resolve_commander(com_id)
+    if info is None:
+        return jsonify(_status=ResponseStatus.Success, commander={})
+    return jsonify(_status=ResponseStatus.Success, commander=asdict(info))
 
 
 @server.route('/commanders/<com_id>', methods=['PUT'])
 @json_input
 def register_commanders(com_id):
     """
-    [NIY] Register a commander
+    Register a commander
     ---
     parameters:
       - name: com_id
@@ -204,16 +209,38 @@ def register_commanders(com_id):
               $ref: '#/definitions/ResponseStatus'
             commander:
               $ref: '#/definitions/CommanderInfo'
+      400:
+        description: '[NT] invalid input'
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+            input:
+              $ref: '#/definitions/CommanderInfo'
     """
-    com = CommanderInfo(**request.json)
-    _app.commander_cache[com.id] = com
+    msgs = {
+        400: "Input parameter is invalid",
+    }
+
+    com = None
+    try:
+        com = CommanderInfo(**request.json)
+    except TypeError:
+        return jsonify(_status=ResponseStatus.make_error(msgs[400]),
+                       input=request.json)
+    if com.id != com_id:
+        return jsonify(_status=ResponseStatus.make_error(msgs[400]),
+                       input=request.json)
+
+    _app.commander_cache[com_id] = com
     return jsonify(_status=ResponseStatus.Success, commander=asdict(com))
 
 
 @server.route('/department/squad/leader', methods=['GET'])
 def get_squad_leader():
     """
-    [NIY] Leader's info, top of a squad
+    Leader's info, top of a squad
     ---
     parameters:
       - name: soldier_id
@@ -246,7 +273,7 @@ def get_squad_leader():
               description: Response status
               $ref: '#/definitions/ResponseStatus'
       500:
-        description: LeaderID is found, but the instance is not resolved.
+        description: "[NT] LeaderID is found, but the instance is not resolved"
         schema:
           properties:
             _status:
@@ -254,13 +281,12 @@ def get_squad_leader():
               $ref: '#/definitions/ResponseStatus'
     """
     msgs = {
-        400: "Query param: soldier_id is required.",
-        404: "Specified soldier does not exist on database.",
-        500: "LeaderID is found, but the instance is not resolved."
+        400: "Query param: soldier_id is required",
+        404: "Specified soldier does not exist on database",
+        500: "LeaderID was found, but the instance was not resolved"
     }
-    try:
-        soldier_id = request.args.get('soldier_id', type=str)
-    except ValueError:
+    soldier_id = request.args.get('soldier_id', type=str)
+    if soldier_id is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[400])), 400
 
     leader_id = _app.get_squad_leader(soldier_id)
@@ -277,7 +303,7 @@ def get_squad_leader():
 @server.route('/department/troop/commander', methods=['GET'])
 def get_troop_commander():
     """
-    [NIY] Commander's info, top of a troop
+    Commander's info, top of a troop
     ---
     parameters:
       - name: leader_id
@@ -318,24 +344,23 @@ def get_troop_commander():
               $ref: '#/definitions/ResponseStatus'
     """
     msgs = {
-        400: "Query param: leader_id is required.",
-        404: "Specified leader does not exist on database.",
-        500: "Commander is found, but the instance is not registered."
+        400: "Query-param leader_id is required",
+        404: "Specified leader does not exist on database",
+        500: "Commander is found, but the instance is not registered"
     }
-    try:
-        leader_id = request.args.get('leader_id', type=str)
-    except ValueError:
+    leader_id = request.args.get('leader_id', type=str)
+    if leader_id is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[400])), 400
 
-    commander_id = _app.get_squad_leader(leader_id)
+    commander_id = _app.get_troop_commander(leader_id)
     if commander_id is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[404])), 404
 
-    info = _app.resolve_leader(commander_id)
+    info = _app.resolve_commander(commander_id)
     if info is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[500])), 500
 
-    return jsonify(_status=ResponseStatus.NotImplemented), 500
+    return jsonify(_status=ResponseStatus.Success, commander=asdict(info))
 
 
 @server.route('/error/squad', methods=['POST'])

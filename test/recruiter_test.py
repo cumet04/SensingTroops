@@ -42,7 +42,7 @@ class RecruiterTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
 
-        config_id_list = [tr.commander for tr in recruiter._app.TroopList]
+        config_id_list = list(recruiter._app.TroopList.keys())
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
             "commanders": config_id_list
@@ -73,7 +73,7 @@ class RecruiterTestCase(unittest.TestCase):
         }
         self.assertEqual(actual, expected)
 
-    def test_get_not_registered_commander_info(self):
+    def test_get_commander_info_with_not_registered_id(self):
         # get not-registered commander's info
         response = self.app.get('/recruiter/commanders/cxxx0')
         self.assertEqual(response.status_code, 200)
@@ -86,7 +86,7 @@ class RecruiterTestCase(unittest.TestCase):
         }
         self.assertEqual(actual, expected)
 
-    def test_get_invalid_commander_info(self):
+    def test_get_commander_info_with_invalid_id(self):
         # get invalid commander's info
         response = self.app.get('/recruiter/commanders/bad_id')
         self.assertEqual(response.status_code, 404)
@@ -133,7 +133,7 @@ class RecruiterTestCase(unittest.TestCase):
         # assert
         expected = {
             "_status": {'success': False,
-                        'msg': "Specified soldier does not exist on database"},
+                        'msg': "Query param: soldier_id is required"},
         }
         self.assertEqual(actual, expected)
 
