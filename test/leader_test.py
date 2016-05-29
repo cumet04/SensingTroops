@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../troops')
 import unittest
 import leader
 import json
+import utils
 from datetime import datetime
 from flask import Flask
 from logging import getLogger, StreamHandler, DEBUG, ERROR
@@ -25,6 +26,7 @@ class LeaderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
+        utils.logger.setLevel(ERROR)
         leader.logger.setLevel(ERROR)
         leader.initialize_app("lxxx0", "lea_http", "http://localhost:50000")
         app = Flask(__name__)

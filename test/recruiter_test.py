@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../troops')
 import unittest
 import recruiter
 import json
+import utils
 from flask import Flask
 from logging import getLogger, StreamHandler, DEBUG, ERROR
 from objects import LeaderInfo, CommanderInfo
@@ -27,6 +28,7 @@ class RecruiterTestCase(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
         config_path = '{0}/recruit.yml'.format(os.path.dirname(__file__))
+        utils.logger.setLevel(ERROR)
         recruiter.logger.setLevel(ERROR)
         recruiter.initialize_app(config_path)
         app = Flask(__name__)
