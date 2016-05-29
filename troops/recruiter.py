@@ -9,7 +9,7 @@ import os
 from collections import namedtuple
 from flask_cors import cross_origin
 from objects import LeaderInfo, CommanderInfo, ResponseStatus
-from utils import json_input, asdict
+from utils import json_input, asdict, RestClient
 from flask import Flask, jsonify, request, render_template, Blueprint
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -105,6 +105,21 @@ class Recruiter(object):
         return self.commander_cache[commander_id]
 
 
+class RecruiterClient(object):
+    def __init__(self, client: RestClient):
+        self.client = client
+
+        # リストに挙げられているメソッドをインスタンスメソッド化する
+        # APIドキュメントとAPIヘルパーの実装をコード的に近くに実装するための措置
+        method_list = [_get_commanders,
+                       _get_commanders_spec,
+                       _put_commanders_spec,
+                       _get_department_squad_leader,
+                       _get_department_troop_commander,
+                       ]
+        for method in method_list:
+            setattr(self.__class__, method.__name__[1:], method)
+
 # ------------------------------------------------------------------------------
 # REST interface ---------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -141,6 +156,15 @@ def get_commanders():
     """
     id_list = list(_app.TroopList.keys())
     return jsonify(_status=ResponseStatus.Success, commanders=id_list)
+
+
+def _get_commanders(self):
+    status, response = self.client.get('commanders')
+    if response is None:
+        return None
+    if status != 200:
+        return (response['_status'], None)
+    return (response['_status'], response['commanders'])
 
 
 @server.route('/commanders/<com_id>', methods=['GET'])
@@ -181,6 +205,15 @@ def get_commander_info(com_id):
     if info is None:
         return jsonify(_status=ResponseStatus.Success, commander={})
     return jsonify(_status=ResponseStatus.Success, commander=asdict(info))
+
+
+def _get_commanders_spec(self, com_id: str):
+    status, response = self.client.get('commanders/' + com_id)
+    if response is None:
+        return None
+    if status != 200:
+        return (response['_status'], None)
+    return (response['_status'], CommanderInfo(**response['commander']))
 
 
 @server.route('/commanders/<com_id>', methods=['PUT'])
@@ -235,6 +268,15 @@ def register_commanders(com_id):
 
     _app.commander_cache[com_id] = com
     return jsonify(_status=ResponseStatus.Success, commander=asdict(com))
+
+
+def _put_commanders_spec(self, com_id: str, obj: CommanderInfo):
+    status, response = self.client.put('commanders/' + com_id, asdict(obj))
+    if response is None:
+        return None
+    if status != 200:
+        return (response['_status'], None)
+    return (response['_status'], CommanderInfo(**response['commander']))
 
 
 @server.route('/department/squad/leader', methods=['GET'])
@@ -300,6 +342,16 @@ def get_squad_leader():
     return jsonify(_status=ResponseStatus.Success, leader=info)
 
 
+def _get_department_squad_leader(self, soldier_id: str):
+    status, response = self.client.get('department/squad/leader?sildier_id='
+                                       + soldier_id)
+    if response is None:
+        return None
+    if status != 200:
+        return (response['_status'], None)
+    return (response['_status'], LeaderInfo(**response['leader']))
+
+
 @server.route('/department/troop/commander', methods=['GET'])
 def get_troop_commander():
     """
@@ -361,6 +413,16 @@ def get_troop_commander():
         return jsonify(_status=ResponseStatus.make_error(msgs[500])), 500
 
     return jsonify(_status=ResponseStatus.Success, commander=asdict(info))
+
+
+def _get_department_troop_commander(self, leader_id: str):
+    status, response = self.client.get('department/troop/commander?leader_id='
+                                       + leader_id)
+    if response is None:
+        return None
+    if status != 200:
+        return (response['_status'], None)
+    return (response['_status'], CommanderInfo(**response['commander']))
 
 
 @server.route('/error/squad', methods=['POST'])
