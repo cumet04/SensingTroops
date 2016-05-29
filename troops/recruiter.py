@@ -163,8 +163,8 @@ def _get_commanders(self):
     if res is None:
         return None
     if st != 200:
-        return (res['_status'], None)
-    return (res['_status'], res['commanders'])
+        return None, res['_status']['msg']
+    return res['commanders'], None
 
 
 @server.route('/commanders/<com_id>', methods=['GET'])
@@ -212,8 +212,8 @@ def _get_commanders_spec(self, com_id):
     if res is None:
         return None
     if st != 200:
-        return (res['_status'], None)
-    return (res['_status'], CommanderInfo(**res['commander']))
+        return None, res['_status']['msg']
+    return CommanderInfo(**res['commander']), None
 
 
 @server.route('/commanders/<com_id>', methods=['PUT'])
@@ -275,8 +275,8 @@ def _put_commanders_spec(self, com_id, obj):
     if res is None:
         return None
     if st != 200:
-        return (res['_status'], None)
-    return (res['_status'], CommanderInfo(**res['commander']))
+        return None, res['_status']['msg']
+    return CommanderInfo(**res['commander']), None
 
 
 @server.route('/department/squad/leader', methods=['GET'])
@@ -348,8 +348,8 @@ def _get_department_squad_leader(self, soldier_id):
     if res is None:
         return None
     if st != 200:
-        return (res['_status'], None)
-    return (res['_status'], LeaderInfo(**res['leader']))
+        return None, res['_status']['msg']
+    return LeaderInfo(**res['leader']), None
 
 
 @server.route('/department/troop/commander', methods=['GET'])
@@ -421,8 +421,8 @@ def _get_department_troop_commander(self, leader_id):
     if res is None:
         return None
     if st != 200:
-        return (res['_status'], None)
-    return (res['_status'], CommanderInfo(**res['commander']))
+        return None, res['_status']['msg']
+    return CommanderInfo(**res['commander']), None
 
 
 @server.route('/error/squad', methods=['POST'])

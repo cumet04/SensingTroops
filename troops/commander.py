@@ -138,8 +138,8 @@ def _get_root(self):
     if res is None:
         return None
     if st != 200:
-        return res['_status'], None
-    return res['_status'], CommanderInfo(**res['info'])
+        return None, res['status']['msg']
+    return CommanderInfo(**res['info']), None
 
 
 @server.route('/ui', methods=['GET'])
@@ -188,8 +188,8 @@ def _get_campaigns(self):
     if res is None:
         return None
     if st != 200:
-        return res['_status'], None
-    return res['_status'], [Campaign(c) for c in res['campaigns']]
+        return None, res['_status']['msg']
+    return [Campaign(c) for c in res['campaigns']], None
 
 
 @server.route('/campaigns', methods=['POST'])
@@ -230,8 +230,8 @@ def _post_campaigns(self, obj):
     if res is None:
         return None
     if st != 200:
-        return res['_status'], None
-    return res['_status'], Campaign(**res['accepted'])
+        return None, res['_status']['msg']
+    return Campaign(**res['accepted']), None
 
 
 @server.route('/subordinates', methods=['GET'])
@@ -265,8 +265,8 @@ def _get_subordinates(self):
     if res is None:
         return None
     if st != 200:
-        return res['_status'], None
-    return res['_status'], [LeaderInfo(l) for l in res['subordinates']]
+        return None, res['_status']['msg']
+    return [LeaderInfo(l) for l in res['subordinates']]
 
 
 @server.route('/subordinates', methods=['POST'])
@@ -307,8 +307,8 @@ def _post_subordinates(self, obj):
     if res is None:
         return None
     if st != 200:
-        return res['_status'], None
-    return res['_status'], LeaderInfo(**res['accepted'])
+        return None, res['_status']['msg']
+    return LeaderInfo(**res['accepted']), None
 
 
 def access_subordinate(f):
@@ -366,8 +366,8 @@ def _get_subordinates_spec(self, sub_id):
     if res is None:
         return None
     if st != 200:
-        return res['_status'], None
-    return res['_status'], LeaderInfo(res['info'])
+        return None, res['_status']['msg']
+    return LeaderInfo(res['info']), None
 
 
 @server.route('/subordinates/<sub_id>/report', methods=['POST'])
@@ -419,6 +419,6 @@ def _post_report(self, sub_id, obj):
     if res is None:
         return None
     if st != 200:
-        return res['_status'], None
-    return res['_status'], Report(**res['accepted'])
+        return res['_status']['msg']
+    return Report(**res['accepted']), None
 
