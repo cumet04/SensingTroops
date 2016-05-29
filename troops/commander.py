@@ -10,11 +10,10 @@ from objects import LeaderInfo, CommanderInfo, Report,\
     Mission, Campaign, ResponseStatus
 from utils import json_input, asdict
 from flask import Flask, jsonify, request, render_template, Blueprint
-from logging import getLogger, StreamHandler, DEBUG, FileHandler
+from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
-handler = FileHandler('/tmp/troops/commander.log')
-# handler = StreamHandler()
+handler = StreamHandler()
 handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
