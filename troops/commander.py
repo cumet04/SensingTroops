@@ -8,13 +8,12 @@ from functools import wraps
 from flask_cors import cross_origin
 from objects import LeaderInfo, CommanderInfo, Report,\
     Mission, Campaign, ResponseStatus
-from utils import json_input, asdict
+from utils import json_input, asdict, RestClient
 from flask import Flask, jsonify, request, render_template, Blueprint
-from logging import getLogger, StreamHandler, DEBUG, FileHandler
+from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
-handler = FileHandler('/tmp/troops/commander.log')
-# handler = StreamHandler()
+handler = StreamHandler()
 handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
@@ -78,6 +77,22 @@ class Commander(object):
         return True
 
 
+class CommanderClient(object):
+    def __init__(self, client: RestClient):
+        self.client = client
+
+        # リストに挙げられているメソッドをインスタンスメソッド化する
+        # APIドキュメントとAPIヘルパーの実装をコード的に近くに実装するための措置
+        method_list = [_get_root,
+                       _get_campaigns,
+                       _post_campaigns,
+                       _get_subordinates,
+                       _post_subordinates,
+                       _get_subordinates_spec,
+                       _post_report
+                       ]
+        for method in method_list:
+            setattr(self.__class__, method.__name__[1:], method)
 
 # ------------------------------------------------------------------------------
 # REST interface ---------------------------------------------------------------
@@ -116,6 +131,15 @@ def get_info():
     """
     info = asdict(_app.generate_info())
     return jsonify(_status=ResponseStatus.Success, info=info), 200
+
+
+def _get_root(self):
+    st, res = self.client.get('')
+    if res is None:
+        return None
+    if st != 200:
+        return res['_status'], None
+    return res['_status'], CommanderInfo(**res['info'])
 
 
 @server.route('/ui', methods=['GET'])
@@ -159,6 +183,15 @@ def get_campaigns():
     return jsonify(_status=ResponseStatus.Success, campaigns=camps_dicts), 200
 
 
+def _get_campaigns(self):
+    st, res = self.client.get('campaigns')
+    if res is None:
+        return None
+    if st != 200:
+        return res['_status'], None
+    return res['_status'], [Campaign(c) for c in res['campaigns']]
+
+
 @server.route('/campaigns', methods=['POST'])
 def accept_campaigns():
     """
@@ -192,6 +225,15 @@ def accept_campaigns():
     return jsonify(_status=ResponseStatus.Success, accepted=accepted), 200
 
 
+def _post_campaigns(self, obj):
+    st, res = self.client.post('campaigns', asdict(obj))
+    if res is None:
+        return None
+    if st != 200:
+        return res['_status'], None
+    return res['_status'], Campaign(**res['accepted'])
+
+
 @server.route('/subordinates', methods=['GET'])
 @json_input
 def get_subordinates():
@@ -216,6 +258,15 @@ def get_subordinates():
     subs_raw = _app.subordinates
     subs_dicts = [asdict(sub) for sub in subs_raw.values()]
     return jsonify(_status=ResponseStatus.Success, subordinates=subs_dicts)
+
+
+def _get_subordinates(self):
+    st, res = self.client.get('subordinates')
+    if res is None:
+        return None
+    if st != 200:
+        return res['_status'], None
+    return res['_status'], [LeaderInfo(l) for l in res['subordinates']]
 
 
 @server.route('/subordinates', methods=['POST'])
@@ -249,6 +300,15 @@ def accept_subordinate():
 
     return jsonify(_status=ResponseStatus.Success,
                    accepted=asdict(leader)), 200
+
+
+def _post_subordinates(self, obj):
+    st, res = self.client.post('subordinates', asdict(obj))
+    if res is None:
+        return None
+    if st != 200:
+        return res['_status'], None
+    return res['_status'], LeaderInfo(**res['accepted'])
 
 
 def access_subordinate(f):
@@ -301,6 +361,15 @@ def get_sub_info(sub_id):
     return jsonify(_status=ResponseStatus.Success, info=asdict(res))
 
 
+def _get_subordinates_spec(self, sub_id):
+    st, res = self.client.get('subordinates/' + sub_id)
+    if res is None:
+        return None
+    if st != 200:
+        return res['_status'], None
+    return res['_status'], LeaderInfo(res['info'])
+
+
 @server.route('/subordinates/<sub_id>/report', methods=['POST'])
 @access_subordinate
 @json_input
@@ -342,4 +411,14 @@ def accept_report(sub_id):
     input = Report(**request.json)
     _app.accept_report(sub_id, input)
     return jsonify(_status=ResponseStatus.Success, accepted=asdict(input))
+
+
+def _post_report(self, sub_id, obj):
+    st, res = self.client.post('subordinates/{0}/report'.format(sub_id),
+                               asdict(obj))
+    if res is None:
+        return None
+    if st != 200:
+        return res['_status'], None
+    return res['_status'], Report(**res['accepted'])
 
