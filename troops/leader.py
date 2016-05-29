@@ -1,10 +1,15 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+import os
+import argparse
 from functools import wraps
-from objects import LeaderInfo, SoldierInfo, Work, Mission, ResponseStatus
+from objects import LeaderInfo, SoldierInfo, Work, Mission, ResponseStatus,\
+    definitions
 from utils import json_input, asdict
-from flask import jsonify, request, Blueprint
+from flask import Flask, jsonify, request, Blueprint, render_template
+from flask_cors import cross_origin
+from flask_swagger import swagger
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -74,19 +79,21 @@ class Leader(object):
 # REST interface ---------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
-server = Blueprint('leader', __name__)
-_app = None  # type: Leader
+server = None  # type: Flask
+app = Blueprint('leader', __name__)
+_leader = None  # type: Leader
+url_prefix = '/leader'
 
 
 def initialize_app(leader_id, leader_name, endpoint):
-    global _app
-    _app = Leader()
-    _app.id = leader_id
-    _app.name = leader_name
-    _app.endpoint = endpoint
+    global _leader
+    _leader = Leader()
+    _leader.id = leader_id
+    _leader.name = leader_name
+    _leader.endpoint = endpoint
 
 
-@server.route('/', methods=['GET'])
+@app.route('/', methods=['GET'])
 def get_info():
     """
     Information of this leader
@@ -105,11 +112,11 @@ def get_info():
               description: Leader's information
               $ref: '#/definitions/LeaderInfo'
     """
-    info = asdict(_app.generate_info())
+    info = asdict(_leader.generate_info())
     return jsonify(_status=ResponseStatus.Success, info=info), 200
 
 
-@server.route('/missions', methods=['GET'])
+@app.route('/missions', methods=['GET'])
 def get_missions():
     """
     Accepted missions
@@ -128,13 +135,13 @@ def get_missions():
               items:
                 $ref: '#/definitions/Mission'
     """
-    missions_raw = _app.missions
+    missions_raw = _leader.missions
     missions_dicts = [asdict(m) for m in missions_raw]
     return jsonify(_status=ResponseStatus.Success,
                    missions=missions_dicts), 200
 
 
-@server.route('/missions', methods=['POST'])
+@app.route('/missions', methods=['POST'])
 def accept_missions():
     """
     Add new missions
@@ -159,14 +166,14 @@ def accept_missions():
               $ref: '#/definitions/Mission'
     """
     mission = Mission(**request.json)
-    accepted = asdict(_app.accept_mission(mission))
+    accepted = asdict(_leader.accept_mission(mission))
     if accepted is None:
         return jsonify(_status=ResponseStatus.Failed), 500
 
     return jsonify(_status=ResponseStatus.Success, accepted=accepted), 200
 
 
-@server.route('/subordinates', methods=['GET'])
+@app.route('/subordinates', methods=['GET'])
 @json_input
 def get_subordinates():
     """
@@ -187,12 +194,12 @@ def get_subordinates():
               items:
                 $ref: '#/definitions/SoldierInfo'
     """
-    subs_raw = _app.subordinates
+    subs_raw = _leader.subordinates
     subs_dicts = [asdict(sub) for sub in subs_raw.values()]
     return jsonify(_status=ResponseStatus.Success, subordinates=subs_dicts)
 
 
-@server.route('/subordinates', methods=['POST'])
+@app.route('/subordinates', methods=['POST'])
 @json_input
 def accept_subordinate():
     """
@@ -218,7 +225,7 @@ def accept_subordinate():
               $ref: '#/definitions/SoldierInfo'
     """
     soldier = SoldierInfo(**request.json)
-    if _app.accept_subordinate(soldier) == False:
+    if not _leader.accept_subordinate(soldier):
         return jsonify(_status=ResponseStatus.Failed), 500
 
     return jsonify(_status=ResponseStatus.Success,
@@ -233,7 +240,7 @@ def access_subordinate(f):
     # commanderのものと全く同一
     @wraps(f)
     def check_subordinate(sub_id, *args, **kwargs):
-        if not _app.check_subordinate(sub_id):
+        if not _leader.check_subordinate(sub_id):
             return jsonify(_status=ResponseStatus.make_error(
                 "The subordinate is not found"
             )), 404
@@ -242,7 +249,7 @@ def access_subordinate(f):
     return check_subordinate
 
 
-@server.route('/subordinates/<sub_id>', methods=['GET'])
+@app.route('/subordinates/<sub_id>', methods=['GET'])
 @access_subordinate
 def get_sub_info(sub_id):
     """
@@ -265,11 +272,11 @@ def get_sub_info(sub_id):
               description: Information object of the subordinate
               $ref: '#/definitions/SoldierInfo'
     """
-    res = _app.get_sub_info(sub_id)
+    res = _leader.get_sub_info(sub_id)
     return jsonify(_status=ResponseStatus.Success, info=asdict(res))
 
 
-@server.route('/subordinates/<sub_id>/work', methods=['POST'])
+@app.route('/subordinates/<sub_id>/work', methods=['POST'])
 @access_subordinate
 @json_input
 def accept_work(sub_id):
@@ -299,6 +306,42 @@ def accept_work(sub_id):
               description: The accepted work
               $ref: '#/definitions/Work'
     """
-    input = Work(**request.json)
-    _app.accept_work(sub_id, input)
-    return jsonify(_status=ResponseStatus.Success, accepted=asdict(input))
+    work = Work(**request.json)
+    _leader.accept_work(sub_id, work)
+    return jsonify(_status=ResponseStatus.Success, accepted=asdict(work))
+
+
+@app.route('/spec.json')
+@cross_origin()
+def spec_json():
+    spec_dict = swagger(server, template={'definitions': definitions})
+    spec_dict['info']['title'] = 'SensingTroops'
+    return jsonify(spec_dict)
+
+
+@app.route('/spec.html')
+def spec_html():
+    return render_template('swagger_ui.html',
+                           spec_url=url_prefix + '/spec.json')
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'id', metavar='id', type=str, help='Target id of app')
+    parser.add_argument(
+        'name', metavar='name', type=str, help='Target name of app')
+    parser.add_argument(
+        '-P', '--port', type=int, default=50002, help='port')
+    parser.add_argument(
+        '-F', '--prefix', type=str, default='/leader', help='url prefix')
+    params = parser.parse_args()
+    url_prefix = params.prefix
+
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        ep = 'http://localhost:{0}{1}'.format(params.port, url_prefix)
+        initialize_app(params.id, params.name, ep)
+
+    server = Flask(__name__)
+    server.debug = True
+    server.register_blueprint(app, url_prefix=url_prefix)
+    server.run(host='0.0.0.0', port=params.port)
