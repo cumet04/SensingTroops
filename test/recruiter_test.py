@@ -4,13 +4,14 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../troops')
+
 import unittest
 import recruiter
 import json
 import utils
 from flask import Flask
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from objects import LeaderInfo, CommanderInfo
+from objects import CommanderInfo
 from utils import asdict
 
 
@@ -27,13 +28,14 @@ class RecruiterTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        config_path = '{0}/recruit.yml'.format(os.path.dirname(__file__))
         utils.logger.setLevel(ERROR)
         recruiter.logger.setLevel(ERROR)
+        config_path = '{0}/recruit.yml'.format(os.path.dirname(__file__))
         recruiter.initialize_app(config_path)
-        app = Flask(__name__)
-        app.register_blueprint(recruiter.server, url_prefix="/recruiter")
-        self.app = app.test_client()
+        server = Flask(__name__)
+        server.register_blueprint(recruiter.app,
+                                  url_prefix=recruiter.url_prefix)
+        self.app = server.test_client()
 
     def tearDown(self):
         pass
@@ -44,7 +46,7 @@ class RecruiterTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
 
-        config_id_list = list(recruiter._app.TroopList.keys())
+        config_id_list = list(recruiter._recruiter.TroopList.keys())
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
             "commanders": config_id_list

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import requests
-import json
-from objects import definitions
 from functools import wraps
 from flask import jsonify, request
 from werkzeug.exceptions import BadRequest
@@ -23,20 +21,20 @@ class RestClient(object):
     def get(self, url):
         response = requests.get(self.base_url + url)
         if response.headers['content-type'] != 'application/json':
-            return (response.status_code, None)
-        return (response.status_code, response.json())
+            return response.status_code, None
+        return response.status_code, response.json()
 
     def post(self, url, request_obj):
         response = requests.post(self.base_url + url, data=request_obj)
         if response.headers['content-type'] != 'application/json':
-            return (response.status_code, None)
-        return (response.status_code, response.json())
+            return response.status_code, None
+        return response.status_code, response.json()
 
     def put(self, url, request_obj):
         response = requests.put(self.base_url + url, data=request_obj)
         if response.headers['content-type'] != 'application/json':
-            return (response.status_code, None)
-        return (response.status_code, response.json())
+            return response.status_code, None
+        return response.status_code, response.json()
 
 
 def json_input(f):
@@ -60,6 +58,7 @@ def json_input(f):
                                msg="param couldn't decode to json"), 400
         return f(*args, **kwargs)
     return check_json
+
 
 def asdict(n_tuple):
     """
