@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+import requests
+import json
 from objects import definitions
 from functools import wraps
 from flask import jsonify, request
@@ -13,6 +15,46 @@ handler = FileHandler('/tmp/troops/commander_test.log')
 handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
+
+
+class RestClient(object):
+    def __init__(self):
+        pass
+
+    def get(self, url):
+        pass
+
+    def post(self, url, obj):
+        pass
+
+    def put(self, url, obj):
+        pass
+
+
+class RestTestClient(RestClient):
+    def __init__(self, test_client):
+        self.c = test_client
+
+    def _split_response(self, response):
+        if response.content_type == 'application/json':
+            response_obj = json.loads(response.data.decode('utf-8'))
+        else:
+            response_obj = None
+        return (response.status_code, response_obj)
+
+    def get(self, url):
+        response = self.c.get(url, follow_redirects=True)
+        return self._split_response(response)
+
+    def post(self, url, request_obj):
+        response = self.c.post(url, data=json.dumps(request_obj),
+                               content_type='application/json')
+        return self._split_response(response)
+
+    def put(self, url, request_obj):
+        response = self.c.post(url, data=json.dumps(request_obj),
+                               content_type='application/json')
+        return self._split_response(response)
 
 
 def json_input(f):
