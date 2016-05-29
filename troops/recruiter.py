@@ -1,12 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import json
-import requests
 import yaml
 import argparse
 import os
-import utils
 from collections import namedtuple
 from flask_cors import cross_origin
 from objects import LeaderInfo, CommanderInfo, ResponseStatus, definitions
@@ -21,13 +18,11 @@ handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
-
 Squad = namedtuple('Squad', ['leader', 'subordinates'])
 Troop = namedtuple('Troop', ['commander', 'subordinates'])
 
 
 class Recruiter(object):
-    
     def __init__(self):
         self.SquadList = {}
         self.TroopList = {}
@@ -85,15 +80,7 @@ class Recruiter(object):
         :param str leader_id: 取得したいLeaderのID
         :param bool force_retrieve: キャッシュを無視して問い合わせるかどうか
         """
-        if force_retrieve or (leader_id not in self.leader_cache):
-            com_id = self.get_troop_commander(leader_id)
-            com = self.commander_cache[com_id]
-
-            path = 'http://{0}/subordinates/{1}'.format(com.endpoint, leader_id)
-            res = requests.post(path, json=asdict(self.info)).json()
-
-            leader = LeaderInfo(**res)
-            self.leader_cache[leader.id] = leader
+        pass
 
         return self.leader_cache[leader_id]
 
@@ -110,7 +97,6 @@ class Recruiter(object):
 class RecruiterClient(object):
     def __init__(self, client: RestClient):
         self.client = client
-
         # リストに挙げられているメソッドをインスタンスメソッド化する
         # APIドキュメントとAPIヘルパーの実装をコード的に近くに実装するための措置
         method_list = [_get_commanders,
@@ -120,7 +106,11 @@ class RecruiterClient(object):
                        _get_department_troop_commander,
                        ]
         for method in method_list:
-            setattr(self.__class__, method.__name__[1:], method)
+            setattr(RecruiterClient, method.__name__[1:], method)
+
+
+def gen_rest_client(base_url):
+    return RecruiterClient(RestClient(base_url))
 
 # ------------------------------------------------------------------------------
 # REST interface ---------------------------------------------------------------
@@ -163,8 +153,6 @@ def get_commanders():
 
 def _get_commanders(self):
     st, res = self.client.get('commanders')
-    if res is None:
-        return None
     if st != 200:
         return None, res['_status']['msg']
     return res['commanders'], None
@@ -212,8 +200,6 @@ def get_commander_info(com_id):
 
 def _get_commanders_spec(self, com_id):
     st, res = self.client.get('commanders/' + com_id)
-    if res is None:
-        return None
     if st != 200:
         return None, res['_status']['msg']
     return CommanderInfo(**res['commander']), None
@@ -259,15 +245,14 @@ def register_commanders(com_id):
         400: "Input parameter is invalid",
     }
 
-    com = None
     try:
         com = CommanderInfo(**request.json)
     except TypeError:
         return jsonify(_status=ResponseStatus.make_error(msgs[400]),
-                       input=request.json)
+                       input=request.json), 400
     if com.id != com_id:
         return jsonify(_status=ResponseStatus.make_error(msgs[400]),
-                       input=request.json)
+                       input=request.json), 400
 
     _recruiter.commander_cache[com_id] = com
     return jsonify(_status=ResponseStatus.Success, commander=asdict(com))
@@ -275,8 +260,6 @@ def register_commanders(com_id):
 
 def _put_commanders_spec(self, com_id, obj):
     st, res = self.client.put('commanders/' + com_id, asdict(obj))
-    if res is None:
-        return None
     if st != 200:
         return None, res['_status']['msg']
     return CommanderInfo(**res['commander']), None
@@ -346,10 +329,8 @@ def get_squad_leader():
 
 
 def _get_department_squad_leader(self, soldier_id):
-    st, res = self.client.get('department/squad/leader?soldier_id='
-                              + soldier_id)
-    if res is None:
-        return None
+    st, res = self.client.get('department/squad/leader?soldier_id=' +
+                              soldier_id)
     if st != 200:
         return None, res['_status']['msg']
     return LeaderInfo(**res['leader']), None
@@ -419,10 +400,8 @@ def get_troop_commander():
 
 
 def _get_department_troop_commander(self, leader_id):
-    st, res = self.client.get('department/troop/commander?leader_id='
-                              + leader_id)
-    if res is None:
-        return None
+    st, res = self.client.get('department/troop/commander?leader_id=' +
+                              leader_id)
     if st != 200:
         return None, res['_status']['msg']
     return CommanderInfo(**res['commander']), None
@@ -445,7 +424,7 @@ def add_troop_error():
 @app.route('/spec.json')
 @cross_origin()
 def spec_json():
-    spec_dict = swagger(app, template={'definitions': definitions})
+    spec_dict = swagger(server, template={'definitions': definitions})
     spec_dict['info']['title'] = 'SensingTroops'
     return jsonify(spec_dict)
 
@@ -455,6 +434,10 @@ def spec_html():
     return render_template('swagger_ui.html',
                            spec_url=url_prefix + '/spec.json')
 
+
+# ------------------------------------------------------------------------------
+# entry point ------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -466,8 +449,8 @@ if __name__ == "__main__":
     url_prefix = args.prefix
 
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        config_path = '{0}/recruit.yml'.format(os.path.dirname(__file__))
-        initialize_app(config_path)
+        config = '{0}/recruit.yml'.format(os.path.dirname(__file__))
+        initialize_app(config)
 
     server = Flask(__name__)
     server.debug = True

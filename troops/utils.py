@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+import json
 import requests
 from functools import wraps
 from flask import jsonify, request
@@ -14,6 +15,15 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
+class UnexpectedServerError(Exception):
+    def __init__(self, status, response):
+        self.status = status
+        self.response = response
+
+    def __str__(self):
+        return "status code: {0}".format(self.status)
+
+
 class RestClient(object):
     def __init__(self, base_url):
         self.base_url = base_url
@@ -21,19 +31,23 @@ class RestClient(object):
     def get(self, url):
         response = requests.get(self.base_url + url)
         if response.headers['content-type'] != 'application/json':
-            return response.status_code, None
+            raise UnexpectedServerError(response.status_code, response)
         return response.status_code, response.json()
 
     def post(self, url, request_obj):
-        response = requests.post(self.base_url + url, data=request_obj)
+        response = requests.post(self.base_url + url,
+                                 json.dumps(request_obj),
+                                 headers={'Content-Type': 'application/json'})
         if response.headers['content-type'] != 'application/json':
-            return response.status_code, None
+            raise UnexpectedServerError(response.status_code, response)
         return response.status_code, response.json()
 
     def put(self, url, request_obj):
-        response = requests.put(self.base_url + url, data=request_obj)
+        response = requests.put(self.base_url + url,
+                                json.dumps(request_obj),
+                                headers={'Content-Type': 'application/json'})
         if response.headers['content-type'] != 'application/json':
-            return response.status_code, None
+            raise UnexpectedServerError(response.status_code, response)
         return response.status_code, response.json()
 
 

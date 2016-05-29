@@ -3,6 +3,7 @@
 
 import os
 import argparse
+import recruiter
 from functools import wraps
 from flask import Flask, jsonify, request, render_template, Blueprint
 from flask_cors import cross_origin
@@ -20,13 +21,25 @@ logger.addHandler(handler)
 
 
 class Commander(object):
-    def __init__(self):
-        self.id = ''
-        self.name = ''
-        self.endpoint = ''
+    def __init__(self, com_id, name, endpoint):
+        self.id = com_id
+        self.name = name
+        self.endpoint = endpoint
         self.subordinates = {}
         self.campaigns = []
         self.report_cache = []
+        self.awake(recruiter.gen_rest_client(
+            'http://localhost:50000/recruiter/'))
+
+    def awake(self, recruiter_client):
+        info = self.generate_info()
+        res, err = recruiter_client.put_commanders_spec(self.id, info)
+        if err is not None:
+            logger.error("in Commander awake")
+            logger.error("[PUT]recruiter/commanders/id failed: {0}".format(err))
+            return False
+        logger.info("register commander to recruiter: success")
+        return True
 
     def generate_info(self):
         """
@@ -106,10 +119,7 @@ url_prefix = '/commander'
 
 def initialize_app(commander_id, commander_name, endpoint):
     global _commander
-    _commander = Commander()
-    _commander.id = commander_id
-    _commander.name = commander_name
-    _commander.endpoint = endpoint
+    _commander = Commander(commander_id, commander_name, endpoint)
 
 
 @app.route('/', methods=['GET'])
@@ -137,8 +147,6 @@ def get_info():
 
 def _get_root(self):
     st, res = self.client.get('')
-    if res is None:
-        return None
     if st != 200:
         return None, res['status']['msg']
     return CommanderInfo(**res['info']), None
@@ -187,8 +195,6 @@ def get_campaigns():
 
 def _get_campaigns(self):
     st, res = self.client.get('campaigns')
-    if res is None:
-        return None
     if st != 200:
         return None, res['_status']['msg']
     return [Campaign(c) for c in res['campaigns']], None
@@ -229,8 +235,6 @@ def accept_campaigns():
 
 def _post_campaigns(self, obj):
     st, res = self.client.post('campaigns', asdict(obj))
-    if res is None:
-        return None
     if st != 200:
         return None, res['_status']['msg']
     return Campaign(**res['accepted']), None
@@ -264,8 +268,6 @@ def get_subordinates():
 
 def _get_subordinates(self):
     st, res = self.client.get('subordinates')
-    if res is None:
-        return None
     if st != 200:
         return None, res['_status']['msg']
     return [LeaderInfo(l) for l in res['subordinates']]
@@ -306,8 +308,6 @@ def accept_subordinate():
 
 def _post_subordinates(self, obj):
     st, res = self.client.post('subordinates', asdict(obj))
-    if res is None:
-        return None
     if st != 200:
         return None, res['_status']['msg']
     return LeaderInfo(**res['accepted']), None
@@ -365,8 +365,6 @@ def get_sub_info(sub_id):
 
 def _get_subordinates_spec(self, sub_id):
     st, res = self.client.get('subordinates/' + sub_id)
-    if res is None:
-        return None
     if st != 200:
         return None, res['_status']['msg']
     return LeaderInfo(res['info']), None
@@ -418,8 +416,6 @@ def accept_report(sub_id):
 def _post_report(self, sub_id, obj):
     st, res = self.client.post('subordinates/{0}/report'.format(sub_id),
                                asdict(obj))
-    if res is None:
-        return None
     if st != 200:
         return res['_status']['msg']
     return Report(**res['accepted']), None
