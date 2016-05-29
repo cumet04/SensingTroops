@@ -12,7 +12,7 @@ import utils
 from datetime import datetime
 from flask import Flask
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from objects import LeaderInfo, CommanderInfo, Report, Mission, Campaign
+from objects import LeaderInfo, CommanderInfo, Report, Campaign
 from utils import asdict
 
 logger = getLogger(__name__)
@@ -29,9 +29,10 @@ class CommanderTestCase(unittest.TestCase):
         utils.logger.setLevel(ERROR)
         commander.logger.setLevel(ERROR)
         commander.initialize_app("cxxx0", "cmd_http", "http://localhost:50000")
-        app = Flask(__name__)
-        app.register_blueprint(commander.server, url_prefix="/commander")
-        self.app = app.test_client()
+        server = Flask(__name__)
+        server.register_blueprint(commander.app,
+                                  url_prefix=commander.url_prefix)
+        self.app = server.test_client()
 
     def tearDown(self):
         pass
@@ -42,14 +43,14 @@ class CommanderTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
 
-        commander = CommanderInfo(id='cxxx0',
-                                  name='cmd_http',
-                                  endpoint='http://localhost:50000',
-                                  subordinates=[],
-                                  campaigns=[])
+        com = CommanderInfo(id='cxxx0',
+                            name='cmd_http',
+                            endpoint='http://localhost:50000',
+                            subordinates=[],
+                            campaigns=[])
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            "info": asdict(commander)
+            "info": asdict(com)
         }
         self.assertEqual(actual, expected)
 

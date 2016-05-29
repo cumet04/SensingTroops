@@ -29,9 +29,10 @@ class LeaderTestCase(unittest.TestCase):
         utils.logger.setLevel(ERROR)
         leader.logger.setLevel(ERROR)
         leader.initialize_app("lxxx0", "lea_http", "http://localhost:50000")
-        app = Flask(__name__)
-        app.register_blueprint(leader.server, url_prefix="/leader")
-        self.app = app.test_client()
+        server = Flask(__name__)
+        server.register_blueprint(leader.app,
+                                  url_prefix=leader.url_prefix)
+        self.app = server.test_client()
 
     def tearDown(self):
         pass
@@ -42,14 +43,14 @@ class LeaderTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
 
-        leader = LeaderInfo(id='lxxx0',
-                            name='lea_http',
-                            endpoint='http://localhost:50000',
-                            subordinates=[],
-                            missions=[])
+        lea = LeaderInfo(id='lxxx0',
+                         name='lea_http',
+                         endpoint='http://localhost:50000',
+                         subordinates=[],
+                         missions=[])
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            "info": asdict(leader)
+            "info": asdict(lea)
         }
         self.assertEqual(actual, expected)
 

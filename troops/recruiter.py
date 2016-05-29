@@ -6,11 +6,13 @@ import requests
 import yaml
 import argparse
 import os
+import utils
 from collections import namedtuple
 from flask_cors import cross_origin
-from objects import LeaderInfo, CommanderInfo, ResponseStatus
+from objects import LeaderInfo, CommanderInfo, ResponseStatus, definitions
 from utils import json_input, asdict, RestClient
 from flask import Flask, jsonify, request, render_template, Blueprint
+from flask_swagger import swagger
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -124,17 +126,18 @@ class RecruiterClient(object):
 # REST interface ---------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
-server = Blueprint('recruiter', __name__)
-_app = None  # type:Recruiter
+app = Blueprint('recruiter', __name__)
+_recruiter = None  # type:Recruiter
+url_prefix = '/recruiter'
 
 
 def initialize_app(config_path):
-    global _app
-    _app = Recruiter()
-    _app.load_config(config_path)
+    global _recruiter
+    _recruiter = Recruiter()
+    _recruiter.load_config(config_path)
 
 
-@server.route('/commanders', methods=['GET'])
+@app.route('/commanders', methods=['GET'])
 @json_input
 def get_commanders():
     """
@@ -154,7 +157,7 @@ def get_commanders():
               items:
                 type: string
     """
-    id_list = list(_app.TroopList.keys())
+    id_list = list(_recruiter.TroopList.keys())
     return jsonify(_status=ResponseStatus.Success, commanders=id_list)
 
 
@@ -167,7 +170,7 @@ def _get_commanders(self):
     return (res['_status'], res['commanders'])
 
 
-@server.route('/commanders/<com_id>', methods=['GET'])
+@app.route('/commanders/<com_id>', methods=['GET'])
 @json_input
 def get_commander_info(com_id):
     """
@@ -198,10 +201,10 @@ def get_commander_info(com_id):
               description: Response status
               $ref: '#/definitions/ResponseStatus'
     """
-    if com_id not in _app.TroopList:
+    if com_id not in _recruiter.TroopList:
         return jsonify(_status=ResponseStatus.NotFound), 404
 
-    info = _app.resolve_commander(com_id)
+    info = _recruiter.resolve_commander(com_id)
     if info is None:
         return jsonify(_status=ResponseStatus.Success, commander={})
     return jsonify(_status=ResponseStatus.Success, commander=asdict(info))
@@ -216,7 +219,7 @@ def _get_commanders_spec(self, com_id):
     return (res['_status'], CommanderInfo(**res['commander']))
 
 
-@server.route('/commanders/<com_id>', methods=['PUT'])
+@app.route('/commanders/<com_id>', methods=['PUT'])
 @json_input
 def register_commanders(com_id):
     """
@@ -266,7 +269,7 @@ def register_commanders(com_id):
         return jsonify(_status=ResponseStatus.make_error(msgs[400]),
                        input=request.json)
 
-    _app.commander_cache[com_id] = com
+    _recruiter.commander_cache[com_id] = com
     return jsonify(_status=ResponseStatus.Success, commander=asdict(com))
 
 
@@ -279,7 +282,7 @@ def _put_commanders_spec(self, com_id, obj):
     return (res['_status'], CommanderInfo(**res['commander']))
 
 
-@server.route('/department/squad/leader', methods=['GET'])
+@app.route('/department/squad/leader', methods=['GET'])
 def get_squad_leader():
     """
     Leader's info, top of a squad
@@ -331,11 +334,11 @@ def get_squad_leader():
     if soldier_id is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[400])), 400
 
-    leader_id = _app.get_squad_leader(soldier_id)
+    leader_id = _recruiter.get_squad_leader(soldier_id)
     if leader_id is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[404])), 404
 
-    info = _app.resolve_leader(leader_id)
+    info = _recruiter.resolve_leader(leader_id)
     if info is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[500])), 500
 
@@ -352,7 +355,7 @@ def _get_department_squad_leader(self, soldier_id):
     return (res['_status'], LeaderInfo(**res['leader']))
 
 
-@server.route('/department/troop/commander', methods=['GET'])
+@app.route('/department/troop/commander', methods=['GET'])
 def get_troop_commander():
     """
     Commander's info, top of a troop
@@ -404,11 +407,11 @@ def get_troop_commander():
     if leader_id is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[400])), 400
 
-    commander_id = _app.get_troop_commander(leader_id)
+    commander_id = _recruiter.get_troop_commander(leader_id)
     if commander_id is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[404])), 404
 
-    info = _app.resolve_commander(commander_id)
+    info = _recruiter.resolve_commander(commander_id)
     if info is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[500])), 500
 
@@ -425,16 +428,48 @@ def _get_department_troop_commander(self, leader_id):
     return (res['_status'], CommanderInfo(**res['commander']))
 
 
-@server.route('/error/squad', methods=['POST'])
+@app.route('/error/squad', methods=['POST'])
 @json_input
 def add_squad_error():
     # TODO
     return jsonify(msg='this function is not implemented yet.'), 500
 
 
-@server.route('/error/troop', methods=['POST'])
+@app.route('/error/troop', methods=['POST'])
 @json_input
 def add_troop_error():
     # TODO
     return jsonify(msg='this function is not implemented yet.'), 500
 
+
+@app.route('/spec.json')
+@cross_origin()
+def spec_json():
+    spec_dict = swagger(app, template={'definitions': definitions})
+    spec_dict['info']['title'] = 'SensingTroops'
+    return jsonify(spec_dict)
+
+
+@app.route('/spec.html')
+def spec_html():
+    return render_template('swagger_ui.html',
+                           spec_url=url_prefix + '/spec.json')
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-P', '--port', type=int, default=50000, help='port')
+    parser.add_argument(
+        '-F', '--prefix', type=str, default='/recruiter', help='url prefix')
+    args = parser.parse_args()
+    url_prefix = args.prefix
+
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        config_path = '{0}/recruit.yml'.format(os.path.dirname(__file__))
+        initialize_app(config_path)
+
+    server = Flask(__name__)
+    server.debug = True
+    server.register_blueprint(app, url_prefix=url_prefix)
+    server.run(host='0.0.0.0', port=args.port)
