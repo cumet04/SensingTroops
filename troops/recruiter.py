@@ -159,12 +159,12 @@ def get_commanders():
 
 
 def _get_commanders(self):
-    status, response = self.client.get('commanders')
-    if response is None:
+    st, res = self.client.get('commanders')
+    if res is None:
         return None
-    if status != 200:
-        return (response['_status'], None)
-    return (response['_status'], response['commanders'])
+    if st != 200:
+        return (res['_status'], None)
+    return (res['_status'], res['commanders'])
 
 
 @server.route('/commanders/<com_id>', methods=['GET'])
@@ -207,13 +207,13 @@ def get_commander_info(com_id):
     return jsonify(_status=ResponseStatus.Success, commander=asdict(info))
 
 
-def _get_commanders_spec(self, com_id: str):
-    status, response = self.client.get('commanders/' + com_id)
-    if response is None:
+def _get_commanders_spec(self, com_id):
+    st, res = self.client.get('commanders/' + com_id)
+    if res is None:
         return None
-    if status != 200:
-        return (response['_status'], None)
-    return (response['_status'], CommanderInfo(**response['commander']))
+    if st != 200:
+        return (res['_status'], None)
+    return (res['_status'], CommanderInfo(**res['commander']))
 
 
 @server.route('/commanders/<com_id>', methods=['PUT'])
@@ -270,13 +270,13 @@ def register_commanders(com_id):
     return jsonify(_status=ResponseStatus.Success, commander=asdict(com))
 
 
-def _put_commanders_spec(self, com_id: str, obj: CommanderInfo):
-    status, response = self.client.put('commanders/' + com_id, asdict(obj))
-    if response is None:
+def _put_commanders_spec(self, com_id, obj):
+    st, res = self.client.put('commanders/' + com_id, asdict(obj))
+    if res is None:
         return None
-    if status != 200:
-        return (response['_status'], None)
-    return (response['_status'], CommanderInfo(**response['commander']))
+    if st != 200:
+        return (res['_status'], None)
+    return (res['_status'], CommanderInfo(**res['commander']))
 
 
 @server.route('/department/squad/leader', methods=['GET'])
@@ -342,14 +342,14 @@ def get_squad_leader():
     return jsonify(_status=ResponseStatus.Success, leader=info)
 
 
-def _get_department_squad_leader(self, soldier_id: str):
-    status, response = self.client.get('department/squad/leader?sildier_id='
-                                       + soldier_id)
-    if response is None:
+def _get_department_squad_leader(self, soldier_id):
+    st, res = self.client.get('department/squad/leader?soldier_id='
+                              + soldier_id)
+    if res is None:
         return None
-    if status != 200:
-        return (response['_status'], None)
-    return (response['_status'], LeaderInfo(**response['leader']))
+    if st != 200:
+        return (res['_status'], None)
+    return (res['_status'], LeaderInfo(**res['leader']))
 
 
 @server.route('/department/troop/commander', methods=['GET'])
@@ -415,14 +415,14 @@ def get_troop_commander():
     return jsonify(_status=ResponseStatus.Success, commander=asdict(info))
 
 
-def _get_department_troop_commander(self, leader_id: str):
-    status, response = self.client.get('department/troop/commander?leader_id='
-                                       + leader_id)
-    if response is None:
+def _get_department_troop_commander(self, leader_id):
+    st, res = self.client.get('department/troop/commander?leader_id='
+                              + leader_id)
+    if res is None:
         return None
-    if status != 200:
-        return (response['_status'], None)
-    return (response['_status'], CommanderInfo(**response['commander']))
+    if st != 200:
+        return (res['_status'], None)
+    return (res['_status'], CommanderInfo(**res['commander']))
 
 
 @server.route('/error/squad', methods=['POST'])
