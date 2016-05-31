@@ -300,8 +300,22 @@ def accept_subordinate():
             accepted:
               description: Information object of the subordinate
               $ref: '#/definitions/LeaderInfo'
+      400:
+        description: "[NT] Requested leader already exists in the troop"
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
     """
+    msgs = {
+        400: "Requested leader already exists in the troop",
+    }
+
     leader = LeaderInfo(**request.json)
+    if _commander.check_subordinate(leader.id):
+        return jsonify(_status=ResponseStatus.make_error(msgs[400])), 400
+
     if not _commander.accept_subordinate(leader):
         return jsonify(_status=ResponseStatus.Failed), 500
 
