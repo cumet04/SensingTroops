@@ -3,13 +3,13 @@
 
 import os
 import argparse
-import recruiter
 from functools import wraps
 from flask import Flask, jsonify, request, render_template, Blueprint
 from flask_cors import cross_origin
 from flask_swagger import swagger
 from objects import LeaderInfo, CommanderInfo, Report,\
     Campaign, ResponseStatus, definitions
+from recruiter import RecruiterClient
 from utils import json_input, asdict, RestClient
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -28,8 +28,6 @@ class Commander(object):
         self.subordinates = {}
         self.campaigns = []
         self.report_cache = []
-        self.awake(recruiter.gen_rest_client(
-            'http://localhost:50000/recruiter/'))
 
     def awake(self, recruiter_client):
         info = self.generate_info()
@@ -106,6 +104,11 @@ class CommanderClient(object):
                        ]
         for method in method_list:
             setattr(self.__class__, method.__name__[1:], method)
+
+    @staticmethod
+    def gen_rest_client(base_url):
+        return CommanderClient(RestClient(base_url))
+
 
 # ------------------------------------------------------------------------------
 # REST interface ---------------------------------------------------------------
@@ -297,8 +300,22 @@ def accept_subordinate():
             accepted:
               description: Information object of the subordinate
               $ref: '#/definitions/LeaderInfo'
+      400:
+        description: "[NT] Requested leader already exists in the troop"
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
     """
+    msgs = {
+        400: "Requested leader already exists in the troop",
+    }
+
     leader = LeaderInfo(**request.json)
+    if _commander.check_subordinate(leader.id):
+        return jsonify(_status=ResponseStatus.make_error(msgs[400])), 400
+
     if not _commander.accept_subordinate(leader):
         return jsonify(_status=ResponseStatus.Failed), 500
 
@@ -450,8 +467,10 @@ if __name__ == "__main__":
 
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         # flaskのuse_reloader=Trueのときの二重起動対策
-        ep = 'http://localhost:{0}{1}'.format(params.port, url_prefix)
+        ep = 'http://localhost:{0}{1}/'.format(params.port, url_prefix)
         initialize_app(params.id, params.name, ep)
+        _commander.awake(RecruiterClient.gen_rest_client(
+            'http://localhost:50000/recruiter/'))
 
     server = Flask(__name__)
     server.debug = True

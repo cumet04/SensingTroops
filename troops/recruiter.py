@@ -108,9 +108,9 @@ class RecruiterClient(object):
         for method in method_list:
             setattr(RecruiterClient, method.__name__[1:], method)
 
-
-def gen_rest_client(base_url):
-    return RecruiterClient(RestClient(base_url))
+    @staticmethod
+    def gen_rest_client(base_url):
+        return RecruiterClient(RestClient(base_url))
 
 # ------------------------------------------------------------------------------
 # REST interface ---------------------------------------------------------------
