@@ -10,6 +10,7 @@ from utils import json_input, asdict
 from flask import Flask, jsonify, request, Blueprint, render_template
 from flask_cors import cross_origin
 from flask_swagger import swagger
+from recruiter import RecruiterClient
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
