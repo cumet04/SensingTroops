@@ -11,6 +11,7 @@ from flask import Flask, jsonify, request, Blueprint, render_template
 from flask_cors import cross_origin
 from flask_swagger import swagger
 from recruiter import RecruiterClient
+from commander import CommanderClient
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -28,6 +29,28 @@ class Leader(object):
         self.subordinates = {}
         self.missions = []
         self.work_cache = []
+
+    def awake(self, rec_client):
+        # 上官を解決する
+        superior, err = rec_client.get_department_troop_commander(self.id)
+        if err is not None:
+            logger.error("in Leader awake")
+            logger.error("[GET]recruiter/department/troop/commander" +
+                         " failed: {0}".format(err))
+            return False
+        logger.info("superior was resolved: id={0}".format(superior.id))
+
+        # 部隊に加入する
+        com_client = CommanderClient.gen_rest_client(superior.endpoint)
+        res, err = com_client.post_subordinates(self.generate_info())
+        if err is not None:
+            logger.error("in Leader awake")
+            logger.error("[POST]commander/subordinates failed: {0}".format(err))
+            return False
+        logger.info("joined to troop")
+
+        # missionを取得する
+        # TODO: job assignが実装され次第
 
     def generate_info(self):
         """
@@ -339,8 +362,10 @@ if __name__ == "__main__":
     url_prefix = params.prefix
 
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        ep = 'http://localhost:{0}{1}'.format(params.port, url_prefix)
+        ep = 'http://localhost:{0}{1}/'.format(params.port, url_prefix)
         initialize_app(params.id, params.name, ep)
+        _leader.awake(RecruiterClient.gen_rest_client(
+            'http://localhost:50000/recruiter/'))
 
     server = Flask(__name__)
     server.debug = True

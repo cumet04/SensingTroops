@@ -467,7 +467,7 @@ if __name__ == "__main__":
 
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         # flaskのuse_reloader=Trueのときの二重起動対策
-        ep = 'http://localhost:{0}{1}'.format(params.port, url_prefix)
+        ep = 'http://localhost:{0}{1}/'.format(params.port, url_prefix)
         initialize_app(params.id, params.name, ep)
         _commander.awake(RecruiterClient.gen_rest_client(
             'http://localhost:50000/recruiter/'))
