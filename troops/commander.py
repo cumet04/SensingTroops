@@ -3,6 +3,7 @@
 
 import os
 import argparse
+from typing import List
 from functools import wraps
 from flask import Flask, jsonify, request, render_template, Blueprint
 from flask_cors import cross_origin
@@ -92,18 +93,63 @@ class CommanderClient(object):
     def __init__(self, client: RestClient):
         self.client = client
 
-        # リストに挙げられているメソッドをインスタンスメソッド化する
-        # APIドキュメントとAPIヘルパーの実装をコード的に近くに実装するための措置
-        method_list = [_get_root,
-                       _get_campaigns,
-                       _post_campaigns,
-                       _get_subordinates,
-                       _post_subordinates,
-                       _get_subordinates_spec,
-                       _post_report
-                       ]
-        for method in method_list:
-            setattr(self.__class__, method.__name__[1:], method)
+    # それぞれの実体メソッドを呼び出す
+    # APIドキュメントとAPIヘルパーの実装をコード的に近くに実装するための措置
+    def get_root(self) -> (CommanderInfo, str):
+        try:
+            return _get_root(self.client)
+        except Exception as e:
+            logger.error("in CommanderClient.get_root")
+            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            return None, None
+
+    def get_campaigns(self) -> (List[Campaign], str):
+        try:
+            return _get_campaigns(self.client)
+        except Exception as e:
+            logger.error("in CommanderClient.get_campaigns")
+            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            return None, None
+
+    def post_campaigns(self, obj: Campaign) -> (Campaign, str):
+        try:
+            return _post_campaigns(self.client, obj)
+        except Exception as e:
+            logger.error("in CommanderClient.post_campaigns")
+            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            return None, None
+
+    def get_subordinates(self) -> (List[LeaderInfo], str):
+        try:
+            return _get_subordinates(self.client)
+        except Exception as e:
+            logger.error("in CommanderClient.get_subordinates")
+            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            return None, None
+
+    def post_subordinates(self, obj: LeaderInfo) -> (LeaderInfo, str):
+        try:
+            return _post_subordinates(self.client, obj)
+        except Exception as e:
+            logger.error("in CommanderClient.post_subordinates")
+            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            return None, None
+
+    def get_subordinates_spec(self, sub_id: str) -> (LeaderInfo, str):
+        try:
+            return _get_subordinates_spec(self.client, sub_id)
+        except Exception as e:
+            logger.error("in CommanderClient.get_subordinates_spec")
+            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            return None, None
+
+    def post_report(self, sub_id: str, obj: Report) -> (Report, str):
+        try:
+            return _post_report(self.client, sub_id, obj)
+        except Exception as e:
+            logger.error("in CommanderClient.post_report")
+            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            return None, None
 
     @staticmethod
     def gen_rest_client(base_url):
@@ -148,8 +194,8 @@ def get_info():
     return jsonify(_status=ResponseStatus.Success, info=info), 200
 
 
-def _get_root(self):
-    st, res = self.client.get('')
+def _get_root(c):
+    st, res = c.get('')
     if st != 200:
         return None, res['status']['msg']
     return CommanderInfo(**res['info']), None
@@ -196,8 +242,8 @@ def get_campaigns():
     return jsonify(_status=ResponseStatus.Success, campaigns=camps_dicts), 200
 
 
-def _get_campaigns(self):
-    st, res = self.client.get('campaigns')
+def _get_campaigns(c):
+    st, res = c.get('campaigns')
     if st != 200:
         return None, res['_status']['msg']
     return [Campaign(c) for c in res['campaigns']], None
@@ -236,8 +282,8 @@ def accept_campaigns():
     return jsonify(_status=ResponseStatus.Success, accepted=accepted), 200
 
 
-def _post_campaigns(self, obj):
-    st, res = self.client.post('campaigns', asdict(obj))
+def _post_campaigns(c, obj):
+    st, res = c.post('campaigns', asdict(obj))
     if st != 200:
         return None, res['_status']['msg']
     return Campaign(**res['accepted']), None
@@ -269,8 +315,8 @@ def get_subordinates():
     return jsonify(_status=ResponseStatus.Success, subordinates=subs_dicts)
 
 
-def _get_subordinates(self):
-    st, res = self.client.get('subordinates')
+def _get_subordinates(c):
+    st, res = c.get('subordinates')
     if st != 200:
         return None, res['_status']['msg']
     return [LeaderInfo(l) for l in res['subordinates']]
@@ -323,8 +369,8 @@ def accept_subordinate():
                    accepted=asdict(leader)), 200
 
 
-def _post_subordinates(self, obj):
-    st, res = self.client.post('subordinates', asdict(obj))
+def _post_subordinates(c, obj):
+    st, res = c.post('subordinates', asdict(obj))
     if st != 200:
         return None, res['_status']['msg']
     return LeaderInfo(**res['accepted']), None
@@ -380,8 +426,8 @@ def get_sub_info(sub_id):
     return jsonify(_status=ResponseStatus.Success, info=asdict(res))
 
 
-def _get_subordinates_spec(self, sub_id):
-    st, res = self.client.get('subordinates/' + sub_id)
+def _get_subordinates_spec(c, sub_id):
+    st, res = c.get('subordinates/' + sub_id)
     if st != 200:
         return None, res['_status']['msg']
     return LeaderInfo(res['info']), None
@@ -430,9 +476,8 @@ def accept_report(sub_id):
     return jsonify(_status=ResponseStatus.Success, accepted=asdict(report))
 
 
-def _post_report(self, sub_id, obj):
-    st, res = self.client.post('subordinates/{0}/report'.format(sub_id),
-                               asdict(obj))
+def _post_report(c, sub_id, obj):
+    st, res = c.post('subordinates/{0}/report'.format(sub_id), asdict(obj))
     if st != 200:
         return res['_status']['msg']
     return Report(**res['accepted']), None
