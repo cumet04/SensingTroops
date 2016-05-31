@@ -105,6 +105,11 @@ class CommanderClient(object):
         for method in method_list:
             setattr(self.__class__, method.__name__[1:], method)
 
+    @staticmethod
+    def gen_rest_client(base_url):
+        return CommanderClient(RestClient(base_url))
+
+
 # ------------------------------------------------------------------------------
 # REST interface ---------------------------------------------------------------
 # ------------------------------------------------------------------------------
