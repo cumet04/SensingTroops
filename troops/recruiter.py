@@ -4,6 +4,7 @@
 import yaml
 import argparse
 import os
+from typing import List
 from collections import namedtuple
 from flask_cors import cross_origin
 from objects import LeaderInfo, CommanderInfo, ResponseStatus, definitions
@@ -97,16 +98,50 @@ class Recruiter(object):
 class RecruiterClient(object):
     def __init__(self, client: RestClient):
         self.client = client
-        # リストに挙げられているメソッドをインスタンスメソッド化する
-        # APIドキュメントとAPIヘルパーの実装をコード的に近くに実装するための措置
-        method_list = [_get_commanders,
-                       _get_commanders_spec,
-                       _put_commanders_spec,
-                       _get_department_squad_leader,
-                       _get_department_troop_commander,
-                       ]
-        for method in method_list:
-            setattr(RecruiterClient, method.__name__[1:], method)
+
+    # それぞれの実体メソッドを呼び出す
+    # APIドキュメントとAPIヘルパーの実装をコード的に近くに実装するための措置
+    def get_commanders(self) -> (List[str], str):
+        try:
+            return _get_commanders(self.client)
+        except Exception as e:
+            logger.error("in RecruiterClient.get_commanders")
+            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            return None, None
+
+    def get_commanders_spec(self, com_id: str) -> (CommanderInfo, str):
+        try:
+            return _get_commanders_spec(self.client, com_id)
+        except Exception as e:
+            logger.error("in RecruiterClient.get_commanders_spec")
+            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            return None, None
+
+    def put_commanders_spec(self, com_id: str, obj: CommanderInfo)\
+            -> (CommanderInfo, str):
+        try:
+            return _put_commanders_spec(self.client, com_id, obj)
+        except Exception as e:
+            logger.error("in RecruiterClient.put_commanders_spec")
+            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            return None, None
+
+    def get_department_squad_leader(self, soldier_id: str) -> (LeaderInfo, str):
+        try:
+            return _get_department_squad_leader(self.client, soldier_id)
+        except Exception as e:
+            logger.error("in RecruiterClient.get_department_squad_leader")
+            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            return None, None
+
+    def get_department_troop_commander(self, leader_id: str)\
+            -> (CommanderInfo, str):
+        try:
+            return _get_department_troop_commander(self.client, leader_id)
+        except Exception as e:
+            logger.error("in RecruiterClient.get_department_troop_commander")
+            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            return None, None
 
     @staticmethod
     def gen_rest_client(base_url):
@@ -151,8 +186,8 @@ def get_commanders():
     return jsonify(_status=ResponseStatus.Success, commanders=id_list)
 
 
-def _get_commanders(self):
-    st, res = self.client.get('commanders')
+def _get_commanders(c):
+    st, res = c.get('commanders')
     if st != 200:
         return None, res['_status']['msg']
     return res['commanders'], None
@@ -198,8 +233,8 @@ def get_commander_info(com_id):
     return jsonify(_status=ResponseStatus.Success, commander=asdict(info))
 
 
-def _get_commanders_spec(self, com_id):
-    st, res = self.client.get('commanders/' + com_id)
+def _get_commanders_spec(c, com_id):
+    st, res = c.get('commanders/' + com_id)
     if st != 200:
         return None, res['_status']['msg']
     return CommanderInfo(**res['commander']), None
@@ -258,8 +293,8 @@ def register_commanders(com_id):
     return jsonify(_status=ResponseStatus.Success, commander=asdict(com))
 
 
-def _put_commanders_spec(self, com_id, obj):
-    st, res = self.client.put('commanders/' + com_id, asdict(obj))
+def _put_commanders_spec(c, com_id, obj):
+    st, res = c.put('commanders/' + com_id, asdict(obj))
     if st != 200:
         return None, res['_status']['msg']
     return CommanderInfo(**res['commander']), None
@@ -328,9 +363,8 @@ def get_squad_leader():
     return jsonify(_status=ResponseStatus.Success, leader=info)
 
 
-def _get_department_squad_leader(self, soldier_id):
-    st, res = self.client.get('department/squad/leader?soldier_id=' +
-                              soldier_id)
+def _get_department_squad_leader(c, soldier_id):
+    st, res = c.get('department/squad/leader?soldier_id=' + soldier_id)
     if st != 200:
         return None, res['_status']['msg']
     return LeaderInfo(**res['leader']), None
@@ -399,9 +433,8 @@ def get_troop_commander():
     return jsonify(_status=ResponseStatus.Success, commander=asdict(info))
 
 
-def _get_department_troop_commander(self, leader_id):
-    st, res = self.client.get('department/troop/commander?leader_id=' +
-                              leader_id)
+def _get_department_troop_commander(c, leader_id):
+    st, res = c.get('department/troop/commander?leader_id=' + leader_id)
     if st != 200:
         return None, res['_status']['msg']
     return CommanderInfo(**res['commander']), None

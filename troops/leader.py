@@ -33,6 +33,8 @@ class Leader(object):
     def awake(self, rec_client):
         # 上官を解決する
         superior, err = rec_client.get_department_troop_commander(self.id)
+        if superior is None and err is None:
+            return False
         if err is not None:
             logger.error("in Leader awake")
             logger.error("[GET]recruiter/department/troop/commander" +
@@ -43,6 +45,8 @@ class Leader(object):
         # 部隊に加入する
         com_client = CommanderClient.gen_rest_client(superior.endpoint)
         res, err = com_client.post_subordinates(self.generate_info())
+        if res is None and err is None:
+            return False
         if err is not None:
             logger.error("in Leader awake")
             logger.error("[POST]commander/subordinates failed: {0}".format(err))
@@ -52,7 +56,7 @@ class Leader(object):
         # missionを取得する
         # TODO: job assignが実装され次第
 
-    def generate_info(self):
+    def generate_info(self) -> LeaderInfo:
         """
         自身のパラメータ群からLeaderInfoオブジェクトを生成する
         :return LeaderInfo: 生成したLeaderInfo
