@@ -246,7 +246,7 @@ def _get_campaigns(c):
     st, res = c.get('campaigns')
     if st != 200:
         return None, res['_status']['msg']
-    return [Campaign(c) for c in res['campaigns']], None
+    return [Campaign(**cam) for cam in res['campaigns']], None
 
 
 @app.route('/campaigns', methods=['POST'])
@@ -319,7 +319,7 @@ def _get_subordinates(c):
     st, res = c.get('subordinates')
     if st != 200:
         return None, res['_status']['msg']
-    return [LeaderInfo(l) for l in res['subordinates']]
+    return [LeaderInfo(**l) for l in res['subordinates']]
 
 
 @app.route('/subordinates', methods=['POST'])
@@ -430,7 +430,7 @@ def _get_subordinates_spec(c, sub_id):
     st, res = c.get('subordinates/' + sub_id)
     if st != 200:
         return None, res['_status']['msg']
-    return LeaderInfo(res['info']), None
+    return LeaderInfo(**res['info']), None
 
 
 @app.route('/subordinates/<sub_id>/report', methods=['POST'])
