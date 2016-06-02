@@ -488,4 +488,4 @@ if __name__ == "__main__":
     server = Flask(__name__)
     server.debug = True
     server.register_blueprint(app, url_prefix=url_prefix)
-    server.run(host='0.0.0.0', port=args.port)
+    server.run(host='0.0.0.0', port=args.port, use_reloader=False)
