@@ -1,19 +1,15 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../troops')
-
 import unittest
-import commander
+import troops.commander as commander
 import json
 import utils
 from datetime import datetime
 from flask import Flask
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from objects import LeaderInfo, CommanderInfo, Report, Campaign
-from utils import asdict
+from utils.objects import LeaderInfo, CommanderInfo, Report, Campaign
+from utils.helpers import asdict
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -26,7 +22,7 @@ class CommanderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        utils.logger.setLevel(ERROR)
+        utils.helpers.logger.setLevel(ERROR)
         commander.logger.setLevel(ERROR)
         commander.initialize_app("cxxx0", "cmd_http", "http://localhost:50000")
         server = Flask(__name__)
@@ -307,3 +303,4 @@ class CommanderTestCase(unittest.TestCase):
             "accepted": asdict(report)
         }
         self.assertEqual(actual, expected)
+
