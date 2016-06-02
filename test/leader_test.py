@@ -1,19 +1,15 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../troops')
-
 import unittest
-import leader
+import troops.leader as leader
 import json
 import utils
 from datetime import datetime
 from flask import Flask
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from objects import LeaderInfo, SoldierInfo, Work, Mission
-from utils import asdict
+from utils.objects import LeaderInfo, SoldierInfo, Work, Mission
+from utils.helpers import asdict
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -26,7 +22,7 @@ class LeaderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        utils.logger.setLevel(ERROR)
+        utils.helpers.logger.setLevel(ERROR)
         leader.logger.setLevel(ERROR)
         leader.initialize_app("lxxx0", "lea_http", "http://localhost:50000")
         server = Flask(__name__)
@@ -165,7 +161,6 @@ class LeaderTestCase(unittest.TestCase):
         # add a soldier
         soldier = SoldierInfo(id='sxxx0',
                               name='sol_http',
-                              endpoint='http://localhost:50000',
                               weapons=[],
                               orders=[])
         self.app.post('/leader/subordinates',
@@ -188,7 +183,6 @@ class LeaderTestCase(unittest.TestCase):
         # add some soldier
         soldier_base = SoldierInfo(id='sxxx0',
                                    name='sol_http',
-                                   endpoint='http://localhost:50000',
                                    weapons=[],
                                    orders=[])
         soldier_list = [
@@ -224,7 +218,6 @@ class LeaderTestCase(unittest.TestCase):
     def test_add_subordinates(self):
         soldier = SoldierInfo(id='sxxx0',
                               name='sol_http',
-                              endpoint='http://localhost:50000',
                               weapons=[],
                               orders=[])
         response = self.app.post('/leader/subordinates',
@@ -244,7 +237,6 @@ class LeaderTestCase(unittest.TestCase):
         # add soldier
         soldier = SoldierInfo(id='sxxx0',
                               name='sol_http',
-                              endpoint='http://localhost:50000',
                               weapons=[],
                               orders=[])
         self.app.post('/leader/subordinates',
@@ -281,7 +273,6 @@ class LeaderTestCase(unittest.TestCase):
         # add soldier
         soldier = SoldierInfo(id='sxxx0',
                               name='sol_http',
-                              endpoint='http://localhost:50000',
                               weapons=[],
                               orders=[])
         self.app.post('/leader/subordinates',

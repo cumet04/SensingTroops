@@ -54,7 +54,6 @@ _info = {
         'id': {'description': "the man's ID",
                'type': 'string'},
         'name': {'type': 'string'},
-        'endpoint': {'type': 'string'},
         'weapons': {'description': "A list of weapon",
                     'type': 'array',
                     'items': {'type': 'object'}},

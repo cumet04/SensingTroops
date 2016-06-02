@@ -3,16 +3,14 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../troops')
-
 import unittest
-import recruiter
+import troops.recruiter as recruiter
 import json
 import utils
 from flask import Flask
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from objects import CommanderInfo
-from utils import asdict
+from utils.objects import CommanderInfo
+from utils.helpers import asdict
 
 
 logger = getLogger(__name__)
@@ -28,7 +26,7 @@ class RecruiterTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        utils.logger.setLevel(ERROR)
+        utils.helpers.logger.setLevel(ERROR)
         recruiter.logger.setLevel(ERROR)
         config_path = '{0}/recruit.yml'.format(os.path.dirname(__file__))
         recruiter.initialize_app(config_path)

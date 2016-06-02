@@ -3,16 +3,15 @@
 
 import os
 import argparse
-from typing import List
 from functools import wraps
-from objects import LeaderInfo, SoldierInfo, Work, Mission, ResponseStatus,\
-    definitions
-from utils import json_input, asdict, RestClient
+from utils.objects import LeaderInfo, SoldierInfo, Work, Mission, \
+    ResponseStatus,definitions
+from utils.helpers import json_input, asdict
 from flask import Flask, jsonify, request, Blueprint, render_template
 from flask_cors import cross_origin
 from flask_swagger import swagger
-from recruiter import RecruiterClient
-from commander import CommanderClient
+from utils.recruiter_client import RecruiterClient
+from utils.commander_client import CommanderClient
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -104,69 +103,6 @@ class Leader(object):
         return True
 
 
-class LeaderClient(object):
-    def __init__(self, client: RestClient):
-        self.client = client
-
-    # それぞれの実体メソッドを呼び出す
-    # APIドキュメントとAPIヘルパーの実装をコード的に近くに実装するための措置
-    def get_root(self) -> (LeaderInfo, str):
-        try:
-            return _get_root(self.client)
-        except Exception as e:
-            logger.error("in LeaderClient.get_root")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
-            return None, None
-
-    def get_missions(self) -> (List[Mission], str):
-        try:
-            return _get_missions(self.client)
-        except Exception as e:
-            logger.error("in LeaderClient.get_missions")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
-            return None, None
-
-    def post_missions(self, obj: Mission) -> (Mission, str):
-        try:
-            return _post_missions(self.client, obj)
-        except Exception as e:
-            logger.error("in LeaderClient.post_missions")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
-            return None, None
-
-    def get_subordinates(self) -> (List[SoldierInfo], str):
-        try:
-            return _get_subordinates(self.client)
-        except Exception as e:
-            logger.error("in LeaderClient.get_subordinates")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
-            return None, None
-
-    def post_subordinates(self, obj: SoldierInfo) -> (SoldierInfo, str):
-        try:
-            return _post_subordinates(self.client, obj)
-        except Exception as e:
-            logger.error("in LeaderClient.post_subordinates")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
-            return None, None
-
-    def get_subordinates_spec(self, sub_id: str) -> (SoldierInfo, str):
-        try:
-            return _get_subordinates_spec(self.client, sub_id)
-        except Exception as e:
-            logger.error("in LeaderClient.get_subordinates_spec")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
-            return None, None
-
-    def post_work(self, sub_id: str, obj: Work) -> (Work, str):
-        try:
-            return _post_work(self.client, sub_id, obj)
-        except Exception as e:
-            logger.error("in LeaderClient.post_work")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
-            return None, None
-
-
 # ------------------------------------------------------------------------------
 # REST interface ---------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -208,13 +144,6 @@ def get_info():
     return jsonify(_status=ResponseStatus.Success, info=info), 200
 
 
-def _get_root(c):
-    st, res = c.get('')
-    if st != 200:
-        return None, res['status']['msg']
-    return LeaderInfo(**res['info']), None
-
-
 @app.route('/missions', methods=['GET'])
 def get_missions():
     """
@@ -238,13 +167,6 @@ def get_missions():
     missions_dicts = [asdict(m) for m in missions_raw]
     return jsonify(_status=ResponseStatus.Success,
                    missions=missions_dicts), 200
-
-
-def _get_missions(c):
-    st, res = c.get('missions')
-    if st != 200:
-        return None, res['status']['msg']
-    return [Mission(**m) for m in res['missions']], None
 
 
 @app.route('/missions', methods=['POST'])
@@ -279,13 +201,6 @@ def accept_missions():
     return jsonify(_status=ResponseStatus.Success, accepted=accepted), 200
 
 
-def _post_missions(c, obj):
-    st, res = c.post('missions', asdict(obj))
-    if st != 200:
-        return None, res['status']['msg']
-    return Mission(**res['accepted']), None
-
-
 @app.route('/subordinates', methods=['GET'])
 @json_input
 def get_subordinates():
@@ -310,13 +225,6 @@ def get_subordinates():
     subs_raw = _leader.subordinates
     subs_dicts = [asdict(sub) for sub in subs_raw.values()]
     return jsonify(_status=ResponseStatus.Success, subordinates=subs_dicts)
-
-
-def _get_subordinates(c):
-    st, res = c.get('subordinates')
-    if st != 200:
-        return None, res['status']['msg']
-    return [SoldierInfo(**sol) for sol in res['subordinates']], None
 
 
 @app.route('/subordinates', methods=['POST'])
@@ -350,13 +258,6 @@ def accept_subordinate():
 
     return jsonify(_status=ResponseStatus.Success,
                    accepted=asdict(soldier)), 200
-
-
-def _post_subordinates(c, obj):
-    st, res = c.post('subordinates', asdict(obj))
-    if st != 200:
-        return None, res['status']['msg']
-    return SoldierInfo(**res['accepted']), None
 
 
 def access_subordinate(f):
@@ -403,13 +304,6 @@ def get_sub_info(sub_id):
     return jsonify(_status=ResponseStatus.Success, info=asdict(res))
 
 
-def _get_subordinates_spec(c, sub_id):
-    st, res = c.get('subordinates/' + sub_id)
-    if st != 200:
-        return None, res['status']['msg']
-    return SoldierInfo(**res['info']), None
-
-
 @app.route('/subordinates/<sub_id>/work', methods=['POST'])
 @access_subordinate
 @json_input
@@ -445,13 +339,6 @@ def accept_work(sub_id):
     return jsonify(_status=ResponseStatus.Success, accepted=asdict(work))
 
 
-def _post_work(c, sub_id, obj):
-    st, res = c.post('subordinates/' + sub_id, obj)
-    if st != 200:
-        return None, res['status']['msg']
-    return Work(**res['accepted']), None
-
-
 @app.route('/spec.json')
 @cross_origin()
 def spec_json():
@@ -478,13 +365,12 @@ if __name__ == "__main__":
     params = parser.parse_args()
     url_prefix = params.prefix
 
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        ep = 'http://localhost:{0}{1}/'.format(params.port, url_prefix)
-        initialize_app(params.id, params.name, ep)
-        _leader.awake(RecruiterClient.gen_rest_client(
-            'http://localhost:50000/recruiter/'))
+    ep = 'http://localhost:{0}{1}/'.format(params.port, url_prefix)
+    initialize_app(params.id, params.name, ep)
+    _leader.awake(RecruiterClient.gen_rest_client(
+        'http://localhost:50000/recruiter/'))
 
     server = Flask(__name__)
     server.debug = True
     server.register_blueprint(app, url_prefix=url_prefix)
-    server.run(host='0.0.0.0', port=params.port)
+    server.run(host='0.0.0.0', port=params.port, use_reloader=False)
