@@ -399,9 +399,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     url_prefix = args.prefix
 
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        config = '{0}/recruit.yml'.format(os.path.dirname(__file__))
-        initialize_app(config)
+    config = '{0}/recruit.yml'.format(os.path.dirname(__file__))
+    initialize_app(config)
 
     server = Flask(__name__)
     server.debug = True

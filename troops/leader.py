@@ -365,11 +365,10 @@ if __name__ == "__main__":
     params = parser.parse_args()
     url_prefix = params.prefix
 
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        ep = 'http://localhost:{0}{1}/'.format(params.port, url_prefix)
-        initialize_app(params.id, params.name, ep)
-        _leader.awake(RecruiterClient.gen_rest_client(
-            'http://localhost:50000/recruiter/'))
+    ep = 'http://localhost:{0}{1}/'.format(params.port, url_prefix)
+    initialize_app(params.id, params.name, ep)
+    _leader.awake(RecruiterClient.gen_rest_client(
+        'http://localhost:50000/recruiter/'))
 
     server = Flask(__name__)
     server.debug = True
