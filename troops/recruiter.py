@@ -292,7 +292,7 @@ def get_squad_leader():
     if info is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[500])), 500
 
-    return jsonify(_status=ResponseStatus.Success, leader=info)
+    return jsonify(_status=ResponseStatus.Success, leader=asdict(info))
 
 
 @app.route('/department/troop/commander', methods=['GET'])
