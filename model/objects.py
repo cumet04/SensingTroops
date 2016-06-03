@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 from collections import namedtuple
 
 
@@ -19,32 +16,6 @@ _info = {
     }
 }
 definitions[_name] = _info
-
-
-class ResponseStatus(object):
-    Success = {
-        'success': True,
-        'msg': "status is ok"
-    }
-    NotFound = {
-        'success': False,
-        'msg': 'resource not found'
-    }
-    Failed = {
-        'success': False,
-        'msg': 'action is failed'
-    }
-    NotImplemented = {
-        'success': False,
-        'msg': 'this function is not implemented yet'
-    }
-
-    @staticmethod
-    def make_error(msg):
-        return {
-            'success': False,
-            'msg': msg
-        }
 
 
 _name = 'SoldierInfo'

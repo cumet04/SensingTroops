@@ -1,8 +1,8 @@
 from functools import wraps
 from flask import jsonify, request, Blueprint
-from utils.objects import LeaderInfo, Report, Campaign, ResponseStatus
-from utils.helpers import json_input, asdict
-from model import Commander
+from model import LeaderInfo, Report, Campaign
+from model.commander import Commander
+from utils.helpers import json_input, asdict, ResponseStatus
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -277,4 +277,3 @@ def accept_report(sub_id):
     report = Report(**request.json)
     commander.accept_report(sub_id, report)
     return jsonify(_status=ResponseStatus.Success, accepted=asdict(report))
-

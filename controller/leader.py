@@ -1,13 +1,9 @@
 from functools import wraps
-from utils.objects import LeaderInfo, SoldierInfo, Work, Mission, \
-    ResponseStatus,definitions
-from utils.helpers import json_input, asdict
-from flask import jsonify, request, Blueprint, render_template
-from flask_cors import cross_origin
-from flask_swagger import swagger
+from model import SoldierInfo, Work, Mission
+from model.leader import Leader
+from utils.helpers import json_input, asdict, ResponseStatus
+from flask import jsonify, request, Blueprint
 from logging import getLogger, StreamHandler, DEBUG
-from model import Leader
-
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -18,14 +14,6 @@ logger.addHandler(handler)
 
 server = Blueprint('leader', __name__)
 leader = None  # type: Leader
-
-
-def initialize_app(leader_id, leader_name, endpoint):
-    global leader
-    leader = Leader()
-    leader.id = leader_id
-    leader.name = leader_name
-    leader.endpoint = endpoint
 
 
 @server.route('/', methods=['GET'])
@@ -244,4 +232,3 @@ def accept_work(sub_id):
     work = Work(**request.json)
     leader.accept_work(sub_id, work)
     return jsonify(_status=ResponseStatus.Success, accepted=asdict(work))
-

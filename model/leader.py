@@ -1,4 +1,4 @@
-from utils.objects import LeaderInfo
+from model import LeaderInfo
 from utils.commander_client import CommanderClient
 from logging import getLogger, StreamHandler, DEBUG
 

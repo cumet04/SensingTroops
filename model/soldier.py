@@ -1,9 +1,4 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
-import os
-import argparse
-from utils.objects import LeaderInfo, SoldierInfo, Work
+from model import SoldierInfo
 from utils.recruiter_client import RecruiterClient
 from utils.leader_client import LeaderClient
 from logging import getLogger, StreamHandler, DEBUG
@@ -54,4 +49,3 @@ class Soldier(object):
             name=self.name,
             weapons=list(self.weapons.keys()),
             orders=self.orders)
-

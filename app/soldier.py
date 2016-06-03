@@ -1,6 +1,6 @@
 import argparse
 from utils.recruiter_client import RecruiterClient
-from model import Soldier
+from model.soldier import Soldier
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

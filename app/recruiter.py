@@ -1,12 +1,12 @@
 import os
 import argparse
-import controller
-from model import Recruiter
 from logging import getLogger, StreamHandler, DEBUG
-from utils.objects import definitions
 from flask_swagger import swagger
 from flask_cors import cross_origin
 from flask import jsonify, render_template
+from controller import RecruiterServer
+from model import definitions
+from model.recruiter import Recruiter
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -25,9 +25,10 @@ if __name__ == "__main__":
 
     config = '{0}/../config/recruit.yml'.format(os.path.dirname(__file__))
     recruiter = Recruiter(config)
-    controller.Recruiter.set_model(recruiter)
+    RecruiterServer.set_model(recruiter)
 
-    server = controller.Recruiter.generate_server(params.prefix)
+    server = RecruiterServer.generate_server(params.prefix)
+
     @server.route(params.prefix + '/spec.json')
     @cross_origin()
     def spec_json():

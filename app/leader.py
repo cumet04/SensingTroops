@@ -1,12 +1,12 @@
 import argparse
-import controller
-from model import Leader
-from logging import getLogger, StreamHandler, DEBUG
-from utils.recruiter_client import RecruiterClient
-from utils.objects import definitions
 from flask import render_template, jsonify
 from flask_cors import cross_origin
 from flask_swagger import swagger
+from logging import getLogger, StreamHandler, DEBUG
+from controller import LeaderServer
+from model import definitions
+from model.leader import Leader
+from utils.recruiter_client import RecruiterClient
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -31,9 +31,10 @@ if __name__ == "__main__":
     leader = Leader(params.id, params.name, ep)
     leader.awake(RecruiterClient.gen_rest_client(
         'http://localhost:50000/recruiter/'))
-    controller.Leader.set_model(leader)
+    LeaderServer.set_model(leader)
 
-    server = controller.Leader.generate_server(params.prefix)
+    server = LeaderServer.generate_server(params.prefix)
+
     @server.route(params.prefix + '/spec.json')
     @cross_origin()
     def spec_json():

@@ -1,4 +1,4 @@
-from utils.objects import CommanderInfo
+from model import CommanderInfo
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)

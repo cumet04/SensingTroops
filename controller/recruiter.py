@@ -1,9 +1,8 @@
-from utils.objects import CommanderInfo, ResponseStatus, definitions
-from utils.helpers import json_input, asdict
-from flask import jsonify, request, render_template, Blueprint
+from model import CommanderInfo
+from model.recruiter import Recruiter
+from utils.helpers import json_input, asdict, ResponseStatus
+from flask import jsonify, request, Blueprint
 from logging import getLogger, StreamHandler, DEBUG
-from model import Recruiter
-
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -271,4 +270,3 @@ def add_squad_error():
 def add_troop_error():
     # TODO
     return jsonify(msg='this function is not implemented yet.'), 500
-

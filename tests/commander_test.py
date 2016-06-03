@@ -1,11 +1,10 @@
 import unittest
 import json
-import utils
-import controller
-from model import Commander
+from controller import CommanderServer
+from model.commander import Commander
 from datetime import datetime
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from utils.objects import LeaderInfo, CommanderInfo, Report, Campaign
+from model import LeaderInfo, CommanderInfo, Report, Campaign
 from utils.helpers import asdict
 
 logger = getLogger(__name__)
@@ -19,11 +18,11 @@ class CommanderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        utils.helpers.logger.setLevel(ERROR)
+        # utils.helpers.logger.setLevel(ERROR)
         # TODO: commander.logger.setLevel(ERROR)
         commander = Commander("cxxx0", "cmd_http", "http://localhost:50000")
-        controller.Commander.set_model(commander)
-        server = controller.Commander.generate_server("/commander")
+        CommanderServer.set_model(commander)
+        server = CommanderServer.generate_server("/commander")
         self.app = server.test_client()
 
     def tearDown(self):

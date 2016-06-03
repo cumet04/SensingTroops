@@ -1,4 +1,4 @@
-from model.recruiter import Recruiter
-from model.commander import Commander
-from model.leader import Leader
-from model.soldier import Soldier
+from model.objects import CommanderInfo, LeaderInfo, SoldierInfo
+from model.objects import Campaign, Mission, Order
+from model.objects import Report, Work
+from model.objects import definitions
