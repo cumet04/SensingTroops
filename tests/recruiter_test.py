@@ -204,3 +204,7 @@ class RecruiterTestCase(unittest.TestCase):
                         'msg': "Specified leader does not exist on database"},
         }
         self.assertEqual(actual, expected)
+
+
+if __name__ == "__main__":
+    unittest.main()
