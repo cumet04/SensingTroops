@@ -1,14 +1,10 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 import unittest
-import troops.commander as commander
 import json
-import utils
+from controller import CommanderServer
+from model.commander import Commander
 from datetime import datetime
-from flask import Flask
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from utils.objects import LeaderInfo, CommanderInfo, Report, Campaign
+from model import LeaderInfo, CommanderInfo, Report, Campaign
 from utils.helpers import asdict
 
 logger = getLogger(__name__)
@@ -22,12 +18,11 @@ class CommanderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        utils.helpers.logger.setLevel(ERROR)
-        commander.logger.setLevel(ERROR)
-        commander.initialize_app("cxxx0", "cmd_http", "http://localhost:50000")
-        server = Flask(__name__)
-        server.register_blueprint(commander.app,
-                                  url_prefix=commander.url_prefix)
+        # utils.helpers.logger.setLevel(ERROR)
+        # TODO: commander.logger.setLevel(ERROR)
+        commander = Commander("cxxx0", "cmd_http", "http://localhost:50000")
+        CommanderServer.set_model(commander)
+        server = CommanderServer.generate_server("/commander")
         self.app = server.test_client()
 
     def tearDown(self):
@@ -304,3 +299,6 @@ class CommanderTestCase(unittest.TestCase):
         }
         self.assertEqual(actual, expected)
 
+
+if __name__ == "__main__":
+    unittest.main()

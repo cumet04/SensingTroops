@@ -1,9 +1,6 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
-from typing import List
-from utils.objects import LeaderInfo, CommanderInfo, Report, Campaign
 from utils.helpers import asdict, RestClient
+from model import LeaderInfo, CommanderInfo, Report, Campaign
+from typing import List
 
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -99,5 +96,3 @@ class CommanderClient(object):
     @staticmethod
     def gen_rest_client(base_url):
         return CommanderClient(RestClient(base_url))
-
-

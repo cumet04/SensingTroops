@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 import json
 import requests
 from functools import wraps
@@ -22,6 +19,32 @@ class UnexpectedServerError(Exception):
 
     def __str__(self):
         return "status code: {0}".format(self.status)
+
+
+class ResponseStatus(object):
+    Success = {
+        'success': True,
+        'msg': "status is ok"
+    }
+    NotFound = {
+        'success': False,
+        'msg': 'resource not found'
+    }
+    Failed = {
+        'success': False,
+        'msg': 'action is failed'
+    }
+    NotImplemented = {
+        'success': False,
+        'msg': 'this function is not implemented yet'
+    }
+
+    @staticmethod
+    def make_error(msg):
+        return {
+            'success': False,
+            'msg': msg
+        }
 
 
 class RestClient(object):

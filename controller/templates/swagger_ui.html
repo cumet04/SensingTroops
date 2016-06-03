@@ -37,7 +37,7 @@
       // } else {
       //   url = "http://petstore.swagger.io/v2/swagger.json";
       // }
-      var url = "{{ spec_url }}";
+      var url = location.pathname.replace(/html/g, "json");
 
       // Pre load translate...
       if(window.SwaggerTranslator) {

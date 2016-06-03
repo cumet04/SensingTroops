@@ -1,8 +1,5 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 from typing import List
-from utils.objects import LeaderInfo, CommanderInfo
+from model import LeaderInfo, CommanderInfo
 from utils.helpers import asdict, RestClient
 from logging import getLogger, StreamHandler, DEBUG
 

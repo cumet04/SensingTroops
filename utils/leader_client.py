@@ -1,8 +1,5 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 from typing import List
-from utils.objects import LeaderInfo, SoldierInfo, Work, Mission
+from model import LeaderInfo, SoldierInfo, Work, Mission
 from utils.helpers import asdict, RestClient
 from logging import getLogger, StreamHandler, DEBUG
 
