@@ -1,13 +1,9 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
-import sys
 import os
 import unittest
-import troops.recruiter as recruiter
 import json
 import utils
-from flask import Flask
+import controller
+from model import Recruiter
 from logging import getLogger, StreamHandler, DEBUG, ERROR
 from utils.objects import CommanderInfo
 from utils.helpers import asdict
@@ -27,12 +23,11 @@ class RecruiterTestCase(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
         utils.helpers.logger.setLevel(ERROR)
-        recruiter.logger.setLevel(ERROR)
+        # recruiter.logger.setLevel(ERROR)
         config_path = '{0}/recruit.yml'.format(os.path.dirname(__file__))
-        recruiter.initialize_app(config_path)
-        server = Flask(__name__)
-        server.register_blueprint(recruiter.app,
-                                  url_prefix=recruiter.url_prefix)
+        recruiter = Recruiter(config_path)
+        controller.Recruiter.set_model(recruiter)
+        server = controller.Recruiter.generate_server("/recruiter")
         self.app = server.test_client()
 
     def tearDown(self):
@@ -44,7 +39,7 @@ class RecruiterTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
 
-        config_id_list = list(recruiter._recruiter.TroopList.keys())
+        config_id_list = ["cxxx0", "cxxx1"]
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
             "commanders": config_id_list

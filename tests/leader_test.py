@@ -1,10 +1,8 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 import unittest
-import troops.leader as leader
 import json
 import utils
+import controller
+from model import Leader
 from datetime import datetime
 from flask import Flask
 from logging import getLogger, StreamHandler, DEBUG, ERROR
@@ -23,11 +21,10 @@ class LeaderTestCase(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
         utils.helpers.logger.setLevel(ERROR)
-        leader.logger.setLevel(ERROR)
-        leader.initialize_app("lxxx0", "lea_http", "http://localhost:50000")
-        server = Flask(__name__)
-        server.register_blueprint(leader.app,
-                                  url_prefix=leader.url_prefix)
+        # leader.logger.setLevel(ERROR)
+        leader = Leader("lxxx0", "lea_http", "http://localhost:50000")
+        controller.Leader.set_model(leader)
+        server = controller.Leader.generate_server("/leader")
         self.app = server.test_client()
 
     def tearDown(self):
