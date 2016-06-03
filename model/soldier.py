@@ -55,17 +55,3 @@ class Soldier(object):
             weapons=list(self.weapons.keys()),
             orders=self.orders)
 
-
-_soldier = None  # type: Soldier
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        'id', metavar='id', type=str, help='Target id of app')
-    parser.add_argument(
-        'name', metavar='name', type=str, help='Target name of app')
-    params = parser.parse_args()
-
-    _soldier = Soldier(params.id, params.name)
-    _soldier.awake(RecruiterClient.gen_rest_client(
-        'http://localhost:50000/recruiter/'))
