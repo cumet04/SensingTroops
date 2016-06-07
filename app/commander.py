@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '-P', '--port', type=int, default=50001, help='port')
     parser.add_argument(
-        '-F', '--prefix', type=str, default='/leader', help='url prefix')
+        '-F', '--prefix', type=str, default='/commander', help='url prefix')
     params = parser.parse_args()
 
 
