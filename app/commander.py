@@ -1,4 +1,5 @@
 import argparse
+import json
 from logging import getLogger, StreamHandler, DEBUG
 from flask import render_template, jsonify
 from flask_cors import cross_origin
@@ -18,6 +19,8 @@ logger.addHandler(handler)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        '--spec', action="store_true", help='output spec.json and exit')
+    parser.add_argument(
         'id', metavar='id', type=str, help='Target id of app')
     parser.add_argument(
         'name', metavar='name', type=str, help='Target name of app')
@@ -27,17 +30,24 @@ if __name__ == "__main__":
         '-F', '--prefix', type=str, default='/leader', help='url prefix')
     params = parser.parse_args()
 
+
+    server = CommanderServer.generate_server(params.prefix)
+
+    if params.spec:
+        spec_dict = swagger(server, template={'definitions': definitions})
+        spec_dict['info']['title'] = 'SensingTroops'
+        print(json.dumps(spec_dict, sort_keys=True, indent=2))
+        exit()
+
     ep = 'http://localhost:{0}{1}/'.format(params.port, params.prefix)
     commander = Commander(params.id, params.name, ep)
     commander.awake(RecruiterClient.gen_rest_client(
         'http://localhost:50000/recruiter/'))
     CommanderServer.set_model(commander)
 
-    server = CommanderServer.generate_server(params.prefix)
-
     @server.route(params.prefix + '/spec.json')
     @cross_origin()
-    def spec_json():
+    def output_spec_json():
         spec_dict = swagger(server, template={'definitions': definitions})
         spec_dict['info']['title'] = 'SensingTroops'
         return jsonify(spec_dict)

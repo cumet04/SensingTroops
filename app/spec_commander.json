@@ -1,0 +1,453 @@
+{
+  "definitions": {
+    "Campaign": {
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "destination": {
+          "type": "string"
+        },
+        "place": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "requirements": {
+          "type": "string"
+        },
+        "trigger": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "CommanderInfo": {
+      "properties": {
+        "campaigns": {
+          "items": {
+            "$ref": "#/definitions/Campaign"
+          },
+          "type": "array"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "id": {
+          "description": "the man's ID",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "subordinates": {
+          "description": "A list of subordinates's ID",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "LeaderInfo": {
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        },
+        "id": {
+          "description": "the man's ID",
+          "type": "string"
+        },
+        "missions": {
+          "items": {
+            "$ref": "#/definitions/Mission"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "subordinates": {
+          "description": "A list of subordinates's ID",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "Mission": {
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "destination": {
+          "type": "string"
+        },
+        "place": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "requirements": {
+          "type": "string"
+        },
+        "trigger": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Order": {
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "destination": {
+          "type": "string"
+        },
+        "place": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "requirements": {
+          "type": "string"
+        },
+        "trigger": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Report": {
+      "properties": {
+        "purpose": {
+          "type": "string"
+        },
+        "time": {
+          "type": "string"
+        },
+        "values": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ResponseStatus": {
+      "properties": {
+        "msg": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "SoldierInfo": {
+      "properties": {
+        "id": {
+          "description": "the man's ID",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "orders": {
+          "items": {
+            "$ref": "#/definitions/Order"
+          },
+          "type": "array"
+        },
+        "weapons": {
+          "description": "A list of weapon",
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "Work": {
+      "properties": {
+        "purpose": {
+          "type": "string"
+        },
+        "time": {
+          "type": "string"
+        },
+        "values": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "info": {
+    "title": "SensingTroops",
+    "version": "0.0.0"
+  },
+  "paths": {
+    "/leader/": {
+      "get": {
+        "description": "\u3053\u306eCommander\u306e\u60c5\u5831\u3092json\u5f62\u5f0f\u3067\u8fd4\u3059",
+        "responses": {
+          "200": {
+            "description": "Commander's information",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                },
+                "info": {
+                  "$ref": "#/definitions/CommanderInfo",
+                  "description": "Commander's information"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Information of this commander"
+      }
+    },
+    "/leader/campaigns": {
+      "get": {
+        "description": "\u3053\u306eCommander\u304c\u53d7\u7406\u3057\u305fCampaigns\u306e\u4e00\u89a7\u3092\u8fd4\u3059",
+        "responses": {
+          "200": {
+            "description": "A list of campaign that is accepted by the commander",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                },
+                "campaigns": {
+                  "items": {
+                    "$ref": "#/definitions/Campaign"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Accepted campaigns"
+      },
+      "post": {
+        "description": "\u3053\u306eCommander\u306b\u65b0\u3057\u3044Campaign\u3092\u4e00\u3064\u3060\u3051\u8ffd\u52a0\u3059\u308b",
+        "parameters": [
+          {
+            "description": "A campaign to be accepted",
+            "in": "body",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Campaign"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The campaign is accepted",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                },
+                "accepted": {
+                  "$ref": "#/definitions/Campaign",
+                  "description": "The accepted campaign"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Add a new campaigns"
+      }
+    },
+    "/leader/subordinates": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "The subordinate is found",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                },
+                "subordinates": {
+                  "description": "Information object of the subordinate",
+                  "items": {
+                    "$ref": "#/definitions/LeaderInfo"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "summary": "All subordinates of this commander"
+      },
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "description": "Information of a leader who is to join",
+            "in": "body",
+            "name": "subordinate",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/LeaderInfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The leader is accepted",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                },
+                "accepted": {
+                  "$ref": "#/definitions/LeaderInfo",
+                  "description": "Information object of the subordinate"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "[NT] Requested leader already exists in the troop",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Add a new leader"
+      }
+    },
+    "/leader/subordinates/{sub_id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "description": "ID of a requested subordinate",
+            "in": "path",
+            "name": "sub_id",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The subordinate is found",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                },
+                "info": {
+                  "$ref": "#/definitions/LeaderInfo",
+                  "description": "Information object of the subordinate"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The subordinate is not found",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Information of a subordinate"
+      }
+    },
+    "/leader/subordinates/{sub_id}/report": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "description": "The report's author-id",
+            "in": "path",
+            "name": "sub_id",
+            "type": "string"
+          },
+          {
+            "description": "A report to be accepted",
+            "in": "body",
+            "name": "report",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Report"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The report is accepted",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                },
+                "accepted": {
+                  "$ref": "#/definitions/Report",
+                  "description": "The accepted report"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The subordinate is not found",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Accept new report"
+      }
+    },
+    "/leader/ui": {
+      "get": {
+        "description": "\u3053\u306eCommander\u53ca\u3073Troop\u306e\u5404\u7a2e\u60c5\u5831\u3092WebUI\u3067\u8868\u793a\u3059\u308b",
+        "responses": {
+          "200": {
+            "description": "Commander's status UI"
+          }
+        },
+        "summary": "[NIY][NT] Status UI"
+      }
+    }
+  },
+  "swagger": "2.0"
+}

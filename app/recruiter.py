@@ -1,5 +1,6 @@
 import os
 import argparse
+import json
 from logging import getLogger, StreamHandler, DEBUG
 from flask_swagger import swagger
 from flask_cors import cross_origin
@@ -18,26 +19,35 @@ logger.addHandler(handler)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        '--spec', action="store_true", help='output spec.json and exit')
+    parser.add_argument(
         '-P', '--port', type=int, default=50000, help='port')
     parser.add_argument(
         '-F', '--prefix', type=str, default='/recruiter', help='url prefix')
     params = parser.parse_args()
 
+
+    server = RecruiterServer.generate_server(params.prefix)
+
+    if params.spec:
+        spec_dict = swagger(server, template={'definitions': definitions})
+        spec_dict['info']['title'] = 'SensingTroops'
+        print(json.dumps(spec_dict, sort_keys=True, indent=2))
+        exit()
+
     config = '{0}/../config/recruit.yml'.format(os.path.dirname(__file__))
     recruiter = Recruiter(config)
     RecruiterServer.set_model(recruiter)
 
-    server = RecruiterServer.generate_server(params.prefix)
-
     @server.route(params.prefix + '/spec.json')
     @cross_origin()
-    def spec_json():
+    def output_spec_json():
         spec_dict = swagger(server, template={'definitions': definitions})
         spec_dict['info']['title'] = 'SensingTroops'
         return jsonify(spec_dict)
 
     @server.route(params.prefix + '/spec.html')
-    def spec_html():
+    def output_spec_html():
         return render_template('swagger_ui.html')
 
     server.debug = True
