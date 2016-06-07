@@ -195,7 +195,7 @@
     "version": "0.0.0"
   },
   "paths": {
-    "/leader/": {
+    "/commander/": {
       "get": {
         "description": "\u3053\u306eCommander\u306e\u60c5\u5831\u3092json\u5f62\u5f0f\u3067\u8fd4\u3059",
         "responses": {
@@ -218,7 +218,7 @@
         "summary": "Information of this commander"
       }
     },
-    "/leader/campaigns": {
+    "/commander/campaigns": {
       "get": {
         "description": "\u3053\u306eCommander\u304c\u53d7\u7406\u3057\u305fCampaigns\u306e\u4e00\u89a7\u3092\u8fd4\u3059",
         "responses": {
@@ -275,7 +275,7 @@
         "summary": "Add a new campaigns"
       }
     },
-    "/leader/subordinates": {
+    "/commander/subordinates": {
       "get": {
         "description": "",
         "responses": {
@@ -344,7 +344,7 @@
         "summary": "Add a new leader"
       }
     },
-    "/leader/subordinates/{sub_id}": {
+    "/commander/subordinates/{sub_id}": {
       "get": {
         "description": "",
         "parameters": [
@@ -386,7 +386,7 @@
         "summary": "Information of a subordinate"
       }
     },
-    "/leader/subordinates/{sub_id}/report": {
+    "/commander/subordinates/{sub_id}/report": {
       "post": {
         "description": "",
         "parameters": [
@@ -437,7 +437,7 @@
         "summary": "Accept new report"
       }
     },
-    "/leader/ui": {
+    "/commander/ui": {
       "get": {
         "description": "\u3053\u306eCommander\u53ca\u3073Troop\u306e\u5404\u7a2e\u60c5\u5831\u3092WebUI\u3067\u8868\u793a\u3059\u308b",
         "responses": {
