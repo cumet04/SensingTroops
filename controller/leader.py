@@ -64,38 +64,6 @@ def get_missions():
                    missions=missions_dicts), 200
 
 
-@server.route('/missions', methods=['POST'])
-def accept_missions():
-    """
-    Add new missions
-    ---
-    parameters:
-      - name: mission
-        description: A mission to be accepted
-        in: body
-        required: true
-        schema:
-          $ref: '#/definitions/Mission'
-    responses:
-      200:
-        description: The mission is accepted
-        schema:
-          properties:
-            _status:
-              description: Response status
-              $ref: '#/definitions/ResponseStatus'
-            accepted:
-              description: The accepted mission
-              $ref: '#/definitions/Mission'
-    """
-    mission = Mission(**request.json)
-    accepted = leader.accept_mission(mission).to_dict()
-    if accepted is None:
-        return jsonify(_status=ResponseStatus.Failed), 500
-
-    return jsonify(_status=ResponseStatus.Success, accepted=accepted), 200
-
-
 @server.route('/subordinates', methods=['GET'])
 @json_input
 def get_subordinates():

@@ -241,38 +241,6 @@
           }
         },
         "summary": "Accepted missions"
-      },
-      "post": {
-        "description": "",
-        "parameters": [
-          {
-            "description": "A mission to be accepted",
-            "in": "body",
-            "name": "mission",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/Mission"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The mission is accepted",
-            "schema": {
-              "properties": {
-                "_status": {
-                  "$ref": "#/definitions/ResponseStatus",
-                  "description": "Response status"
-                },
-                "accepted": {
-                  "$ref": "#/definitions/Mission",
-                  "description": "The accepted mission"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Add new missions"
       }
     },
     "/leader/subordinates": {

@@ -20,8 +20,8 @@ class LeaderTestCase(unittest.TestCase):
         self.maxDiff = None
         # utils.helpers.logger.setLevel(ERROR)
         # leader.logger.setLevel(ERROR)
-        leader = Leader("lxxx0", "lea_http", "http://localhost:50000")
-        LeaderServer.set_model(leader)
+        self.leader_obj = Leader("lxxx0", "lea_http", "http://localhost:50000")
+        LeaderServer.set_model(self.leader_obj)
         server = LeaderServer.generate_server("/leader")
         self.app = server.test_client()
 
@@ -66,9 +66,7 @@ class LeaderTestCase(unittest.TestCase):
                           purpose='A great app',
                           requirements='brightness sound',
                           trigger='a trigger')
-        self.app.post('/leader/missions',
-                      data=json.dumps(mission.to_dict()),
-                      content_type='application/json')
+        self.leader_obj.accept_mission(mission)
 
         # get subordinates
         response = self.app.get('/leader/missions')
@@ -96,10 +94,8 @@ class LeaderTestCase(unittest.TestCase):
             m.place = place
             mission_list.append(m)
 
-        for c in mission_list:
-            self.app.post('/leader/missions',
-                          data=json.dumps(c.to_dict()),
-                          content_type='application/json')
+        for m in mission_list:
+            self.leader_obj.accept_mission(m)
 
         # get missions
         response = self.app.get('/leader/missions')
@@ -118,26 +114,6 @@ class LeaderTestCase(unittest.TestCase):
             if exp not in actual_list:
                 self.fail('{0} is not found.'.format(exp))
         pass
-
-# [POST] /missions
-    def test_add_missions(self):
-        mission = Mission(author='lxxx0',
-                          destination='mongoserv',
-                          place='on desk',
-                          purpose='A great app',
-                          requirements='brightness sound',
-                          trigger='a trigger')
-        response = self.app.post('/leader/missions',
-                                 data=json.dumps(mission.to_dict()),
-                                 content_type='application/json')
-        self.assertEqual(response.status_code, 200)
-        actual = json.loads(response.data.decode("utf-8"))
-
-        expected = {
-            "_status": {'success': True, 'msg': "status is ok"},
-            "accepted": mission.to_dict()
-        }
-        self.assertEqual(actual, expected)
 
 # [GET] /subordinates
     def test_get_subordinates_none(self):

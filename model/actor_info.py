@@ -69,7 +69,7 @@ class LeaderInfo(object):
             "id": self.id,
             "name": self.name,
             "endpoint": self.endpoint,
-            "subordinates": [sub.to_dict() for sub in self.subordinates],
+            "subordinates": self.subordinates,
             "missions": [m.to_dict() for m in self.missions]
         }
 
@@ -106,6 +106,6 @@ class CommanderInfo(object):
             "id": self.id,
             "name": self.name,
             "endpoint": self.endpoint,
-            "subordinates": [sub.to_dict() for sub in self.subordinates],
+            "subordinates": self.subordinates,
             "campaigns": [c.to_dict() for c in self.campaigns]
         }
