@@ -5,7 +5,6 @@ from controller import RecruiterServer
 from model import CommanderInfo
 from model.recruiter import Recruiter
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from utils.helpers import asdict
 
 
 logger = getLogger(__name__)
@@ -54,7 +53,7 @@ class RecruiterTestCase(unittest.TestCase):
                                   subordinates=[],
                                   campaigns=[])
         self.app.put('/recruiter/commanders/cxxx0',
-                     data=json.dumps(asdict(commander)),
+                     data=json.dumps(commander.to_dict()),
                      content_type='application/json')
 
         # get commander's info
@@ -65,7 +64,7 @@ class RecruiterTestCase(unittest.TestCase):
         # assert
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            'commander': asdict(commander)
+            'commander': commander.to_dict()
         }
         self.assertEqual(actual, expected)
 
@@ -103,7 +102,7 @@ class RecruiterTestCase(unittest.TestCase):
                                   subordinates=[],
                                   campaigns=[])
         response = self.app.put('/recruiter/commanders/cxxx0',
-                                data=json.dumps(asdict(commander)),
+                                data=json.dumps(commander.to_dict()),
                                 content_type='application/json')
 
         # assert
@@ -112,7 +111,7 @@ class RecruiterTestCase(unittest.TestCase):
 
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            'commander': asdict(commander)
+            'commander': commander.to_dict()
         }
         self.assertEqual(actual, expected)
 
@@ -155,7 +154,7 @@ class RecruiterTestCase(unittest.TestCase):
                                   subordinates=[],
                                   campaigns=[])
         self.app.put('/recruiter/commanders/cxxx1',
-                     data=json.dumps(asdict(commander)),
+                     data=json.dumps(commander.to_dict()),
                      content_type='application/json')
 
         # get commander's info with all leader_ids
@@ -169,7 +168,7 @@ class RecruiterTestCase(unittest.TestCase):
             # assert
             expected = {
                 "_status": {'success': True, 'msg': "status is ok"},
-                'commander': asdict(commander)
+                'commander': commander.to_dict()
             }
             self.assertEqual(actual, expected)
         pass

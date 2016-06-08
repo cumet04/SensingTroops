@@ -1,4 +1,5 @@
-from model import LeaderInfo
+from model import SoldierInfo, LeaderInfo, Mission
+from typing import List, Dict
 from utils.commander_client import CommanderClient
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -14,8 +15,8 @@ class Leader(object):
         self.id = leader_id
         self.name = name
         self.endpoint = endpoint
-        self.subordinates = {}
-        self.missions = []
+        self.subordinates = {}  # type:Dict[str, SoldierInfo]
+        self.missions = []  # type:List[Mission]
         self.work_cache = []
 
     def awake(self, rec_client):
@@ -64,7 +65,7 @@ class Leader(object):
         """
         return sub_id in self.subordinates
 
-    def accept_mission(self, mission):
+    def accept_mission(self, mission: Mission) -> Mission:
         self.missions.append(mission)
         return mission
 

@@ -2,7 +2,7 @@ from functools import wraps
 from flask import jsonify, request, Blueprint
 from model import LeaderInfo, Report, Campaign
 from model.commander import Commander
-from utils.helpers import json_input, asdict, ResponseStatus
+from utils.helpers import json_input, ResponseStatus
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -35,7 +35,7 @@ def get_info():
               description: Commander's information
               $ref: '#/definitions/CommanderInfo'
     """
-    info = asdict(commander.generate_info())
+    info = commander.generate_info().to_dict()
     return jsonify(_status=ResponseStatus.Success, info=info), 200
 
 
@@ -76,7 +76,7 @@ def get_campaigns():
                 $ref: '#/definitions/Campaign'
     """
     camps_raw = commander.campaigns
-    camps_dicts = [asdict(camp) for camp in camps_raw]
+    camps_dicts = [camp.to_dict() for camp in camps_raw]
     return jsonify(_status=ResponseStatus.Success, campaigns=camps_dicts), 200
 
 
@@ -106,7 +106,7 @@ def accept_campaigns():
               $ref: '#/definitions/Campaign'
     """
     campaign = Campaign(**request.json)
-    accepted = asdict(commander.accept_campaign(campaign))
+    accepted = commander.accept_campaign(campaign).to_dict()
     if accepted is None:
         return jsonify(_status=ResponseStatus.Failed), 500
 
@@ -135,7 +135,7 @@ def get_subordinates():
                 $ref: '#/definitions/LeaderInfo'
     """
     subs_raw = commander.subordinates
-    subs_dicts = [asdict(sub) for sub in subs_raw.values()]
+    subs_dicts = [sub.to_dict() for sub in subs_raw.values()]
     return jsonify(_status=ResponseStatus.Success, subordinates=subs_dicts)
 
 
@@ -183,7 +183,7 @@ def accept_subordinate():
         return jsonify(_status=ResponseStatus.Failed), 500
 
     return jsonify(_status=ResponseStatus.Success,
-                   accepted=asdict(leader)), 200
+                   accepted=leader.to_dict()), 200
 
 
 def access_subordinate(f):
@@ -233,7 +233,7 @@ def get_sub_info(sub_id):
               $ref: '#/definitions/ResponseStatus'
     """
     res = commander.get_sub_info(sub_id)
-    return jsonify(_status=ResponseStatus.Success, info=asdict(res))
+    return jsonify(_status=ResponseStatus.Success, info=res.to_dict())
 
 
 @server.route('/subordinates/<sub_id>/report', methods=['POST'])
@@ -273,7 +273,6 @@ def accept_report(sub_id):
               description: Response status
               $ref: '#/definitions/ResponseStatus'
     """
-    # TODO: report.valuesは少なくともstringではないと思う
     report = Report(**request.json)
     commander.accept_report(sub_id, report)
-    return jsonify(_status=ResponseStatus.Success, accepted=asdict(report))
+    return jsonify(_status=ResponseStatus.Success, accepted=report.to_dict())

@@ -1,4 +1,4 @@
-from utils.helpers import asdict, RestClient
+from utils.helpers import RestClient
 from model import LeaderInfo, CommanderInfo, Report, Campaign
 from typing import List
 
@@ -39,7 +39,7 @@ class CommanderClient(object):
 
     def post_campaigns(self, obj: Campaign) -> (Campaign, str):
         try:
-            st, res = self.client.post('campaigns', asdict(obj))
+            st, res = self.client.post('campaigns', obj.to_dict())
             if st != 200:
                 return None, res['_status']['msg']
             return Campaign(**res['accepted']), None
@@ -61,7 +61,7 @@ class CommanderClient(object):
 
     def post_subordinates(self, obj: LeaderInfo) -> (LeaderInfo, str):
         try:
-            st, res = self.client.post('subordinates', asdict(obj))
+            st, res = self.client.post('subordinates', obj.to_dict())
             if st != 200:
                 return None, res['_status']['msg']
             return LeaderInfo(**res['accepted']), None
@@ -84,7 +84,7 @@ class CommanderClient(object):
     def post_report(self, sub_id: str, obj: Report) -> (Report, str):
         try:
             st, res = self.client.post('subordinates/{0}/report'.format(sub_id),
-                                       asdict(obj))
+                                       obj.to_dict())
             if st != 200:
                 return res['_status']['msg']
             return Report(**res['accepted']), None

@@ -1,6 +1,6 @@
 from typing import List
 from model import LeaderInfo, CommanderInfo
-from utils.helpers import asdict, RestClient
+from utils.helpers import RestClient
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -39,7 +39,7 @@ class RecruiterClient(object):
     def put_commanders_spec(self, com_id: str, obj: CommanderInfo) \
             -> (CommanderInfo, str):
         try:
-            st, res = self.client.put('commanders/' + com_id, asdict(obj))
+            st, res = self.client.put('commanders/' + com_id, obj.to_dict())
             if st != 200:
                 return None, res['_status']['msg']
             return CommanderInfo(**res['commander']), None

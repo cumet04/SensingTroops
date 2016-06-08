@@ -15,10 +15,10 @@
           "type": "string"
         },
         "requirements": {
-          "type": "string"
+          "type": "object"
         },
         "trigger": {
-          "type": "string"
+          "type": "object"
         }
       },
       "type": "object"
@@ -94,10 +94,10 @@
           "type": "string"
         },
         "requirements": {
-          "type": "string"
+          "type": "object"
         },
         "trigger": {
-          "type": "string"
+          "type": "object"
         }
       },
       "type": "object"
@@ -117,10 +117,10 @@
           "type": "string"
         },
         "requirements": {
-          "type": "string"
+          "type": "object"
         },
         "trigger": {
-          "type": "string"
+          "type": "object"
         }
       },
       "type": "object"

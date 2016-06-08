@@ -95,14 +95,3 @@ def json_input(f):
                                msg="param couldn't decode to json"), 400
         return f(*args, **kwargs)
     return check_json
-
-
-def asdict(n_tuple):
-    """
-    namedtupleをdictに変換する
-    :param n_tuple: namedtupleのインスタンス
-    :return: dictに変換したもの
-    """
-    # ただの_asdictではOrderedDictになりdictにならないことと
-    # アンダースコア付きの関数利用でlintに引っかかりIDEがうるさい
-    return dict(n_tuple._asdict())

@@ -33,7 +33,7 @@ class SoldierInfo(object):
             "id": self.id,
             "name": self.name,
             "weapons": self.weapons,
-            "orders": [o.asdict() for o in self.orders]
+            "orders": [o.to_dict() for o in self.orders]
         }
 
 

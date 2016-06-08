@@ -1,4 +1,5 @@
-from model import CommanderInfo
+from typing import List, Dict
+from model import LeaderInfo, CommanderInfo, Campaign, Mission
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -13,8 +14,8 @@ class Commander(object):
         self.id = com_id
         self.name = name
         self.endpoint = endpoint
-        self.subordinates = {}
-        self.campaigns = []
+        self.subordinates = {}  # type:Dict[str, LeaderInfo]
+        self.campaigns = []  # type:List[Campaign]
         self.report_cache = []
 
     def awake(self, recruiter_client):
@@ -54,7 +55,25 @@ class Commander(object):
     def get_sub_info(self, sub_id):
         return self.subordinates[sub_id]
 
-    def accept_campaign(self, campaign):
+    def accept_campaign(self, campaign: Campaign):
+        # 部下のMissionを生成・割り当てる
+        target_subs = []
+        if campaign.place == "All":
+            target_subs = list(self.subordinates.keys())
+        m_base = Mission(requirements=campaign.requirements["values"],
+                         place="All",
+                         trigger=campaign.requirements["trigger"],
+                         author=None,
+                         destination="Superior",
+                         purpose=campaign.purpose)
+        for t_id in target_subs:
+            sub = self.subordinates[t_id]
+            missions = sub.missions + [m_base._replace(author=t_id)]
+            self.subordinates[t_id] = sub._replace(missions=missions)
+
+        # 自身のデータ送信スレッドを生成する
+        pass  # not implemented yet
+
         self.campaigns.append(campaign)
         return campaign
 

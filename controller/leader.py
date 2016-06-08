@@ -1,7 +1,7 @@
 from functools import wraps
 from model import SoldierInfo, Work, Mission
 from model.leader import Leader
-from utils.helpers import json_input, asdict, ResponseStatus
+from utils.helpers import json_input, ResponseStatus
 from flask import jsonify, request, Blueprint
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -35,7 +35,7 @@ def get_info():
               description: Leader's information
               $ref: '#/definitions/LeaderInfo'
     """
-    info = asdict(leader.generate_info())
+    info = leader.generate_info().to_dict()
     return jsonify(_status=ResponseStatus.Success, info=info), 200
 
 
@@ -59,7 +59,7 @@ def get_missions():
                 $ref: '#/definitions/Mission'
     """
     missions_raw = leader.missions
-    missions_dicts = [asdict(m) for m in missions_raw]
+    missions_dicts = [m.to_dict() for m in missions_raw]
     return jsonify(_status=ResponseStatus.Success,
                    missions=missions_dicts), 200
 
@@ -89,7 +89,7 @@ def accept_missions():
               $ref: '#/definitions/Mission'
     """
     mission = Mission(**request.json)
-    accepted = asdict(leader.accept_mission(mission))
+    accepted = leader.accept_mission(mission).to_dict()
     if accepted is None:
         return jsonify(_status=ResponseStatus.Failed), 500
 
@@ -118,7 +118,7 @@ def get_subordinates():
                 $ref: '#/definitions/SoldierInfo'
     """
     subs_raw = leader.subordinates
-    subs_dicts = [asdict(sub) for sub in subs_raw.values()]
+    subs_dicts = [sub.to_dict() for sub in subs_raw.values()]
     return jsonify(_status=ResponseStatus.Success, subordinates=subs_dicts)
 
 
@@ -152,7 +152,7 @@ def accept_subordinate():
         return jsonify(_status=ResponseStatus.Failed), 500
 
     return jsonify(_status=ResponseStatus.Success,
-                   accepted=asdict(soldier)), 200
+                   accepted=soldier.to_dict()), 200
 
 
 def access_subordinate(f):
@@ -196,7 +196,7 @@ def get_sub_info(sub_id):
               $ref: '#/definitions/SoldierInfo'
     """
     res = leader.get_sub_info(sub_id)
-    return jsonify(_status=ResponseStatus.Success, info=asdict(res))
+    return jsonify(_status=ResponseStatus.Success, info=res.to_dict())
 
 
 @server.route('/subordinates/<sub_id>/work', methods=['POST'])
@@ -231,4 +231,4 @@ def accept_work(sub_id):
     """
     work = Work(**request.json)
     leader.accept_work(sub_id, work)
-    return jsonify(_status=ResponseStatus.Success, accepted=asdict(work))
+    return jsonify(_status=ResponseStatus.Success, accepted=work.to_dict())
