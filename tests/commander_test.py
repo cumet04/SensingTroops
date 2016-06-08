@@ -1,11 +1,11 @@
 import unittest
 import json
+import copy
 from controller import CommanderServer
 from model.commander import Commander
 from datetime import datetime
 from logging import getLogger, StreamHandler, DEBUG, ERROR
 from model import LeaderInfo, CommanderInfo, Report, Campaign
-from utils.helpers import asdict
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -41,7 +41,7 @@ class CommanderTestCase(unittest.TestCase):
                             campaigns=[])
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            "info": asdict(com)
+            "info": com.to_dict()
         }
         self.assertEqual(actual, expected)
 
@@ -64,10 +64,13 @@ class CommanderTestCase(unittest.TestCase):
                             destination='mongoserv',
                             place='S101',
                             purpose='A great app',
-                            requirements='brightness sound',
+                            requirements={
+                                "values": "val",
+                                "trigger": "tri"
+                            },
                             trigger='a trigger')
         self.app.post('/commander/campaigns',
-                      data=json.dumps(asdict(campaign)),
+                      data=json.dumps(campaign.to_dict()),
                       content_type='application/json')
 
         # get subordinates
@@ -78,7 +81,7 @@ class CommanderTestCase(unittest.TestCase):
         # assert
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            'campaigns': [asdict(campaign)]
+            'campaigns': [campaign.to_dict()]
         }
         self.assertEqual(actual, expected)
 
@@ -88,17 +91,19 @@ class CommanderTestCase(unittest.TestCase):
                                  destination='mongoserv',
                                  place='S101',
                                  purpose='A great app',
-                                 requirements='brightness sound',
+                                 requirements={
+                                     "values": "val",
+                                     "trigger": "tri"
+                                 },
                                  trigger='a trigger')
-        campaign_list = [
-            campaign_base._replace(place='S101'),
-            campaign_base._replace(place='S102'),
-            campaign_base._replace(place='S103'),
-            campaign_base._replace(place='S104'),
-        ]
+        campaign_list = []
+        for place in ['S101', 'S102', 'S103', 'S104']:
+            c = copy.deepcopy(campaign_base)
+            c.place = place
+            campaign_list.append(c)
         for c in campaign_list:
             self.app.post('/commander/campaigns',
-                          data=json.dumps(asdict(c)),
+                          data=json.dumps(c.to_dict()),
                           content_type='application/json')
 
         # get campaigns
@@ -112,7 +117,7 @@ class CommanderTestCase(unittest.TestCase):
         self.assertEqual(actual['_status'], expected_status)
 
         # assert items
-        expected_list = [asdict(c) for c in campaign_list]
+        expected_list = [c.to_dict() for c in campaign_list]
         self.assertEqual(len(actual_list), len(expected_list))
         for exp in expected_list:
             if exp not in actual_list:
@@ -128,17 +133,20 @@ class CommanderTestCase(unittest.TestCase):
                             destination='mongoserv',
                             place='S101',
                             purpose='A great app',
-                            requirements='brightness sound',
+                            requirements={
+                                "values": "val",
+                                "trigger": "tri"
+                            },
                             trigger='a trigger')
         response = self.app.post('/commander/campaigns',
-                                 data=json.dumps(asdict(campaign)),
+                                 data=json.dumps(campaign.to_dict()),
                                  content_type='application/json')
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
 
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            "accepted": asdict(campaign)
+            "accepted": campaign.to_dict()
         }
         self.assertEqual(actual, expected)
 
@@ -163,7 +171,7 @@ class CommanderTestCase(unittest.TestCase):
                             subordinates=[],
                             missions=[])
         self.app.post('/commander/subordinates',
-                      data=json.dumps(asdict(leader)),
+                      data=json.dumps(leader.to_dict()),
                       content_type='application/json')
 
         # get subordinates
@@ -174,7 +182,7 @@ class CommanderTestCase(unittest.TestCase):
         # assert
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            'subordinates': [asdict(leader)]
+            'subordinates': [leader.to_dict()]
         }
         self.assertEqual(actual, expected)
 
@@ -185,15 +193,14 @@ class CommanderTestCase(unittest.TestCase):
                                  endpoint='http://localhost:50000',
                                  subordinates=[],
                                  missions=[])
-        leader_list = [
-            leader_base._replace(id='lxxx0'),
-            leader_base._replace(id='lxxx1'),
-            leader_base._replace(id='lxxx2'),
-            leader_base._replace(id='lxxx3'),
-        ]
+        leader_list = []
+        for l_id in ['lxxx0', 'lxxx1', 'lxxx2', 'lxxx3']:
+            l = copy.deepcopy(leader_base)
+            l.id = l_id
+            leader_list.append(l)
         for l in leader_list:
             self.app.post('/commander/subordinates',
-                          data=json.dumps(asdict(l)),
+                          data=json.dumps(l.to_dict()),
                           content_type='application/json')
 
         # get subordinates
@@ -207,7 +214,7 @@ class CommanderTestCase(unittest.TestCase):
         self.assertEqual(actual['_status'], expected_status)
 
         # assert items
-        expected_list = [asdict(l) for l in leader_list]
+        expected_list = [l.to_dict() for l in leader_list]
         self.assertEqual(len(actual_list), len(expected_list))
         for exp in expected_list:
             if exp not in actual_list:
@@ -222,14 +229,14 @@ class CommanderTestCase(unittest.TestCase):
                             subordinates=[],
                             missions=[])
         response = self.app.post('/commander/subordinates',
-                                 data=json.dumps(asdict(leader)),
+                                 data=json.dumps(leader.to_dict()),
                                  content_type='application/json')
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
 
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            "accepted": asdict(leader)
+            "accepted": leader.to_dict()
         }
         self.assertEqual(actual, expected)
 
@@ -242,7 +249,7 @@ class CommanderTestCase(unittest.TestCase):
                             subordinates=[],
                             missions=[])
         self.app.post('/commander/subordinates',
-                      data=json.dumps(asdict(leader)),
+                      data=json.dumps(leader.to_dict()),
                       content_type='application/json')
 
         # get the leader
@@ -253,7 +260,7 @@ class CommanderTestCase(unittest.TestCase):
         # assert
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            'info': asdict(leader)
+            'info': leader.to_dict()
         }
         self.assertEqual(actual, expected)
 
@@ -279,7 +286,7 @@ class CommanderTestCase(unittest.TestCase):
                             subordinates=[],
                             missions=[])
         self.app.post('/commander/subordinates',
-                      data=json.dumps(asdict(leader)),
+                      data=json.dumps(leader.to_dict()),
                       content_type='application/json')
 
         # submit a report
@@ -287,7 +294,7 @@ class CommanderTestCase(unittest.TestCase):
                         time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                         values="some values")
         response = self.app.post('/commander/subordinates/lxxx0/report',
-                                 data=json.dumps(asdict(report)),
+                                 data=json.dumps(report.to_dict()),
                                  content_type='application/json')
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
@@ -295,7 +302,7 @@ class CommanderTestCase(unittest.TestCase):
         # assert
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            "accepted": asdict(report)
+            "accepted": report.to_dict()
         }
         self.assertEqual(actual, expected)
 

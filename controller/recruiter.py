@@ -1,6 +1,6 @@
 from model import CommanderInfo
 from model.recruiter import Recruiter
-from utils.helpers import json_input, asdict, ResponseStatus
+from utils.helpers import json_input, ResponseStatus
 from flask import jsonify, request, Blueprint
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -35,7 +35,7 @@ def get_commanders():
               items:
                 type: string
     """
-    id_list = list(recruiter.TroopList.keys())
+    id_list = sorted(list(recruiter.TroopList.keys()))
     return jsonify(_status=ResponseStatus.Success, commanders=id_list)
 
 
@@ -76,7 +76,7 @@ def get_commander_info(com_id):
     info = recruiter.resolve_commander(com_id)
     if info is None:
         return jsonify(_status=ResponseStatus.Success, commander={})
-    return jsonify(_status=ResponseStatus.Success, commander=asdict(info))
+    return jsonify(_status=ResponseStatus.Success, commander=info.to_dict())
 
 
 @server.route('/commanders/<com_id>', methods=['PUT'])
@@ -129,7 +129,7 @@ def register_commanders(com_id):
                        input=request.json), 400
 
     recruiter.commander_cache[com_id] = com
-    return jsonify(_status=ResponseStatus.Success, commander=asdict(com))
+    return jsonify(_status=ResponseStatus.Success, commander=com.to_dict())
 
 
 @server.route('/department/squad/leader', methods=['GET'])
@@ -192,7 +192,7 @@ def get_squad_leader():
     if info is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[500])), 500
 
-    return jsonify(_status=ResponseStatus.Success, leader=asdict(info))
+    return jsonify(_status=ResponseStatus.Success, leader=info.to_dict())
 
 
 @server.route('/department/troop/commander', methods=['GET'])
@@ -255,7 +255,7 @@ def get_troop_commander():
     if info is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[500])), 500
 
-    return jsonify(_status=ResponseStatus.Success, commander=asdict(info))
+    return jsonify(_status=ResponseStatus.Success, commander=info.to_dict())
 
 
 @server.route('/error/squad', methods=['POST'])

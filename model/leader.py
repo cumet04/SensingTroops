@@ -1,4 +1,6 @@
-from model import LeaderInfo
+import copy
+from model import SoldierInfo, LeaderInfo, Mission, Order
+from typing import List, Dict
 from utils.commander_client import CommanderClient
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -14,8 +16,8 @@ class Leader(object):
         self.id = leader_id
         self.name = name
         self.endpoint = endpoint
-        self.subordinates = {}
-        self.missions = []
+        self.subordinates = {}  # type:Dict[str, SoldierInfo]
+        self.missions = []  # type:List[Mission]
         self.work_cache = []
 
     def awake(self, rec_client):
@@ -64,7 +66,24 @@ class Leader(object):
         """
         return sub_id in self.subordinates
 
-    def accept_mission(self, mission):
+    def accept_mission(self, mission: Mission) -> Mission:
+        # 部下のOrderを生成・割り当てる
+        target_subs = []
+        if mission.place == "All":
+            target_subs = list(self.subordinates.keys())
+        o_base = Order(requirements=mission.requirements["values"],
+                       trigger=mission.requirements["trigger"],
+                       author="",
+                       destination="Superior",
+                       purpose=mission.purpose)
+        for t_id in target_subs:
+            order = copy.deepcopy(o_base)
+            order.author = t_id
+            self.subordinates[t_id].orders.append(order)
+
+        # 自身のデータ送信スレッドを生成する
+        pass  # not implemented yet
+
         self.missions.append(mission)
         return mission
 

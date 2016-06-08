@@ -1,6 +1,6 @@
 from typing import List
 from model import LeaderInfo, SoldierInfo, Work, Mission
-from utils.helpers import asdict, RestClient
+from utils.helpers import RestClient
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -38,7 +38,7 @@ class LeaderClient(object):
 
     def post_missions(self, obj: Mission) -> (Mission, str):
         try:
-            st, res = self.client.post('missions', asdict(obj))
+            st, res = self.client.post('missions', obj.to_dict())
             if st != 200:
                 return None, res['status']['msg']
             return Mission(**res['accepted']), None
@@ -60,7 +60,7 @@ class LeaderClient(object):
 
     def post_subordinates(self, obj: SoldierInfo) -> (SoldierInfo, str):
         try:
-            st, res = self.client.post('subordinates', asdict(obj))
+            st, res = self.client.post('subordinates', obj.to_dict())
             if st != 200:
                 return None, res['status']['msg']
             return SoldierInfo(**res['accepted']), None

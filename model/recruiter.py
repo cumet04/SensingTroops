@@ -1,4 +1,5 @@
 import yaml
+from model import CommanderInfo, LeaderInfo
 from utils.commander_client import CommanderClient
 from collections import namedtuple
 from logging import getLogger, StreamHandler, DEBUG
@@ -66,7 +67,7 @@ class Recruiter(object):
                 return commander_id
         return None
 
-    def resolve_leader(self, leader_id, force_retrieve=False):
+    def resolve_leader(self, leader_id, force_retrieve=False) -> LeaderInfo:
         """
         Leaderの情報を上官Commanderから取得する
         :param str leader_id: 取得したいLeaderのID
@@ -81,7 +82,7 @@ class Recruiter(object):
         return lea_info
         # TODO: キャッシュまわり
 
-    def resolve_commander(self, commander_id):
+    def resolve_commander(self, commander_id) -> CommanderInfo:
         """
         CommanderのInfoを返す
         :param str commander_id: 取得したいCommanderのID

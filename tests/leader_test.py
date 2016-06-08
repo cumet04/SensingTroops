@@ -1,11 +1,11 @@
 import unittest
 import json
+import copy
 from controller import LeaderServer
 from model.leader import Leader
 from datetime import datetime
 from logging import getLogger, StreamHandler, DEBUG, ERROR
 from model import LeaderInfo, SoldierInfo, Work, Mission
-from utils.helpers import asdict
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -20,8 +20,8 @@ class LeaderTestCase(unittest.TestCase):
         self.maxDiff = None
         # utils.helpers.logger.setLevel(ERROR)
         # leader.logger.setLevel(ERROR)
-        leader = Leader("lxxx0", "lea_http", "http://localhost:50000")
-        LeaderServer.set_model(leader)
+        self.leader_obj = Leader("lxxx0", "lea_http", "http://localhost:50000")
+        LeaderServer.set_model(self.leader_obj)
         server = LeaderServer.generate_server("/leader")
         self.app = server.test_client()
 
@@ -41,7 +41,7 @@ class LeaderTestCase(unittest.TestCase):
                          missions=[])
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            "info": asdict(lea)
+            "info": lea.to_dict()
         }
         self.assertEqual(actual, expected)
 
@@ -64,11 +64,12 @@ class LeaderTestCase(unittest.TestCase):
                           destination='mongoserv',
                           place='on desk',
                           purpose='A great app',
-                          requirements='brightness sound',
+                          requirements={
+                              "values": "val",
+                              "trigger": "tri"
+                          },
                           trigger='a trigger')
-        self.app.post('/leader/missions',
-                      data=json.dumps(asdict(mission)),
-                      content_type='application/json')
+        self.leader_obj.accept_mission(mission)
 
         # get subordinates
         response = self.app.get('/leader/missions')
@@ -78,7 +79,7 @@ class LeaderTestCase(unittest.TestCase):
         # assert
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            'missions': [asdict(mission)]
+            'missions': [mission.to_dict()]
         }
         self.assertEqual(actual, expected)
 
@@ -88,18 +89,19 @@ class LeaderTestCase(unittest.TestCase):
                                destination='mongoserv',
                                place='on desk',
                                purpose='A great app',
-                               requirements='brightness sound',
+                               requirements={
+                                   "values": "val",
+                                   "trigger": "tri"
+                               },
                                trigger='a trigger')
-        mission_list = [
-            mission_base._replace(place='on chair'),
-            mission_base._replace(place='front of door'),
-            mission_base._replace(place='on desk'),
-            mission_base._replace(place='living room'),
-        ]
-        for c in mission_list:
-            self.app.post('/leader/missions',
-                          data=json.dumps(asdict(c)),
-                          content_type='application/json')
+        mission_list = []
+        for place in ['on chair', 'front of door', 'on desk', 'living room']:
+            m = copy.deepcopy(mission_base)
+            m.place = place
+            mission_list.append(m)
+
+        for m in mission_list:
+            self.leader_obj.accept_mission(m)
 
         # get missions
         response = self.app.get('/leader/missions')
@@ -112,32 +114,12 @@ class LeaderTestCase(unittest.TestCase):
         self.assertEqual(actual['_status'], expected_status)
 
         # assert items
-        expected_list = [asdict(c) for c in mission_list]
+        expected_list = [c.to_dict() for c in mission_list]
         self.assertEqual(len(actual_list), len(expected_list))
         for exp in expected_list:
             if exp not in actual_list:
                 self.fail('{0} is not found.'.format(exp))
         pass
-
-# [POST] /missions
-    def test_add_missions(self):
-        mission = Mission(author='lxxx0',
-                          destination='mongoserv',
-                          place='on desk',
-                          purpose='A great app',
-                          requirements='brightness sound',
-                          trigger='a trigger')
-        response = self.app.post('/leader/missions',
-                                 data=json.dumps(asdict(mission)),
-                                 content_type='application/json')
-        self.assertEqual(response.status_code, 200)
-        actual = json.loads(response.data.decode("utf-8"))
-
-        expected = {
-            "_status": {'success': True, 'msg': "status is ok"},
-            "accepted": asdict(mission)
-        }
-        self.assertEqual(actual, expected)
 
 # [GET] /subordinates
     def test_get_subordinates_none(self):
@@ -159,7 +141,7 @@ class LeaderTestCase(unittest.TestCase):
                               weapons=[],
                               orders=[])
         self.app.post('/leader/subordinates',
-                      data=json.dumps(asdict(soldier)),
+                      data=json.dumps(soldier.to_dict()),
                       content_type='application/json')
 
         # get subordinates
@@ -170,7 +152,7 @@ class LeaderTestCase(unittest.TestCase):
         # assert
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            'subordinates': [asdict(soldier)]
+            'subordinates': [soldier.to_dict()]
         }
         self.assertEqual(actual, expected)
 
@@ -180,15 +162,14 @@ class LeaderTestCase(unittest.TestCase):
                                    name='sol_http',
                                    weapons=[],
                                    orders=[])
-        soldier_list = [
-            soldier_base._replace(id='sxxx0'),
-            soldier_base._replace(id='sxxx1'),
-            soldier_base._replace(id='sxxx2'),
-            soldier_base._replace(id='sxxx3'),
-        ]
+        soldier_list = []
+        for s_id in ['sxxx0', 'sxxx1', 'sxxx2', 'sxxx3']:
+            s = copy.deepcopy(soldier_base)
+            s.id = s_id
+            soldier_list.append(s)
         for s in soldier_list:
             self.app.post('/leader/subordinates',
-                          data=json.dumps(asdict(s)),
+                          data=json.dumps(s.to_dict()),
                           content_type='application/json')
 
         # get subordinates
@@ -202,7 +183,7 @@ class LeaderTestCase(unittest.TestCase):
         self.assertEqual(actual['_status'], expected_status)
 
         # assert items
-        expected_list = [asdict(s) for s in soldier_list]
+        expected_list = [s.to_dict() for s in soldier_list]
         self.assertEqual(len(actual_list), len(expected_list))
         for exp in expected_list:
             if exp not in actual_list:
@@ -216,14 +197,14 @@ class LeaderTestCase(unittest.TestCase):
                               weapons=[],
                               orders=[])
         response = self.app.post('/leader/subordinates',
-                                 data=json.dumps(asdict(soldier)),
+                                 data=json.dumps(soldier.to_dict()),
                                  content_type='application/json')
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
 
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            "accepted": asdict(soldier)
+            "accepted": soldier.to_dict()
         }
         self.assertEqual(actual, expected)
 
@@ -235,7 +216,7 @@ class LeaderTestCase(unittest.TestCase):
                               weapons=[],
                               orders=[])
         self.app.post('/leader/subordinates',
-                      data=json.dumps(asdict(soldier)),
+                      data=json.dumps(soldier.to_dict()),
                       content_type='application/json')
 
         # get the soldier
@@ -246,7 +227,7 @@ class LeaderTestCase(unittest.TestCase):
         # assert
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            'info': asdict(soldier)
+            'info': soldier.to_dict()
         }
         self.assertEqual(actual, expected)
 
@@ -271,7 +252,7 @@ class LeaderTestCase(unittest.TestCase):
                               weapons=[],
                               orders=[])
         self.app.post('/leader/subordinates',
-                      data=json.dumps(asdict(soldier)),
+                      data=json.dumps(soldier.to_dict()),
                       content_type='application/json')
 
         # submit a work
@@ -279,7 +260,7 @@ class LeaderTestCase(unittest.TestCase):
                     time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                     values="some values")
         response = self.app.post('/leader/subordinates/sxxx0/work',
-                                 data=json.dumps(asdict(work)),
+                                 data=json.dumps(work.to_dict()),
                                  content_type='application/json')
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
@@ -287,7 +268,7 @@ class LeaderTestCase(unittest.TestCase):
         # assert
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            "accepted": asdict(work)
+            "accepted": work.to_dict()
         }
         self.assertEqual(actual, expected)
 
