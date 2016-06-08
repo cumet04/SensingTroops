@@ -1,4 +1,5 @@
-from model import SoldierInfo, LeaderInfo, Mission
+import copy
+from model import SoldierInfo, LeaderInfo, Mission, Order
 from typing import List, Dict
 from utils.commander_client import CommanderClient
 from logging import getLogger, StreamHandler, DEBUG
@@ -66,6 +67,23 @@ class Leader(object):
         return sub_id in self.subordinates
 
     def accept_mission(self, mission: Mission) -> Mission:
+        # 部下のOrderを生成・割り当てる
+        target_subs = []
+        if mission.place == "All":
+            target_subs = list(self.subordinates.keys())
+        o_base = Order(requirements=mission.requirements["values"],
+                       trigger=mission.requirements["trigger"],
+                       author="",
+                       destination="Superior",
+                       purpose=mission.purpose)
+        for t_id in target_subs:
+            order = copy.deepcopy(o_base)
+            order.author = t_id
+            self.subordinates[t_id].orders.append(order)
+
+        # 自身のデータ送信スレッドを生成する
+        pass  # not implemented yet
+
         self.missions.append(mission)
         return mission
 

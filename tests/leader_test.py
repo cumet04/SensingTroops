@@ -64,7 +64,10 @@ class LeaderTestCase(unittest.TestCase):
                           destination='mongoserv',
                           place='on desk',
                           purpose='A great app',
-                          requirements='brightness sound',
+                          requirements={
+                              "values": "val",
+                              "trigger": "tri"
+                          },
                           trigger='a trigger')
         self.leader_obj.accept_mission(mission)
 
@@ -86,7 +89,10 @@ class LeaderTestCase(unittest.TestCase):
                                destination='mongoserv',
                                place='on desk',
                                purpose='A great app',
-                               requirements='brightness sound',
+                               requirements={
+                                   "values": "val",
+                                   "trigger": "tri"
+                               },
                                trigger='a trigger')
         mission_list = []
         for place in ['on chair', 'front of door', 'on desk', 'living room']:
