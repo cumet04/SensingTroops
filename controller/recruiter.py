@@ -35,7 +35,7 @@ def get_commanders():
               items:
                 type: string
     """
-    id_list = list(recruiter.TroopList.keys())
+    id_list = sorted(list(recruiter.TroopList.keys()))
     return jsonify(_status=ResponseStatus.Success, commanders=id_list)
 
 

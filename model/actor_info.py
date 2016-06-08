@@ -32,8 +32,8 @@ class SoldierInfo(object):
         return {
             "id": self.id,
             "name": self.name,
-            "weapons": self.weapons,
-            "orders": [o.to_dict() for o in self.orders]
+            "weapons": sorted(self.weapons),
+            "orders": sorted([o.to_dict() for o in self.orders])
         }
 
 
@@ -69,8 +69,8 @@ class LeaderInfo(object):
             "id": self.id,
             "name": self.name,
             "endpoint": self.endpoint,
-            "subordinates": self.subordinates,
-            "missions": [m.to_dict() for m in self.missions]
+            "subordinates": sorted(self.subordinates),
+            "missions": sorted([m.to_dict() for m in self.missions])
         }
 
 
@@ -106,6 +106,6 @@ class CommanderInfo(object):
             "id": self.id,
             "name": self.name,
             "endpoint": self.endpoint,
-            "subordinates": self.subordinates,
-            "campaigns": [c.to_dict() for c in self.campaigns]
+            "subordinates": sorted(self.subordinates),
+            "campaigns": sorted([c.to_dict() for c in self.campaigns])
         }
