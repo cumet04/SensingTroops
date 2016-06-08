@@ -56,7 +56,7 @@ class LeaderInfo(object):
                  id: str,
                  name: str,
                  endpoint: str,
-                 subordinates: List[SoldierInfo],
+                 subordinates: List[str],
                  missions: List[Mission]):
         self.id = id
         self.name = name
@@ -93,7 +93,7 @@ class CommanderInfo(object):
                  id: str,
                  name: str,
                  endpoint: str,
-                 subordinates: List[LeaderInfo],
+                 subordinates: List[str],
                  campaigns: List[Campaign]):
         self.id = id
         self.name = name
