@@ -181,7 +181,7 @@ class LeaderTestCase(unittest.TestCase):
                                    weapons=[],
                                    orders=[])
         soldier_list = []
-        for s_id in ['sxxx0', 'sxxx1', 'sxxx2', 'sxxx2']:
+        for s_id in ['sxxx0', 'sxxx1', 'sxxx2', 'sxxx3']:
             s = copy.deepcopy(soldier_base)
             s.id = s_id
             soldier_list.append(s)

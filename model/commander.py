@@ -1,3 +1,4 @@
+import copy
 from typing import List, Dict
 from model import LeaderInfo, CommanderInfo, Campaign, Mission
 from logging import getLogger, StreamHandler, DEBUG
@@ -63,13 +64,13 @@ class Commander(object):
         m_base = Mission(requirements=campaign.requirements["values"],
                          place="All",
                          trigger=campaign.requirements["trigger"],
-                         author=None,
+                         author="",
                          destination="Superior",
                          purpose=campaign.purpose)
         for t_id in target_subs:
-            sub = self.subordinates[t_id]
-            missions = sub.missions + [m_base._replace(author=t_id)]
-            self.subordinates[t_id] = sub._replace(missions=missions)
+            mission = copy.deepcopy(m_base)
+            mission.author = t_id
+            self.subordinates[t_id].missions.append(mission)
 
         # 自身のデータ送信スレッドを生成する
         pass  # not implemented yet

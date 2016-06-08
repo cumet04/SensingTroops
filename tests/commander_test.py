@@ -64,7 +64,10 @@ class CommanderTestCase(unittest.TestCase):
                             destination='mongoserv',
                             place='S101',
                             purpose='A great app',
-                            requirements='brightness sound',
+                            requirements={
+                                "values": "val",
+                                "trigger": "tri"
+                            },
                             trigger='a trigger')
         self.app.post('/commander/campaigns',
                       data=json.dumps(campaign.to_dict()),
@@ -88,7 +91,10 @@ class CommanderTestCase(unittest.TestCase):
                                  destination='mongoserv',
                                  place='S101',
                                  purpose='A great app',
-                                 requirements='brightness sound',
+                                 requirements={
+                                     "values": "val",
+                                     "trigger": "tri"
+                                 },
                                  trigger='a trigger')
         campaign_list = []
         for place in ['S101', 'S102', 'S103', 'S104']:
@@ -127,7 +133,10 @@ class CommanderTestCase(unittest.TestCase):
                             destination='mongoserv',
                             place='S101',
                             purpose='A great app',
-                            requirements='brightness sound',
+                            requirements={
+                                "values": "val",
+                                "trigger": "tri"
+                            },
                             trigger='a trigger')
         response = self.app.post('/commander/campaigns',
                                  data=json.dumps(campaign.to_dict()),
