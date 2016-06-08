@@ -80,7 +80,6 @@ definitions['Order'] = {
         'author': {'type': 'string'},
         'requirements': {'type': 'object'},
         'trigger': {'type': 'object'},
-        'place': {'type': 'string'},
         'purpose': {'type': 'string'},
         'destination': {'type': 'string'}
     }
@@ -90,13 +89,11 @@ class Order(object):
                  author: str,
                  requirements: object,
                  trigger: object,
-                 place: str,
                  purpose: str,
                  destination: str):
         self.author = author
         self.requirements = requirements
         self.trigger = trigger
-        self.place = place
         self.purpose = purpose
         self.destination = destination
 
@@ -105,7 +102,6 @@ class Order(object):
             "author": self.author,
             "requirements": self.requirements,
             "trigger": self.trigger,
-            "place": self.place,
             "purpose": self.purpose,
             "destination": self.destination
         }
