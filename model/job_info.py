@@ -28,6 +28,20 @@ class Campaign(InformationObject):
         self.purpose = purpose
         self.destination = destination
 
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['author'],
+                source['requirements'],
+                source['trigger'],
+                source['place'],
+                source['purpose'],
+                source['destination'],
+            )
+        except KeyError:
+            raise TypeError
+
 
 definitions['Mission'] = {
     'type': 'object',
@@ -55,6 +69,20 @@ class Mission(InformationObject):
         self.purpose = purpose
         self.destination = destination
 
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['author'],
+                source['requirements'],
+                source['trigger'],
+                source['place'],
+                source['purpose'],
+                source['destination'],
+            )
+        except KeyError:
+            raise TypeError
+
 
 definitions['Order'] = {
     'type': 'object',
@@ -79,6 +107,19 @@ class Order(InformationObject):
         self.purpose = purpose
         self.destination = destination
 
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['author'],
+                source['requirements'],
+                source['trigger'],
+                source['purpose'],
+                source['destination'],
+            )
+        except KeyError:
+            raise TypeError
+
 
 definitions['Report'] = {
     'type': 'object',
@@ -97,6 +138,16 @@ class Report(InformationObject):
         self.purpose = purpose
         self.values = values
 
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['time'],
+                source['purpose'],
+                source['values'],
+            )
+        except KeyError:
+            raise TypeError
 
 definitions['Work'] = {
     'type': 'object',
@@ -114,3 +165,15 @@ class Work(InformationObject):
         self.time = time
         self.purpose = purpose
         self.values = values
+
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['time'],
+                source['purpose'],
+                source['values'],
+            )
+        except KeyError:
+            raise TypeError
+

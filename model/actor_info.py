@@ -29,6 +29,19 @@ class SoldierInfo(InformationObject):
         self.weapons = weapons
         self.orders = orders
 
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            ord = [Order(**o) for o in source['orders']]
+            return cls(
+                source['id'],
+                source['name'],
+                source['weapons'],
+                ord,
+            )
+        except KeyError:
+            raise TypeError
+
 
 definitions['LeaderInfo'] = {
     'type': 'object',
@@ -57,6 +70,20 @@ class LeaderInfo(InformationObject):
         self.subordinates = subordinates
         self.missions = missions
 
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            mis = [Mission(**m) for m in source['missions']]
+            return cls(
+                source['id'],
+                source['name'],
+                source['endpoint'],
+                source['subordinates'],
+                mis,
+            )
+        except KeyError:
+            raise TypeError
+
 
 definitions['CommanderInfo'] = {
     'type': 'object',
@@ -84,3 +111,17 @@ class CommanderInfo(InformationObject):
         self.endpoint = endpoint
         self.subordinates = subordinates
         self.campaigns = campaigns
+
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            cam = [Campaign(**c) for c in source['campaigns']]
+            return cls(
+                source['id'],
+                source['name'],
+                source['endpoint'],
+                source['subordinates'],
+                cam,
+            )
+        except KeyError:
+            raise TypeError

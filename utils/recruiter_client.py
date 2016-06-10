@@ -30,7 +30,7 @@ class RecruiterClient(object):
             st, res = self.client.get('commanders/' + com_id)
             if st != 200:
                 return None, res['_status']['msg']
-            return CommanderInfo(**res['commander']), None
+            return CommanderInfo.make(res['commander']), None
         except Exception as e:
             logger.error("in RecruiterClient.get_commanders_spec")
             logger.error(">> got a exception: {0}".format(e.__class__.__name__))
@@ -42,7 +42,7 @@ class RecruiterClient(object):
             st, res = self.client.put('commanders/' + com_id, obj.to_dict())
             if st != 200:
                 return None, res['_status']['msg']
-            return CommanderInfo(**res['commander']), None
+            return CommanderInfo.make(res['commander']), None
         except Exception as e:
             logger.error("in RecruiterClient.put_commanders_spec")
             logger.error(">> got a exception: {0}".format(e.__class__.__name__))
@@ -54,7 +54,7 @@ class RecruiterClient(object):
                                       soldier_id)
             if st != 200:
                 return None, res['_status']['msg']
-            return LeaderInfo(**res['leader']), None
+            return LeaderInfo.make(res['leader']), None
         except Exception as e:
             logger.error("in RecruiterClient.get_department_squad_leader")
             logger.error(">> got a exception: {0}".format(e.__class__.__name__))
@@ -67,7 +67,7 @@ class RecruiterClient(object):
                                       leader_id)
             if st != 200:
                 return None, res['_status']['msg']
-            return CommanderInfo(**res['commander']), None
+            return CommanderInfo.make(res['commander']), None
         except Exception as e:
             logger.error("in RecruiterClient.get_department_troop_commander")
             logger.error(">> got a exception: {0}".format(e.__class__.__name__))
