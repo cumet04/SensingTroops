@@ -1,4 +1,5 @@
 import copy
+from threading import Event, Thread
 from model import SoldierInfo, LeaderInfo, Mission, Order
 from typing import List, Dict
 from utils.commander_client import CommanderClient
@@ -17,8 +18,9 @@ class Leader(object):
         self.name = name
         self.endpoint = endpoint
         self.subordinates = {}  # type:Dict[str, SoldierInfo]
-        self.missions = []  # type:List[Mission]
+        self.missions = {}  # type:Dict[str, Mission]
         self.work_cache = []
+        self.superior_client = None  # type:CommanderClient
 
     def awake(self, rec_client):
         # 上官を解決する
@@ -42,6 +44,7 @@ class Leader(object):
             logger.error("[POST]commander/subordinates failed: {0}".format(err))
             return False
         logger.info("joined to troop")
+        self.superior_client = com_client
 
         # missionを取得する
         # TODO: job assignが実装され次第
@@ -56,7 +59,7 @@ class Leader(object):
             name=self.name,
             endpoint=self.endpoint,
             subordinates=list(self.subordinates.keys()),
-            missions=self.missions)
+            missions=list(self.missions.keys()))
 
     def check_subordinate(self, sub_id):
         """
@@ -65,6 +68,27 @@ class Leader(object):
         :return bool: 存在すればTrue
         """
         return sub_id in self.subordinates
+
+    def update_missions(self, missions: List[Mission]):
+        pass
+
+    def start_heartbeat(self, interval):
+        # TODO: すでに存在する場合
+
+        def polling(self: Leader, interval):
+            while not self.heartbeat_thread_lock.wait(timeout=interval):
+                res, err = self.superior_client.get_subordinates_spec(self.id)
+                if err is not None:
+                    logger.error("in Leader polling")
+                    logger.error("[GET]commander/subordinates/sub_id failed: {0}".
+                                 format(err))
+                logger.info(res.missions)
+                for m in res.missions:
+                    self.accept_mission(m)
+
+        self.heartbeat_thread_lock = Event()
+        self.heartbeat_thread = Thread(target=polling, args=(self, interval))
+        self.heartbeat_thread.start()
 
     def accept_mission(self, mission: Mission) -> Mission:
         # 部下のOrderを生成・割り当てる
@@ -84,7 +108,7 @@ class Leader(object):
         # 自身のデータ送信スレッドを生成する
         pass  # not implemented yet
 
-        self.missions.append(mission)
+        self.missions[mission.purpose] = mission
         return mission
 
     def get_sub_info(self, sub_id):

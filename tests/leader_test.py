@@ -95,9 +95,9 @@ class LeaderTestCase(unittest.TestCase):
                                },
                                trigger='a trigger')
         mission_list = []
-        for place in ['on chair', 'front of door', 'on desk', 'living room']:
+        for purpose in ['on chair', 'front of door', 'on desk', 'living room']:
             m = copy.deepcopy(mission_base)
-            m.place = place
+            m.purpose = purpose
             mission_list.append(m)
 
         for m in mission_list:

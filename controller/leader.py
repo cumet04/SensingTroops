@@ -59,7 +59,7 @@ def get_missions():
                 $ref: '#/definitions/Mission'
     """
     missions_raw = leader.missions
-    missions_dicts = [m.to_dict() for m in missions_raw]
+    missions_dicts = [m.to_dict() for m in missions_raw.values()]
     return jsonify(_status=ResponseStatus.Success,
                    missions=missions_dicts), 200
 

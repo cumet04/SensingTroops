@@ -5,7 +5,7 @@ class InformationObject(object):
         return filter(lambda key:
                       key[0] != '.' and
                       key[0] != '_' and
-                      key != 'to_dict',
+                      not callable(getattr(self, key)),
                       dir(self))
 
     def to_dict(self):
@@ -17,7 +17,10 @@ class InformationObject(object):
             if isinstance(value, List[InformationObject]):
                 value = [v.to_dict() for v in value]
             if isinstance(value, list):
-                value = sorted(value)
+                try:
+                    value = sorted(value)
+                except TypeError:
+                    pass
 
             res_dict[key] = value
         return res_dict

@@ -43,6 +43,7 @@ if __name__ == "__main__":
     leader = Leader(params.id, params.name, ep)
     leader.awake(RecruiterClient.gen_rest_client(
         'http://localhost:50000/recruiter/'))
+    leader.start_heartbeat(5)
     LeaderServer.set_model(leader)
 
     @server.route(params.prefix + '/spec.json')
