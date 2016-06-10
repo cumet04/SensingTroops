@@ -1,3 +1,5 @@
+from model.info_obj import InformationObject
+
 definitions = {}
 
 definitions['Campaign'] = {
@@ -11,7 +13,7 @@ definitions['Campaign'] = {
         'destination': {'type': 'string'}
     }
 }
-class Campaign(object):
+class Campaign(InformationObject):
     def __init__(self,
                  author: str,
                  requirements: object,
@@ -25,16 +27,6 @@ class Campaign(object):
         self.place = place
         self.purpose = purpose
         self.destination = destination
-
-    def to_dict(self):
-        return {
-            "author": self.author,
-            "requirements": self.requirements,
-            "trigger": self.trigger,
-            "place": self.place,
-            "purpose": self.purpose,
-            "destination": self.destination
-        }
 
 
 definitions['Mission'] = {
@@ -48,7 +40,7 @@ definitions['Mission'] = {
         'destination': {'type': 'string'}
     }
 }
-class Mission(object):
+class Mission(InformationObject):
     def __init__(self,
                  author: str,
                  requirements: object,
@@ -63,16 +55,6 @@ class Mission(object):
         self.purpose = purpose
         self.destination = destination
 
-    def to_dict(self):
-        return {
-            "author": self.author,
-            "requirements": self.requirements,
-            "trigger": self.trigger,
-            "place": self.place,
-            "purpose": self.purpose,
-            "destination": self.destination
-        }
-
 
 definitions['Order'] = {
     'type': 'object',
@@ -84,7 +66,7 @@ definitions['Order'] = {
         'destination': {'type': 'string'}
     }
 }
-class Order(object):
+class Order(InformationObject):
     def __init__(self,
                  author: str,
                  requirements: object,
@@ -97,15 +79,6 @@ class Order(object):
         self.purpose = purpose
         self.destination = destination
 
-    def to_dict(self):
-        return {
-            "author": self.author,
-            "requirements": self.requirements,
-            "trigger": self.trigger,
-            "purpose": self.purpose,
-            "destination": self.destination
-        }
-
 
 definitions['Report'] = {
     'type': 'object',
@@ -115,7 +88,7 @@ definitions['Report'] = {
         'values': {'type': 'string'}
     }
 }
-class Report(object):
+class Report(InformationObject):
     def __init__(self,
                  time: str,
                  purpose: str,
@@ -123,13 +96,6 @@ class Report(object):
         self.time = time
         self.purpose = purpose
         self.values = values
-
-    def to_dict(self):
-        return {
-            "time": self.time,
-            "purpose": self.purpose,
-            "values": self.values
-        }
 
 
 definitions['Work'] = {
@@ -140,7 +106,7 @@ definitions['Work'] = {
         'values': {'type': 'string'}
     }
 }
-class Work(object):
+class Work(InformationObject):
     def __init__(self,
                  time: str,
                  purpose: str,
@@ -148,10 +114,3 @@ class Work(object):
         self.time = time
         self.purpose = purpose
         self.values = values
-
-    def to_dict(self):
-        return {
-            "time": self.time,
-            "purpose": self.purpose,
-            "values": self.values
-        }

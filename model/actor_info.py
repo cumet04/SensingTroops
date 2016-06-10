@@ -1,4 +1,5 @@
 from model.job_info import Campaign, Mission, Order
+from model.info_obj import InformationObject
 from typing import List
 
 definitions = {}
@@ -17,7 +18,7 @@ definitions['SoldierInfo'] = {
                    'items': {'$ref': '#/definitions/Order'}},
     }
 }
-class SoldierInfo(object):
+class SoldierInfo(InformationObject):
     def __init__(self,
                  id: str,
                  name: str,
@@ -27,14 +28,6 @@ class SoldierInfo(object):
         self.name = name
         self.weapons = weapons
         self.orders = orders
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "weapons": sorted(self.weapons),
-            "orders": sorted([o.to_dict() for o in self.orders])
-        }
 
 
 definitions['LeaderInfo'] = {
@@ -51,7 +44,7 @@ definitions['LeaderInfo'] = {
                      'items': {'$ref': '#/definitions/Mission'}},
     }
 }
-class LeaderInfo(object):
+class LeaderInfo(InformationObject):
     def __init__(self,
                  id: str,
                  name: str,
@@ -63,15 +56,6 @@ class LeaderInfo(object):
         self.endpoint = endpoint
         self.subordinates = subordinates
         self.missions = missions
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "endpoint": self.endpoint,
-            "subordinates": sorted(self.subordinates),
-            "missions": sorted([m.to_dict() for m in self.missions])
-        }
 
 
 definitions['CommanderInfo'] = {
@@ -88,7 +72,7 @@ definitions['CommanderInfo'] = {
                       'items': {'$ref': '#/definitions/Campaign'}},
     }
 }
-class CommanderInfo(object):
+class CommanderInfo(InformationObject):
     def __init__(self,
                  id: str,
                  name: str,
@@ -100,12 +84,3 @@ class CommanderInfo(object):
         self.endpoint = endpoint
         self.subordinates = subordinates
         self.campaigns = campaigns
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "endpoint": self.endpoint,
-            "subordinates": sorted(self.subordinates),
-            "campaigns": sorted([c.to_dict() for c in self.campaigns])
-        }
