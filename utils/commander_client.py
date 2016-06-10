@@ -20,10 +20,10 @@ class CommanderClient(object):
             st, res = self.client.get('')
             if st != 200:
                 return None, res['status']['msg']
-            return CommanderInfo(**res['info']), None
+            return CommanderInfo.make(res['info']), None
         except Exception as e:
             logger.error("in CommanderClient.get_root")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def get_campaigns(self) -> (List[Campaign], str):
@@ -31,10 +31,10 @@ class CommanderClient(object):
             st, res = self.client.get('campaigns')
             if st != 200:
                 return None, res['_status']['msg']
-            return [Campaign(**cam) for cam in res['campaigns']], None
+            return [Campaign.make(cam) for cam in res['campaigns']], None
         except Exception as e:
             logger.error("in CommanderClient.get_campaigns")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def post_campaigns(self, obj: Campaign) -> (Campaign, str):
@@ -42,10 +42,10 @@ class CommanderClient(object):
             st, res = self.client.post('campaigns', obj.to_dict())
             if st != 200:
                 return None, res['_status']['msg']
-            return Campaign(**res['accepted']), None
+            return Campaign.make(res['accepted']), None
         except Exception as e:
             logger.error("in CommanderClient.post_campaigns")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def get_subordinates(self) -> (List[LeaderInfo], str):
@@ -53,10 +53,10 @@ class CommanderClient(object):
             st, res = self.client.get('subordinates')
             if st != 200:
                 return None, res['_status']['msg']
-            return [LeaderInfo(**l) for l in res['subordinates']]
+            return [LeaderInfo.make(l) for l in res['subordinates']]
         except Exception as e:
             logger.error("in CommanderClient.get_subordinates")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def post_subordinates(self, obj: LeaderInfo) -> (LeaderInfo, str):
@@ -64,10 +64,10 @@ class CommanderClient(object):
             st, res = self.client.post('subordinates', obj.to_dict())
             if st != 200:
                 return None, res['_status']['msg']
-            return LeaderInfo(**res['accepted']), None
+            return LeaderInfo.make(res['accepted']), None
         except Exception as e:
             logger.error("in CommanderClient.post_subordinates")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def get_subordinates_spec(self, sub_id: str) -> (LeaderInfo, str):
@@ -75,10 +75,10 @@ class CommanderClient(object):
             st, res = self.client.get('subordinates/' + sub_id)
             if st != 200:
                 return None, res['_status']['msg']
-            return LeaderInfo(**res['info']), None
-        except Exception as e:
+            return LeaderInfo.make(res['info']), None
+        except BaseException as e:
             logger.error("in CommanderClient.get_subordinates_spec")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def post_report(self, sub_id: str, obj: Report) -> (Report, str):
@@ -87,10 +87,10 @@ class CommanderClient(object):
                                        obj.to_dict())
             if st != 200:
                 return res['_status']['msg']
-            return Report(**res['accepted']), None
+            return Report.make(res['accepted']), None
         except Exception as e:
             logger.error("in CommanderClient.post_report")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     @staticmethod

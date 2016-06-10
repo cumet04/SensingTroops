@@ -22,7 +22,7 @@ class RecruiterClient(object):
             return res['commanders'], None
         except Exception as e:
             logger.error("in RecruiterClient.get_commanders")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def get_commanders_spec(self, com_id: str) -> (CommanderInfo, str):
@@ -33,7 +33,7 @@ class RecruiterClient(object):
             return CommanderInfo.make(res['commander']), None
         except Exception as e:
             logger.error("in RecruiterClient.get_commanders_spec")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def put_commanders_spec(self, com_id: str, obj: CommanderInfo) \
@@ -45,7 +45,7 @@ class RecruiterClient(object):
             return CommanderInfo.make(res['commander']), None
         except Exception as e:
             logger.error("in RecruiterClient.put_commanders_spec")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def get_department_squad_leader(self, soldier_id: str) -> (LeaderInfo, str):
@@ -57,7 +57,7 @@ class RecruiterClient(object):
             return LeaderInfo.make(res['leader']), None
         except Exception as e:
             logger.error("in RecruiterClient.get_department_squad_leader")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def get_department_troop_commander(self, leader_id: str) \
@@ -70,7 +70,7 @@ class RecruiterClient(object):
             return CommanderInfo.make(res['commander']), None
         except Exception as e:
             logger.error("in RecruiterClient.get_department_troop_commander")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     @staticmethod
