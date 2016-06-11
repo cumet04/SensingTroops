@@ -14,8 +14,10 @@ class InformationObject(object):
             value = getattr(self, key)
             if isinstance(value, InformationObject):
                 value = value.to_dict()
-            if isinstance(value, List[InformationObject]):
-                value = [v.to_dict() for v in value]
+            if isinstance(value, list):
+                first = value[0] if len(value) > 0 else None
+                if isinstance(first, InformationObject):
+                    value = [v.to_dict() for v in value]
             if isinstance(value, list):
                 try:
                     value = sorted(value)
