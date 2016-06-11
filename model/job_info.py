@@ -69,7 +69,7 @@ class Campaign(InformationObject):
         try:
             return cls(
                 source['author'],
-                Requirement.make(source['requirements']),
+                Requirement.make(source['requirement']),
                 source['trigger'],
                 source['place'],
                 source['purpose'],
@@ -113,7 +113,7 @@ class Mission(InformationObject):
         try:
             return cls(
                 source['author'],
-                Requirement.make(source['requirements']),
+                Requirement.make(source['requirement']),
                 source['trigger'],
                 source['place'],
                 source['purpose'],
