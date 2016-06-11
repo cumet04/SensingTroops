@@ -3,15 +3,40 @@
 # が，actor_infoと同じように書きたいのでここも通常のclassとして定義する．
 
 import hashlib
+from typing import List, Dict
 from model.info_obj import InformationObject
 
 definitions = {}
+
+definitions['Requirement'] = {
+    'type': 'object',
+    'properties': {
+        'values': {'type': 'array', 'items': {'type': 'string'}},
+        'trigger': {'type': 'object'},
+    }
+}
+class Requirement(InformationObject):
+    def __init__(self,
+                 values: List[str],
+                 trigger: Dict):
+        self.values = values
+        self.trigger = trigger
+
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['values'],
+                source['trigger'],
+            )
+        except KeyError:
+            raise TypeError
 
 definitions['Campaign'] = {
     'type': 'object',
     'properties': {
         'author': {'type': 'string'},
-        'requirements': {'type': 'object'},
+        'requirement': {'$ref': '#/definitions/Requirement'},
         'trigger': {'type': 'object'},
         'place': {'type': 'string'},
         'purpose': {'type': 'string'},
@@ -21,13 +46,13 @@ definitions['Campaign'] = {
 class Campaign(InformationObject):
     def __init__(self,
                  author: str,
-                 requirements: object,
-                 trigger: object,
+                 requirement: Requirement,
+                 trigger: Dict,
                  place: str,
                  purpose: str,
                  destination: str):
         self.author = author
-        self.requirements = requirements
+        self.requirement = requirement
         self.trigger = trigger
         self.place = place
         self.purpose = purpose
@@ -44,7 +69,7 @@ class Campaign(InformationObject):
         try:
             return cls(
                 source['author'],
-                source['requirements'],
+                Requirement.make(source['requirements']),
                 source['trigger'],
                 source['place'],
                 source['purpose'],
@@ -58,38 +83,40 @@ definitions['Mission'] = {
     'type': 'object',
     'properties': {
         'author': {'type': 'string'},
-        'requirements': {'type': 'object'},
+        'requirement': {'$ref': '#/definitions/Requirement'},
         'trigger': {'type': 'object'},
         'place': {'type': 'string'},
         'purpose': {'type': 'string'},
-        'destination': {'type': 'string'}
     }
 }
 class Mission(InformationObject):
     def __init__(self,
                  author: str,
-                 requirements: object,
-                 trigger: object,
+                 requirement: Requirement,
+                 trigger: Dict,
                  place: str,
-                 purpose: str,
-                 destination: str):
+                 purpose: str):
         self.author = author
-        self.requirements = requirements
+        self.requirement = requirement
         self.trigger = trigger
         self.place = place
         self.purpose = purpose
-        self.destination = destination
+
+    def get_id(self):
+        source = self.purpose + self.place
+        m = hashlib.md5()
+        m.update(str(source).encode())
+        return m.hexdigest()
 
     @classmethod
     def make(cls, source: dict):
         try:
             return cls(
                 source['author'],
-                source['requirements'],
+                Requirement.make(source['requirements']),
                 source['trigger'],
                 source['place'],
                 source['purpose'],
-                source['destination'],
             )
         except KeyError:
             raise TypeError
@@ -99,34 +126,30 @@ definitions['Order'] = {
     'type': 'object',
     'properties': {
         'author': {'type': 'string'},
-        'requirements': {'type': 'object'},
+        'values': {'type': 'array', 'items': {'type': 'string'}},
         'trigger': {'type': 'object'},
         'purpose': {'type': 'string'},
-        'destination': {'type': 'string'}
     }
 }
 class Order(InformationObject):
     def __init__(self,
                  author: str,
-                 requirements: object,
-                 trigger: object,
-                 purpose: str,
-                 destination: str):
+                 values: List[str],
+                 trigger: Dict,
+                 purpose: str):
         self.author = author
-        self.requirements = requirements
+        self.values = values
         self.trigger = trigger
         self.purpose = purpose
-        self.destination = destination
 
     @classmethod
     def make(cls, source: dict):
         try:
             return cls(
                 source['author'],
-                source['requirements'],
+                source['values'],
                 source['trigger'],
                 source['purpose'],
-                source['destination'],
             )
         except KeyError:
             raise TypeError

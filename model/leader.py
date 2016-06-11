@@ -95,11 +95,10 @@ class Leader(object):
         target_subs = []
         if mission.place == "All":
             target_subs = list(self.subordinates.keys())
-        o_base = Order(requirements=mission.requirements["values"],
-                       trigger=mission.requirements["trigger"],
-                       author="",
-                       destination="Superior",
-                       purpose=mission.purpose)
+        o_base = Order(author="",
+                       values=mission.requirement.values,
+                       trigger=mission.requirement.trigger,
+                       purpose=mission.get_id())
         for t_id in target_subs:
             order = copy.deepcopy(o_base)
             order.author = t_id

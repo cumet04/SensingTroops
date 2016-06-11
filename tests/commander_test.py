@@ -70,11 +70,11 @@ class CommanderTestCase(unittest.TestCase):
                             destination='mongoserv',
                             place='S101',
                             purpose='A great app',
-                            requirements={
-                                "values": "val",
-                                "trigger": "tri"
-                            },
-                            trigger='a trigger')
+                            requirement=Requirement(
+                                values=["zero", "random"],
+                                trigger={"timer": 10}
+                            ),
+                            trigger={"timer": 30})
         self.app.post('/commander/campaigns',
                       data=json.dumps(campaign.to_dict()),
                       content_type='application/json')
@@ -97,11 +97,11 @@ class CommanderTestCase(unittest.TestCase):
                                  destination='mongoserv',
                                  place='S101',
                                  purpose='A great app',
-                                 requirements={
-                                     "values": "val",
-                                     "trigger": "tri"
-                                 },
-                                 trigger='a trigger')
+                                 requirement=Requirement(
+                                     values=["zero", "random"],
+                                     trigger={"timer": 10}
+                                 ),
+                                 trigger={"timer": 30})
         campaign_list = []
         for place in ['S101', 'S102', 'S103', 'S104']:
             c = copy.deepcopy(campaign_base)
@@ -139,11 +139,11 @@ class CommanderTestCase(unittest.TestCase):
                             destination='mongoserv',
                             place='S101',
                             purpose='A great app',
-                            requirements={
-                                "values": "val",
-                                "trigger": "tri"
-                            },
-                            trigger='a trigger')
+                            requirement=Requirement(
+                                values=["zero", "random"],
+                                trigger={"timer": 10}
+                            ),
+                            trigger={"timer": 30})
         response = self.app.post('/commander/campaigns',
                                  data=json.dumps(campaign.to_dict()),
                                  content_type='application/json')

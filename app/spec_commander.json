@@ -14,8 +14,8 @@
         "purpose": {
           "type": "string"
         },
-        "requirements": {
-          "type": "object"
+        "requirement": {
+          "$ref": "#/definitions/Requirement"
         },
         "trigger": {
           "type": "object"
@@ -84,17 +84,14 @@
         "author": {
           "type": "string"
         },
-        "destination": {
-          "type": "string"
-        },
         "place": {
           "type": "string"
         },
         "purpose": {
           "type": "string"
         },
-        "requirements": {
-          "type": "object"
+        "requirement": {
+          "$ref": "#/definitions/Requirement"
         },
         "trigger": {
           "type": "object"
@@ -107,17 +104,17 @@
         "author": {
           "type": "string"
         },
-        "destination": {
-          "type": "string"
-        },
         "purpose": {
           "type": "string"
         },
-        "requirements": {
-          "type": "object"
-        },
         "trigger": {
           "type": "object"
+        },
+        "values": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "type": "object"
@@ -132,6 +129,20 @@
         },
         "values": {
           "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Requirement": {
+      "properties": {
+        "trigger": {
+          "type": "object"
+        },
+        "values": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "type": "object"

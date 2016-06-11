@@ -1,7 +1,7 @@
 import model.actor_info
 import model.job_info
 from model.actor_info import CommanderInfo, LeaderInfo, SoldierInfo
-from model.job_info import Campaign, Mission, Order, Report, Work
+from model.job_info import Requirement, Campaign, Mission, Order, Report, Work
 
 _name = 'ResponseStatus'
 _info = {
