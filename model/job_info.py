@@ -1,3 +1,8 @@
+# ここで定義されるオブジェクト群は，生成後にプロパティを変更されないことを
+# 期待する．つまりnamedtupleとほぼ同じ特性である．
+# が，actor_infoと同じように書きたいのでここも通常のclassとして定義する．
+
+import hashlib
 from model.info_obj import InformationObject
 
 definitions = {}
@@ -27,6 +32,12 @@ class Campaign(InformationObject):
         self.place = place
         self.purpose = purpose
         self.destination = destination
+
+    def get_id(self):
+        source = self.purpose + self.place
+        m = hashlib.md5()
+        m.update(str(source).encode())
+        return m.hexdigest()
 
     @classmethod
     def make(cls, source: dict):

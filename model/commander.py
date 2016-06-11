@@ -66,7 +66,7 @@ class Commander(object):
                          trigger=campaign.requirements["trigger"],
                          author="",
                          destination="Superior",
-                         purpose=campaign.purpose)
+                         purpose=campaign.get_id())
         for t_id in target_subs:
             mission = copy.deepcopy(m_base)
             mission.author = t_id
