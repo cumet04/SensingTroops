@@ -63,7 +63,7 @@ class Soldier(object):
                     logger.error("in Soldier polling")
                     logger.error("[GET]leader/subordinates/sub_id failed: {0}".
                                  format(err))
-                logger.info(res.orders)
+                logger.info([str(o) for o in res.orders])
 
         self.heartbeat_thread_lock = Event()
         self.heartbeat_thread = Thread(target=polling, args=(self, interval))

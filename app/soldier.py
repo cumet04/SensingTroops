@@ -13,4 +13,4 @@ if __name__ == "__main__":
     soldier = Soldier(params.id, params.name)
     soldier.awake(RecruiterClient.gen_rest_client(
         'http://localhost:50000/recruiter/'))
-    soldier.start_heartbeat(3)
+    soldier.start_heartbeat(1)

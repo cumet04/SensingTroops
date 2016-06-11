@@ -82,7 +82,7 @@ class Leader(object):
                     logger.error("in Leader polling")
                     logger.error("[GET]commander/subordinates/sub_id failed: {0}".
                                  format(err))
-                logger.info(res.missions)
+                logger.info([str(m) for m in res.missions])
                 for m in res.missions:
                     self.accept_mission(m)
 

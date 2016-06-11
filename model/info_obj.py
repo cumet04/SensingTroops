@@ -27,6 +27,9 @@ class InformationObject(object):
             res_dict[key] = value
         return res_dict
 
+    def __str__(self):
+        return str(self.to_dict())
+
     def __eq__(self, other):
         if self.__class__ != other.__class__:
             return False
