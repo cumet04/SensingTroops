@@ -1,11 +1,12 @@
 import unittest
 import json
 import copy
+import traceback
 from controller import LeaderServer
 from model.leader import Leader
 from datetime import datetime
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from model import LeaderInfo, SoldierInfo, Work, Mission
+from model import LeaderInfo, SoldierInfo, Requirement, Work, Mission
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -23,6 +24,11 @@ class LeaderTestCase(unittest.TestCase):
         self.leader_obj = Leader("lxxx0", "lea_http", "http://localhost:50000")
         LeaderServer.set_model(self.leader_obj)
         server = LeaderServer.generate_server("/leader")
+        @server.errorhandler(500)
+        def internal_error(error):
+            logger.error(">> Internal Server Error")
+            logger.error(traceback.format_exc())
+            return "internal server error"
         self.app = server.test_client()
 
     def tearDown(self):

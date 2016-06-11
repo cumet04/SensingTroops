@@ -1,11 +1,12 @@
 import unittest
 import json
 import copy
+import traceback
 from controller import CommanderServer
 from model.commander import Commander
 from datetime import datetime
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from model import LeaderInfo, CommanderInfo, Report, Campaign
+from model import LeaderInfo, CommanderInfo, Requirement, Report, Campaign
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -23,6 +24,11 @@ class CommanderTestCase(unittest.TestCase):
         commander = Commander("cxxx0", "cmd_http", "http://localhost:50000")
         CommanderServer.set_model(commander)
         server = CommanderServer.generate_server("/commander")
+        @server.errorhandler(500)
+        def internal_error(error):
+            logger.error(">> Internal Server Error")
+            logger.error(traceback.format_exc())
+            return "internal server error"
         self.app = server.test_client()
 
     def tearDown(self):
