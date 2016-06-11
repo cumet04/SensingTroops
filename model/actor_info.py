@@ -32,12 +32,11 @@ class SoldierInfo(InformationObject):
     @classmethod
     def make(cls, source: dict):
         try:
-            ord = [Order(**o) for o in source['orders']]
             return cls(
                 source['id'],
                 source['name'],
                 source['weapons'],
-                ord,
+                [Order.make(o) for o in source['orders']]
             )
         except KeyError:
             raise TypeError
@@ -73,13 +72,12 @@ class LeaderInfo(InformationObject):
     @classmethod
     def make(cls, source: dict):
         try:
-            mis = [Mission(**m) for m in source['missions']]
             return cls(
                 source['id'],
                 source['name'],
                 source['endpoint'],
                 source['subordinates'],
-                mis,
+                [Mission.make(m) for m in source['missions']]
             )
         except KeyError:
             raise TypeError
@@ -115,13 +113,12 @@ class CommanderInfo(InformationObject):
     @classmethod
     def make(cls, source: dict):
         try:
-            cam = [Campaign(**c) for c in source['campaigns']]
             return cls(
                 source['id'],
                 source['name'],
                 source['endpoint'],
                 source['subordinates'],
-                cam,
+                [Campaign.make(c) for c in source['campaigns']]
             )
         except KeyError:
             raise TypeError
