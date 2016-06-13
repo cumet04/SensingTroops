@@ -1,110 +1,158 @@
+# ここで定義されるオブジェクト群は，生成後にプロパティを変更されないことを
+# 期待する．つまりnamedtupleとほぼ同じ特性である．
+# が，actor_infoと同じように書きたいのでここも通常のclassとして定義する．
+
+import hashlib
+from typing import List, Dict
+from model.info_obj import InformationObject
+
 definitions = {}
+
+definitions['Requirement'] = {
+    'type': 'object',
+    'properties': {
+        'values': {'type': 'array', 'items': {'type': 'string'}},
+        'trigger': {'type': 'object'},
+    }
+}
+class Requirement(InformationObject):
+    def __init__(self,
+                 values: List[str],
+                 trigger: Dict):
+        self.values = values
+        self.trigger = trigger
+
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['values'],
+                source['trigger'],
+            )
+        except KeyError:
+            raise TypeError
 
 definitions['Campaign'] = {
     'type': 'object',
     'properties': {
         'author': {'type': 'string'},
-        'requirements': {'type': 'object'},
+        'requirement': {'$ref': '#/definitions/Requirement'},
         'trigger': {'type': 'object'},
         'place': {'type': 'string'},
         'purpose': {'type': 'string'},
         'destination': {'type': 'string'}
     }
 }
-class Campaign(object):
+class Campaign(InformationObject):
     def __init__(self,
                  author: str,
-                 requirements: object,
-                 trigger: object,
+                 requirement: Requirement,
+                 trigger: Dict,
                  place: str,
                  purpose: str,
                  destination: str):
         self.author = author
-        self.requirements = requirements
+        self.requirement = requirement
         self.trigger = trigger
         self.place = place
         self.purpose = purpose
         self.destination = destination
 
-    def to_dict(self):
-        return {
-            "author": self.author,
-            "requirements": self.requirements,
-            "trigger": self.trigger,
-            "place": self.place,
-            "purpose": self.purpose,
-            "destination": self.destination
-        }
+    def get_id(self):
+        source = self.purpose + self.place
+        m = hashlib.md5()
+        m.update(str(source).encode())
+        return m.hexdigest()
+
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['author'],
+                Requirement.make(source['requirement']),
+                source['trigger'],
+                source['place'],
+                source['purpose'],
+                source['destination'],
+            )
+        except KeyError:
+            raise TypeError
 
 
 definitions['Mission'] = {
     'type': 'object',
     'properties': {
         'author': {'type': 'string'},
-        'requirements': {'type': 'object'},
+        'requirement': {'$ref': '#/definitions/Requirement'},
         'trigger': {'type': 'object'},
         'place': {'type': 'string'},
         'purpose': {'type': 'string'},
-        'destination': {'type': 'string'}
     }
 }
-class Mission(object):
+class Mission(InformationObject):
     def __init__(self,
                  author: str,
-                 requirements: object,
-                 trigger: object,
+                 requirement: Requirement,
+                 trigger: Dict,
                  place: str,
-                 purpose: str,
-                 destination: str):
+                 purpose: str):
         self.author = author
-        self.requirements = requirements
+        self.requirement = requirement
         self.trigger = trigger
         self.place = place
         self.purpose = purpose
-        self.destination = destination
 
-    def to_dict(self):
-        return {
-            "author": self.author,
-            "requirements": self.requirements,
-            "trigger": self.trigger,
-            "place": self.place,
-            "purpose": self.purpose,
-            "destination": self.destination
-        }
+    def get_id(self):
+        source = self.purpose + self.place
+        m = hashlib.md5()
+        m.update(str(source).encode())
+        return m.hexdigest()
+
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['author'],
+                Requirement.make(source['requirement']),
+                source['trigger'],
+                source['place'],
+                source['purpose'],
+            )
+        except KeyError:
+            raise TypeError
 
 
 definitions['Order'] = {
     'type': 'object',
     'properties': {
         'author': {'type': 'string'},
-        'requirements': {'type': 'object'},
+        'values': {'type': 'array', 'items': {'type': 'string'}},
         'trigger': {'type': 'object'},
         'purpose': {'type': 'string'},
-        'destination': {'type': 'string'}
     }
 }
-class Order(object):
+class Order(InformationObject):
     def __init__(self,
                  author: str,
-                 requirements: object,
-                 trigger: object,
-                 purpose: str,
-                 destination: str):
+                 values: List[str],
+                 trigger: Dict,
+                 purpose: str):
         self.author = author
-        self.requirements = requirements
+        self.values = values
         self.trigger = trigger
         self.purpose = purpose
-        self.destination = destination
 
-    def to_dict(self):
-        return {
-            "author": self.author,
-            "requirements": self.requirements,
-            "trigger": self.trigger,
-            "purpose": self.purpose,
-            "destination": self.destination
-        }
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['author'],
+                source['values'],
+                source['trigger'],
+                source['purpose'],
+            )
+        except KeyError:
+            raise TypeError
 
 
 definitions['Report'] = {
@@ -115,7 +163,7 @@ definitions['Report'] = {
         'values': {'type': 'string'}
     }
 }
-class Report(object):
+class Report(InformationObject):
     def __init__(self,
                  time: str,
                  purpose: str,
@@ -124,13 +172,16 @@ class Report(object):
         self.purpose = purpose
         self.values = values
 
-    def to_dict(self):
-        return {
-            "time": self.time,
-            "purpose": self.purpose,
-            "values": self.values
-        }
-
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['time'],
+                source['purpose'],
+                source['values'],
+            )
+        except KeyError:
+            raise TypeError
 
 definitions['Work'] = {
     'type': 'object',
@@ -140,7 +191,7 @@ definitions['Work'] = {
         'values': {'type': 'string'}
     }
 }
-class Work(object):
+class Work(InformationObject):
     def __init__(self,
                  time: str,
                  purpose: str,
@@ -149,9 +200,14 @@ class Work(object):
         self.purpose = purpose
         self.values = values
 
-    def to_dict(self):
-        return {
-            "time": self.time,
-            "purpose": self.purpose,
-            "values": self.values
-        }
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['time'],
+                source['purpose'],
+                source['values'],
+            )
+        except KeyError:
+            raise TypeError
+

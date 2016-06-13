@@ -19,10 +19,10 @@ class LeaderClient(object):
             st, res = self.client.get('')
             if st != 200:
                 return None, res['status']['msg']
-            return LeaderInfo(**res['info']), None
+            return LeaderInfo.make(res['info']), None
         except Exception as e:
             logger.error("in LeaderClient.get_root")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def get_missions(self) -> (List[Mission], str):
@@ -30,10 +30,10 @@ class LeaderClient(object):
             st, res = self.client.get('missions')
             if st != 200:
                 return None, res['status']['msg']
-            return [Mission(**m) for m in res['missions']], None
+            return [Mission.make(m) for m in res['missions']], None
         except Exception as e:
             logger.error("in LeaderClient.get_missions")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def post_missions(self, obj: Mission) -> (Mission, str):
@@ -41,10 +41,10 @@ class LeaderClient(object):
             st, res = self.client.post('missions', obj.to_dict())
             if st != 200:
                 return None, res['status']['msg']
-            return Mission(**res['accepted']), None
+            return Mission.make(res['accepted']), None
         except Exception as e:
             logger.error("in LeaderClient.post_missions")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def get_subordinates(self) -> (List[SoldierInfo], str):
@@ -52,10 +52,10 @@ class LeaderClient(object):
             st, res = self.client.get('subordinates')
             if st != 200:
                 return None, res['status']['msg']
-            return [SoldierInfo(**sol) for sol in res['subordinates']], None
+            return [SoldierInfo.make(sol) for sol in res['subordinates']], None
         except Exception as e:
             logger.error("in LeaderClient.get_subordinates")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def post_subordinates(self, obj: SoldierInfo) -> (SoldierInfo, str):
@@ -63,10 +63,10 @@ class LeaderClient(object):
             st, res = self.client.post('subordinates', obj.to_dict())
             if st != 200:
                 return None, res['status']['msg']
-            return SoldierInfo(**res['accepted']), None
+            return SoldierInfo.make(res['accepted']), None
         except Exception as e:
             logger.error("in LeaderClient.post_subordinates")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def get_subordinates_spec(self, sub_id: str) -> (SoldierInfo, str):
@@ -74,10 +74,10 @@ class LeaderClient(object):
             st, res = self.client.get('subordinates/' + sub_id)
             if st != 200:
                 return None, res['status']['msg']
-            return SoldierInfo(**res['info']), None
+            return SoldierInfo.make(res['info']), None
         except Exception as e:
             logger.error("in LeaderClient.get_subordinates_spec")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     def post_work(self, sub_id: str, obj: Work) -> (Work, str):
@@ -85,10 +85,10 @@ class LeaderClient(object):
             st, res = self.client.post('subordinates/' + sub_id, obj)
             if st != 200:
                 return None, res['status']['msg']
-            return Work(**res['accepted']), None
+            return Work.make(res['accepted']), None
         except Exception as e:
             logger.error("in LeaderClient.post_work")
-            logger.error(">> got a exception: {0}".format(e.__class__.__name__))
+            logger.error(">> got a exception: {0}".format(e))
             return None, None
 
     @staticmethod

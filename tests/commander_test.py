@@ -1,11 +1,12 @@
 import unittest
 import json
 import copy
+import traceback
 from controller import CommanderServer
 from model.commander import Commander
 from datetime import datetime
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from model import LeaderInfo, CommanderInfo, Report, Campaign
+from model import LeaderInfo, CommanderInfo, Requirement, Report, Campaign
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -23,6 +24,11 @@ class CommanderTestCase(unittest.TestCase):
         commander = Commander("cxxx0", "cmd_http", "http://localhost:50000")
         CommanderServer.set_model(commander)
         server = CommanderServer.generate_server("/commander")
+        @server.errorhandler(500)
+        def internal_error(error):
+            logger.error(">> Internal Server Error")
+            logger.error(traceback.format_exc())
+            return "internal server error"
         self.app = server.test_client()
 
     def tearDown(self):
@@ -64,11 +70,11 @@ class CommanderTestCase(unittest.TestCase):
                             destination='mongoserv',
                             place='S101',
                             purpose='A great app',
-                            requirements={
-                                "values": "val",
-                                "trigger": "tri"
-                            },
-                            trigger='a trigger')
+                            requirement=Requirement(
+                                values=["zero", "random"],
+                                trigger={"timer": 10}
+                            ),
+                            trigger={"timer": 30})
         self.app.post('/commander/campaigns',
                       data=json.dumps(campaign.to_dict()),
                       content_type='application/json')
@@ -91,11 +97,11 @@ class CommanderTestCase(unittest.TestCase):
                                  destination='mongoserv',
                                  place='S101',
                                  purpose='A great app',
-                                 requirements={
-                                     "values": "val",
-                                     "trigger": "tri"
-                                 },
-                                 trigger='a trigger')
+                                 requirement=Requirement(
+                                     values=["zero", "random"],
+                                     trigger={"timer": 10}
+                                 ),
+                                 trigger={"timer": 30})
         campaign_list = []
         for place in ['S101', 'S102', 'S103', 'S104']:
             c = copy.deepcopy(campaign_base)
@@ -133,11 +139,11 @@ class CommanderTestCase(unittest.TestCase):
                             destination='mongoserv',
                             place='S101',
                             purpose='A great app',
-                            requirements={
-                                "values": "val",
-                                "trigger": "tri"
-                            },
-                            trigger='a trigger')
+                            requirement=Requirement(
+                                values=["zero", "random"],
+                                trigger={"timer": 10}
+                            ),
+                            trigger={"timer": 30})
         response = self.app.post('/commander/campaigns',
                                  data=json.dumps(campaign.to_dict()),
                                  content_type='application/json')

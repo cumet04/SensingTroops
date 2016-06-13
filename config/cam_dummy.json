@@ -1,0 +1,42 @@
+### Campaign
+{
+  "author": "cxxx0",
+  "requirement": {
+    "values": ["zero", "random"],
+    "trigger": {
+      "timer": 1
+    }
+  },
+  "trigger": {
+    "timer": 5
+  },
+  "place": "All",
+  "purpose": "test",
+  "destination": "cache"
+}
+
+### Mission
+{
+  "author": "lxxx0",
+  "requirement": {
+    "values": ["zero", "random"],
+    "trigger": {
+      "timer": 1
+    }
+  },
+  "trigger": {
+    "timer": 5
+  },
+  "place": "All",
+  "purpose": "campaign0001"
+}
+
+### Order
+{
+  "author": "sxxx0",
+  "values": ["zero", "random"],
+  "trigger": {
+    "timer": 1
+  },
+  "purpose": "mission0001"
+}

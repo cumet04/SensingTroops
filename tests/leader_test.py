@@ -1,11 +1,12 @@
 import unittest
 import json
 import copy
+import traceback
 from controller import LeaderServer
 from model.leader import Leader
 from datetime import datetime
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from model import LeaderInfo, SoldierInfo, Work, Mission
+from model import LeaderInfo, SoldierInfo, Requirement, Work, Mission
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -23,6 +24,11 @@ class LeaderTestCase(unittest.TestCase):
         self.leader_obj = Leader("lxxx0", "lea_http", "http://localhost:50000")
         LeaderServer.set_model(self.leader_obj)
         server = LeaderServer.generate_server("/leader")
+        @server.errorhandler(500)
+        def internal_error(error):
+            logger.error(">> Internal Server Error")
+            logger.error(traceback.format_exc())
+            return "internal server error"
         self.app = server.test_client()
 
     def tearDown(self):
@@ -61,14 +67,13 @@ class LeaderTestCase(unittest.TestCase):
     def test_get_missions_single(self):
         # add a mission
         mission = Mission(author='lxxx0',
-                          destination='mongoserv',
                           place='on desk',
                           purpose='A great app',
-                          requirements={
-                              "values": "val",
-                              "trigger": "tri"
-                          },
-                          trigger='a trigger')
+                          requirement=Requirement(
+                              values=["zero", "random"],
+                              trigger={"timer": 10}
+                          ),
+                          trigger={"timer": 30})
         self.leader_obj.accept_mission(mission)
 
         # get subordinates
@@ -86,18 +91,17 @@ class LeaderTestCase(unittest.TestCase):
     def test_get_missions_multi(self):
         # add some missions
         mission_base = Mission(author='lxxx0',
-                               destination='mongoserv',
                                place='on desk',
                                purpose='A great app',
-                               requirements={
-                                   "values": "val",
-                                   "trigger": "tri"
-                               },
-                               trigger='a trigger')
+                               requirement=Requirement(
+                                   values=["zero", "random"],
+                                   trigger={"timer": 10}
+                               ),
+                               trigger={"timer": 30})
         mission_list = []
-        for place in ['on chair', 'front of door', 'on desk', 'living room']:
+        for purpose in ['on chair', 'front of door', 'on desk', 'living room']:
             m = copy.deepcopy(mission_base)
-            m.place = place
+            m.purpose = purpose
             mission_list.append(m)
 
         for m in mission_list:

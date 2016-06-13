@@ -1,4 +1,5 @@
 from model.job_info import Campaign, Mission, Order
+from model.info_obj import InformationObject
 from typing import List
 
 definitions = {}
@@ -17,7 +18,7 @@ definitions['SoldierInfo'] = {
                    'items': {'$ref': '#/definitions/Order'}},
     }
 }
-class SoldierInfo(object):
+class SoldierInfo(InformationObject):
     def __init__(self,
                  id: str,
                  name: str,
@@ -28,13 +29,17 @@ class SoldierInfo(object):
         self.weapons = weapons
         self.orders = orders
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "weapons": sorted(self.weapons),
-            "orders": sorted([o.to_dict() for o in self.orders])
-        }
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['id'],
+                source['name'],
+                source['weapons'],
+                [Order.make(o) for o in source['orders']]
+            )
+        except KeyError:
+            raise TypeError
 
 
 definitions['LeaderInfo'] = {
@@ -51,7 +56,7 @@ definitions['LeaderInfo'] = {
                      'items': {'$ref': '#/definitions/Mission'}},
     }
 }
-class LeaderInfo(object):
+class LeaderInfo(InformationObject):
     def __init__(self,
                  id: str,
                  name: str,
@@ -64,14 +69,18 @@ class LeaderInfo(object):
         self.subordinates = subordinates
         self.missions = missions
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "endpoint": self.endpoint,
-            "subordinates": sorted(self.subordinates),
-            "missions": sorted([m.to_dict() for m in self.missions])
-        }
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['id'],
+                source['name'],
+                source['endpoint'],
+                source['subordinates'],
+                [Mission.make(m) for m in source['missions']]
+            )
+        except KeyError:
+            raise TypeError
 
 
 definitions['CommanderInfo'] = {
@@ -88,7 +97,7 @@ definitions['CommanderInfo'] = {
                       'items': {'$ref': '#/definitions/Campaign'}},
     }
 }
-class CommanderInfo(object):
+class CommanderInfo(InformationObject):
     def __init__(self,
                  id: str,
                  name: str,
@@ -101,11 +110,15 @@ class CommanderInfo(object):
         self.subordinates = subordinates
         self.campaigns = campaigns
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "endpoint": self.endpoint,
-            "subordinates": sorted(self.subordinates),
-            "campaigns": sorted([c.to_dict() for c in self.campaigns])
-        }
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['id'],
+                source['name'],
+                source['endpoint'],
+                source['subordinates'],
+                [Campaign.make(c) for c in source['campaigns']]
+            )
+        except KeyError:
+            raise TypeError

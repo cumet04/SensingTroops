@@ -1,4 +1,5 @@
-from model import SoldierInfo
+from threading import Event, Thread
+from model import SoldierInfo, LeaderInfo
 from utils.recruiter_client import RecruiterClient
 from utils.leader_client import LeaderClient
 from logging import getLogger, StreamHandler, DEBUG
@@ -16,6 +17,7 @@ class Soldier(object):
         self.name = name
         self.weapons = {}
         self.orders = []
+        self.superior_client = None  # type: LeaderClient
 
     def awake(self, rec_client: RecruiterClient):
         # 上官を解決する
@@ -35,6 +37,7 @@ class Soldier(object):
             logger.error("[POST]leader/subordinates failed: {0}".format(err))
             return False
         logger.info("joined to squad")
+        self.superior_client = lea_client
 
         # orderを取得する
         # TODO: job assignが実装され次第
@@ -49,3 +52,19 @@ class Soldier(object):
             name=self.name,
             weapons=list(self.weapons.keys()),
             orders=self.orders)
+
+    def start_heartbeat(self, interval):
+        # TODO: すでに存在する場合
+
+        def polling(self: Soldier, interval):
+            while not self.heartbeat_thread_lock.wait(timeout=interval):
+                res, err = self.superior_client.get_subordinates_spec(self.id)
+                if err is not None:
+                    logger.error("in Soldier polling")
+                    logger.error("[GET]leader/subordinates/sub_id failed: {0}".
+                                 format(err))
+                logger.info([str(o) for o in res.orders])
+
+        self.heartbeat_thread_lock = Event()
+        self.heartbeat_thread = Thread(target=polling, args=(self, interval))
+        self.heartbeat_thread.start()

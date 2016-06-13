@@ -61,12 +61,11 @@ class Commander(object):
         target_subs = []
         if campaign.place == "All":
             target_subs = list(self.subordinates.keys())
-        m_base = Mission(requirements=campaign.requirements["values"],
-                         place="All",
-                         trigger=campaign.requirements["trigger"],
-                         author="",
-                         destination="Superior",
-                         purpose=campaign.purpose)
+        m_base = Mission(author='',
+                         place='All',
+                         purpose=campaign.get_id(),
+                         requirement=campaign.requirement,
+                         trigger=campaign.trigger)
         for t_id in target_subs:
             mission = copy.deepcopy(m_base)
             mission.author = t_id
