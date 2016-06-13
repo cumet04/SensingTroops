@@ -18,7 +18,7 @@ class LeaderClient(object):
         try:
             st, res = self.client.get('')
             if st != 200:
-                return None, res['status']['msg']
+                return None, res['_status']['msg']
             return LeaderInfo.make(res['info']), None
         except Exception as e:
             logger.error("in LeaderClient.get_root")
@@ -29,7 +29,7 @@ class LeaderClient(object):
         try:
             st, res = self.client.get('missions')
             if st != 200:
-                return None, res['status']['msg']
+                return None, res['_status']['msg']
             return [Mission.make(m) for m in res['missions']], None
         except Exception as e:
             logger.error("in LeaderClient.get_missions")
@@ -40,7 +40,7 @@ class LeaderClient(object):
         try:
             st, res = self.client.post('missions', obj.to_dict())
             if st != 200:
-                return None, res['status']['msg']
+                return None, res['_status']['msg']
             return Mission.make(res['accepted']), None
         except Exception as e:
             logger.error("in LeaderClient.post_missions")
@@ -51,7 +51,7 @@ class LeaderClient(object):
         try:
             st, res = self.client.get('subordinates')
             if st != 200:
-                return None, res['status']['msg']
+                return None, res['_status']['msg']
             return [SoldierInfo.make(sol) for sol in res['subordinates']], None
         except Exception as e:
             logger.error("in LeaderClient.get_subordinates")
@@ -62,18 +62,19 @@ class LeaderClient(object):
         try:
             st, res = self.client.post('subordinates', obj.to_dict())
             if st != 200:
-                return None, res['status']['msg']
+                return None, res['_status']['msg']
             return SoldierInfo.make(res['accepted']), None
         except Exception as e:
             logger.error("in LeaderClient.post_subordinates")
             logger.error(">> got a exception: {0}".format(e))
             return None, None
 
-    def get_subordinates_spec(self, sub_id: str) -> (SoldierInfo, str):
+    def get_subordinates_spec(self, sub_id: str, etag=None)\
+            -> (SoldierInfo, str):
         try:
-            st, res = self.client.get('subordinates/' + sub_id)
+            st, res = self.client.get('subordinates/' + sub_id, etag=etag)
             if st != 200:
-                return None, res['status']['msg']
+                return None, res['_status']['msg']
             return SoldierInfo.make(res['info']), None
         except Exception as e:
             logger.error("in LeaderClient.get_subordinates_spec")
@@ -84,7 +85,7 @@ class LeaderClient(object):
         try:
             st, res = self.client.post('subordinates/' + sub_id, obj)
             if st != 200:
-                return None, res['status']['msg']
+                return None, res['_status']['msg']
             return Work.make(res['accepted']), None
         except Exception as e:
             logger.error("in LeaderClient.post_work")

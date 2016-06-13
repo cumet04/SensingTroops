@@ -2,7 +2,7 @@ from functools import wraps
 from model import SoldierInfo, Work, Mission
 from model.leader import Leader
 from utils.helpers import json_input, ResponseStatus
-from flask import jsonify, request, Blueprint
+from flask import jsonify, request, Blueprint, make_response
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -163,8 +163,15 @@ def get_sub_info(sub_id):
               description: Information object of the subordinate
               $ref: '#/definitions/SoldierInfo'
     """
-    res = leader.get_sub_info(sub_id)
-    return jsonify(_status=ResponseStatus.Success, info=res.to_dict())
+    info = leader.get_sub_info(sub_id)
+    hash = info.hash()
+    if_none_match = str(request.if_none_match)[1:-1]  # ダブルクォートを削除
+    if hash == if_none_match:
+        return make_response(), 304
+
+    response = jsonify(_status=ResponseStatus.Success, info=info.to_dict())
+    response.set_etag(hash)
+    return response
 
 
 @server.route('/subordinates/<sub_id>/work', methods=['POST'])
