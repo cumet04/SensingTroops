@@ -115,7 +115,7 @@ def accept_subordinate():
               description: Information object of the subordinate
               $ref: '#/definitions/SoldierInfo'
     """
-    soldier = SoldierInfo(**request.json)
+    soldier = SoldierInfo.make(request.json)
     if not leader.accept_subordinate(soldier):
         return jsonify(_status=ResponseStatus.Failed), 500
 
@@ -197,6 +197,6 @@ def accept_work(sub_id):
               description: The accepted work
               $ref: '#/definitions/Work'
     """
-    work = Work(**request.json)
+    work = Work.make(request.json)
     leader.accept_work(sub_id, work)
     return jsonify(_status=ResponseStatus.Success, accepted=work.to_dict())

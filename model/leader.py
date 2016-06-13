@@ -59,7 +59,7 @@ class Leader(object):
             name=self.name,
             endpoint=self.endpoint,
             subordinates=list(self.subordinates.keys()),
-            missions=list(self.missions.keys()))
+            missions=list(self.missions.values()))
 
     def check_subordinate(self, sub_id):
         """

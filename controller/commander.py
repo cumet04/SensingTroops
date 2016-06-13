@@ -81,6 +81,7 @@ def get_campaigns():
 
 
 @server.route('/campaigns', methods=['POST'])
+@json_input
 def accept_campaigns():
     """
     Add a new campaigns
@@ -105,7 +106,7 @@ def accept_campaigns():
               description: The accepted campaign
               $ref: '#/definitions/Campaign'
     """
-    campaign = Campaign(**request.json)
+    campaign = Campaign.make(request.json)
     accepted = commander.accept_campaign(campaign).to_dict()
     if accepted is None:
         return jsonify(_status=ResponseStatus.Failed), 500
@@ -114,7 +115,6 @@ def accept_campaigns():
 
 
 @server.route('/subordinates', methods=['GET'])
-@json_input
 def get_subordinates():
     """
     All subordinates of this commander
@@ -175,7 +175,7 @@ def accept_subordinate():
         400: "Requested leader already exists in the troop",
     }
 
-    leader = LeaderInfo(**request.json)
+    leader = LeaderInfo.make(request.json)
     if commander.check_subordinate(leader.id):
         return jsonify(_status=ResponseStatus.make_error(msgs[400])), 400
 
@@ -273,6 +273,6 @@ def accept_report(sub_id):
               description: Response status
               $ref: '#/definitions/ResponseStatus'
     """
-    report = Report(**request.json)
+    report = Report.make(request.json)
     commander.accept_report(sub_id, report)
     return jsonify(_status=ResponseStatus.Success, accepted=report.to_dict())
