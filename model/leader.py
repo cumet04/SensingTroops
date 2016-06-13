@@ -21,6 +21,7 @@ class Leader(object):
         self.missions = {}  # type:Dict[str, Mission]
         self.work_cache = []
         self.superior_client = None  # type:CommanderClient
+        self.heartbeat_thread = HeartBeat(self, 0)
 
     def awake(self, rec_client, heartbeat_rate: int):
         # 上官を解決する
@@ -69,25 +70,8 @@ class Leader(object):
         """
         return sub_id in self.subordinates
 
-    def update_missions(self, missions: List[Mission]):
-        pass
-
     def start_heartbeat(self, interval):
-        # TODO: すでに存在する場合
-
-        def polling(leader: Leader, interval):
-            while not self.heartbeat_thread_lock.wait(timeout=interval):
-                res, err = self.superior_client.get_subordinates_spec(self.id)
-                if err is not None:
-                    logger.error("in Leader polling")
-                    logger.error("[GET]commander/subordinates/sub_id failed: {0}".
-                                 format(err))
-                logger.info([str(m) for m in res.missions])
-                for m in res.missions:
-                    leader.accept_mission(m)
-
-        self.heartbeat_thread_lock = Event()
-        self.heartbeat_thread = Thread(target=polling, args=(self, interval))
+        self.heartbeat_thread.interval = interval
         self.heartbeat_thread.start()
 
     def accept_mission(self, mission: Mission) -> Mission:
@@ -131,3 +115,31 @@ class Leader(object):
             return False
         self.work_cache.append(work)
         return True
+
+
+class HeartBeat(Thread):
+    def __init__(self, leader: Leader, interval: int):
+        super(HeartBeat, self).__init__()
+        self.lock = Event()
+        self.leader = leader
+        self.interval = interval
+        self.etag = None
+
+    def run(self):
+        while not self.lock.wait(timeout=self.interval):
+            com_client = self.leader.superior_client
+            res, err = com_client.get_subordinates_spec(self.leader.id,
+                                                        etag=self.etag)
+            if com_client.client.last_response.status_code == 304:
+                # 判定の方法がイケてないが，RESTヘルパーの実装上仕方ない．
+                # できればETagもいい感じに取得できるように再実装したいところ．
+                continue
+            if err is not None:
+                logger.error("in HeartBeat run")
+                logger.error("[GET]commander/subordinates/sub_id failed: {0}".
+                             format(err))
+
+            self.etag = com_client.client.last_response.headers['ETag']
+            logger.info([str(m) for m in res.missions])
+            for m in res.missions:
+                self.leader.accept_mission(m)

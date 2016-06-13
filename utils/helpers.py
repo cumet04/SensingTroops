@@ -27,7 +27,7 @@ class ResponseStatus(object):
         'msg': "status is ok"
     }
     NotModified = {
-        'success': True,
+        'success': False,  # ヘルパー周りの実装の関係上ここはFalseのが都合良い
         'msg': "resource is not modified"
     }
     NotFound = {
@@ -54,9 +54,17 @@ class ResponseStatus(object):
 class RestClient(object):
     def __init__(self, base_url):
         self.base_url = base_url
+        self.last_response = None
 
-    def get(self, url):
-        response = requests.get(self.base_url + url)
+    def get(self, url, etag=None):
+        headers = {}
+        if etag is not None:
+            headers['If-None-Match'] = etag
+        response = requests.get(self.base_url + url, headers=headers)
+        self.last_response = response
+        if response.status_code == 304:
+            # 本来304はbodyが無いが，ヘルパー周りの実装上こうする他なかった
+            return 304, {"_status": ResponseStatus.NotModified}
         if response.headers['content-type'] != 'application/json':
             raise UnexpectedServerError(response.status_code, response)
         return response.status_code, response.json()
@@ -65,6 +73,7 @@ class RestClient(object):
         response = requests.post(self.base_url + url,
                                  json.dumps(request_obj),
                                  headers={'Content-Type': 'application/json'})
+        self.last_response = response
         if response.headers['content-type'] != 'application/json':
             raise UnexpectedServerError(response.status_code, response)
         return response.status_code, response.json()
@@ -73,6 +82,7 @@ class RestClient(object):
         response = requests.put(self.base_url + url,
                                 json.dumps(request_obj),
                                 headers={'Content-Type': 'application/json'})
+        self.last_response = response
         if response.headers['content-type'] != 'application/json':
             raise UnexpectedServerError(response.status_code, response)
         return response.status_code, response.json()

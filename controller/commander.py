@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import jsonify, request, Blueprint
+from flask import jsonify, request, Blueprint, make_response
 from model import LeaderInfo, Report, Campaign
 from model.commander import Commander
 from utils.helpers import json_input, ResponseStatus
@@ -236,7 +236,7 @@ def get_sub_info(sub_id):
     hash = info.hash()
     if_none_match = str(request.if_none_match)[1:-1]  # ダブルクォートを削除
     if hash == if_none_match:
-        return jsonify(_status=ResponseStatus.NotModified), 304
+        return make_response(), 304
 
     response = jsonify(_status=ResponseStatus.Success, info=info.to_dict())
     response.set_etag(hash)

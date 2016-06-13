@@ -70,9 +70,10 @@ class CommanderClient(object):
             logger.error(">> got a exception: {0}".format(e))
             return None, None
 
-    def get_subordinates_spec(self, sub_id: str) -> (LeaderInfo, str):
+    def get_subordinates_spec(self, sub_id: str, etag=None)\
+            -> (LeaderInfo, str):
         try:
-            st, res = self.client.get('subordinates/' + sub_id)
+            st, res = self.client.get('subordinates/' + sub_id, etag=etag)
             if st != 200:
                 return None, res['_status']['msg']
             return LeaderInfo.make(res['info']), None
