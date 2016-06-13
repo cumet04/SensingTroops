@@ -11,6 +11,6 @@ if __name__ == "__main__":
     params = parser.parse_args()
 
     soldier = Soldier(params.id, params.name)
-    soldier.awake(RecruiterClient.gen_rest_client(
-        'http://localhost:50000/recruiter/'))
-    soldier.start_heartbeat(1)
+    rec_client = RecruiterClient.gen_rest_client(
+        'http://localhost:50000/recruiter/')
+    soldier.awake(rec_client, 1)

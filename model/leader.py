@@ -22,7 +22,7 @@ class Leader(object):
         self.work_cache = []
         self.superior_client = None  # type:CommanderClient
 
-    def awake(self, rec_client):
+    def awake(self, rec_client, heartbeat_rate: int):
         # 上官を解決する
         superior, err = rec_client.get_department_troop_commander(self.id)
         if superior is None and err is None:
@@ -47,7 +47,7 @@ class Leader(object):
         self.superior_client = com_client
 
         # missionを取得する
-        # TODO: job assignが実装され次第
+        self.start_heartbeat(heartbeat_rate)
 
     def generate_info(self) -> LeaderInfo:
         """
@@ -75,7 +75,7 @@ class Leader(object):
     def start_heartbeat(self, interval):
         # TODO: すでに存在する場合
 
-        def polling(self: Leader, interval):
+        def polling(leader: Leader, interval):
             while not self.heartbeat_thread_lock.wait(timeout=interval):
                 res, err = self.superior_client.get_subordinates_spec(self.id)
                 if err is not None:
@@ -84,7 +84,7 @@ class Leader(object):
                                  format(err))
                 logger.info([str(m) for m in res.missions])
                 for m in res.missions:
-                    self.accept_mission(m)
+                    leader.accept_mission(m)
 
         self.heartbeat_thread_lock = Event()
         self.heartbeat_thread = Thread(target=polling, args=(self, interval))

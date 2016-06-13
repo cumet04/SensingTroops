@@ -19,7 +19,7 @@ class Soldier(object):
         self.orders = []
         self.superior_client = None  # type: LeaderClient
 
-    def awake(self, rec_client: RecruiterClient):
+    def awake(self, rec_client: RecruiterClient, heartbeat_rate: int):
         # 上官を解決する
         superior, err = rec_client.get_department_squad_leader(self.id)
         if err is not None:
@@ -40,7 +40,7 @@ class Soldier(object):
         self.superior_client = lea_client
 
         # orderを取得する
-        # TODO: job assignが実装され次第
+        self.start_heartbeat(heartbeat_rate)
 
     def generate_info(self) -> SoldierInfo:
         """
