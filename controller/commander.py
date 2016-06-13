@@ -232,8 +232,15 @@ def get_sub_info(sub_id):
               description: Response status
               $ref: '#/definitions/ResponseStatus'
     """
-    res = commander.get_sub_info(sub_id)
-    return jsonify(_status=ResponseStatus.Success, info=res.to_dict())
+    info = commander.get_sub_info(sub_id)
+    hash = info.hash()
+    if_none_match = str(request.if_none_match)[1:-1]  # ダブルクォートを削除
+    if hash == if_none_match:
+        return jsonify(_status=ResponseStatus.NotModified), 304
+
+    response = jsonify(_status=ResponseStatus.Success, info=info.to_dict())
+    response.set_etag(hash)
+    return response
 
 
 @server.route('/subordinates/<sub_id>/report', methods=['POST'])

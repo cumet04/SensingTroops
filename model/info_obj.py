@@ -1,4 +1,4 @@
-from typing import List, Dict
+import hashlib
 
 class InformationObject(object):
     def _props(self):
@@ -26,6 +26,11 @@ class InformationObject(object):
 
             res_dict[key] = value
         return res_dict
+
+    def hash(self):
+        m = hashlib.md5()
+        m.update(str(self.to_dict()).encode())
+        return m.hexdigest()
 
     def __str__(self):
         return str(self.to_dict())

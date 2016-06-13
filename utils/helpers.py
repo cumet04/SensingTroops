@@ -26,6 +26,10 @@ class ResponseStatus(object):
         'success': True,
         'msg': "status is ok"
     }
+    NotModified = {
+        'success': True,
+        'msg': "resource is not modified"
+    }
     NotFound = {
         'success': False,
         'msg': 'resource not found'
