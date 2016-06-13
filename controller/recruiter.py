@@ -120,7 +120,7 @@ def register_commanders(com_id):
     }
 
     try:
-        com = CommanderInfo(**request.json)
+        com = CommanderInfo.make(request.json)
     except TypeError:
         return jsonify(_status=ResponseStatus.make_error(msgs[400]),
                        input=request.json), 400

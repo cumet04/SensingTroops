@@ -1,5 +1,6 @@
+from typing import List
 from threading import Event, Thread
-from model import SoldierInfo, LeaderInfo
+from model import SoldierInfo, Order
 from utils.recruiter_client import RecruiterClient
 from utils.leader_client import LeaderClient
 from logging import getLogger, StreamHandler, DEBUG
@@ -18,8 +19,9 @@ class Soldier(object):
         self.weapons = {}
         self.orders = []
         self.superior_client = None  # type: LeaderClient
+        self.heartbeat_thread = HeartBeat(self, 0)
 
-    def awake(self, rec_client: RecruiterClient):
+    def awake(self, rec_client: RecruiterClient, heartbeat_rate: int):
         # 上官を解決する
         superior, err = rec_client.get_department_squad_leader(self.id)
         if err is not None:
@@ -40,7 +42,7 @@ class Soldier(object):
         self.superior_client = lea_client
 
         # orderを取得する
-        # TODO: job assignが実装され次第
+        self.start_heartbeat(heartbeat_rate)
 
     def generate_info(self) -> SoldierInfo:
         """
@@ -53,18 +55,35 @@ class Soldier(object):
             weapons=list(self.weapons.keys()),
             orders=self.orders)
 
+    def accept_order(self, order: Order):
+        pass
+
     def start_heartbeat(self, interval):
-        # TODO: すでに存在する場合
-
-        def polling(self: Soldier, interval):
-            while not self.heartbeat_thread_lock.wait(timeout=interval):
-                res, err = self.superior_client.get_subordinates_spec(self.id)
-                if err is not None:
-                    logger.error("in Soldier polling")
-                    logger.error("[GET]leader/subordinates/sub_id failed: {0}".
-                                 format(err))
-                logger.info([str(o) for o in res.orders])
-
-        self.heartbeat_thread_lock = Event()
-        self.heartbeat_thread = Thread(target=polling, args=(self, interval))
+        self.heartbeat_thread.interval = interval
         self.heartbeat_thread.start()
+
+
+class HeartBeat(Thread):
+    def __init__(self, soldier: Soldier, interval: int):
+        super(HeartBeat, self).__init__()
+        self.lock = Event()
+        self.soldier = soldier
+        self.interval = interval
+        self.etag = None
+
+    def run(self):
+        while not self.lock.wait(timeout=self.interval):
+            lea_client = self.soldier.superior_client
+            res, err = lea_client.get_subordinates_spec(self.soldier.id,
+                                                        etag=self.etag)
+            if lea_client.client.last_response.status_code == 304:
+                continue
+            if err is not None:
+                logger.error("in HeartBeat run")
+                logger.error("[GET]leader/subordinates/sub_id failed: {0}".
+                             format(err))
+
+            self.etag = lea_client.client.last_response.headers['ETag']
+            logger.info([str(m) for m in res.orders])
+            for m in res.orders:
+                self.soldier.accept_order(m)

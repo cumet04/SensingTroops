@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import jsonify, request, Blueprint
+from flask import jsonify, request, Blueprint, make_response
 from model import LeaderInfo, Report, Campaign
 from model.commander import Commander
 from utils.helpers import json_input, ResponseStatus
@@ -81,6 +81,7 @@ def get_campaigns():
 
 
 @server.route('/campaigns', methods=['POST'])
+@json_input
 def accept_campaigns():
     """
     Add a new campaigns
@@ -105,7 +106,7 @@ def accept_campaigns():
               description: The accepted campaign
               $ref: '#/definitions/Campaign'
     """
-    campaign = Campaign(**request.json)
+    campaign = Campaign.make(request.json)
     accepted = commander.accept_campaign(campaign).to_dict()
     if accepted is None:
         return jsonify(_status=ResponseStatus.Failed), 500
@@ -114,7 +115,6 @@ def accept_campaigns():
 
 
 @server.route('/subordinates', methods=['GET'])
-@json_input
 def get_subordinates():
     """
     All subordinates of this commander
@@ -175,7 +175,7 @@ def accept_subordinate():
         400: "Requested leader already exists in the troop",
     }
 
-    leader = LeaderInfo(**request.json)
+    leader = LeaderInfo.make(request.json)
     if commander.check_subordinate(leader.id):
         return jsonify(_status=ResponseStatus.make_error(msgs[400])), 400
 
@@ -232,8 +232,15 @@ def get_sub_info(sub_id):
               description: Response status
               $ref: '#/definitions/ResponseStatus'
     """
-    res = commander.get_sub_info(sub_id)
-    return jsonify(_status=ResponseStatus.Success, info=res.to_dict())
+    info = commander.get_sub_info(sub_id)
+    hash = info.hash()
+    if_none_match = str(request.if_none_match)[1:-1]  # ダブルクォートを削除
+    if hash == if_none_match:
+        return make_response(), 304
+
+    response = jsonify(_status=ResponseStatus.Success, info=info.to_dict())
+    response.set_etag(hash)
+    return response
 
 
 @server.route('/subordinates/<sub_id>/report', methods=['POST'])
@@ -273,6 +280,6 @@ def accept_report(sub_id):
               description: Response status
               $ref: '#/definitions/ResponseStatus'
     """
-    report = Report(**request.json)
+    report = Report.make(request.json)
     commander.accept_report(sub_id, report)
     return jsonify(_status=ResponseStatus.Success, accepted=report.to_dict())
