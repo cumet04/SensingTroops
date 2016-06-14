@@ -111,7 +111,7 @@ class Leader(object):
         return True
 
     def accept_work(self, sub_id, work):
-        if self.check_subordinate(sub_id):
+        if not self.check_subordinate(sub_id):
             return False
         self.work_cache.append(work)
         return True
