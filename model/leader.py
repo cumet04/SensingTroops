@@ -123,7 +123,7 @@ class Leader(object):
 
 class WorkingThread(Thread):
     def __init__(self, leader: Leader, mission: Mission):
-        super(WorkingThread, self).__init__()
+        super(WorkingThread, self).__init__(daemon=True)
         self.mission = mission
         self.leader = leader
         self.lock = Event()
@@ -155,7 +155,7 @@ class WorkingThread(Thread):
 
 class HeartBeat(Thread):
     def __init__(self, leader: Leader, interval: int):
-        super(HeartBeat, self).__init__()
+        super(HeartBeat, self).__init__(daemon=True)
         self.lock = Event()
         self.leader = leader
         self.interval = interval

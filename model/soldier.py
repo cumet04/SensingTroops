@@ -73,7 +73,7 @@ class Soldier(object):
 
 class WorkingThread(Thread):
     def __init__(self, soldier: Soldier,order: Order):
-        super(WorkingThread, self).__init__()
+        super(WorkingThread, self).__init__(daemon=True)
         self.order = order
         self.soldier = soldier
         self.lock = Event()
@@ -99,7 +99,7 @@ class WorkingThread(Thread):
 
 class HeartBeat(Thread):
     def __init__(self, soldier: Soldier, interval: int):
-        super(HeartBeat, self).__init__()
+        super(HeartBeat, self).__init__(daemon=True)
         self.lock = Event()
         self.soldier = soldier
         self.interval = interval
