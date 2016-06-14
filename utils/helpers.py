@@ -100,7 +100,7 @@ def json_input(f):
             #   - bad content-type -> return None
             #   - can't decode -> raise BadRequest
             try:
-                logger.info(request.data.decode('utf-8'))
+                # logger.info(request.data.decode('utf-8'))
                 if request.json is None:
                     return jsonify(result='failed',
                                    msg='application/json required'), 406

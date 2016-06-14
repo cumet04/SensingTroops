@@ -1,4 +1,6 @@
 import copy
+import json
+import pymongo
 from typing import List, Dict
 from model import LeaderInfo, CommanderInfo, Campaign, Mission
 from logging import getLogger, StreamHandler, DEBUG
@@ -16,7 +18,7 @@ class Commander(object):
         self.name = name
         self.endpoint = endpoint
         self.subordinates = {}  # type:Dict[str, LeaderInfo]
-        self.campaigns = []  # type:List[Campaign]
+        self.campaigns = {}  # type:Dict[str, Campaign]
         self.report_cache = []
 
     def awake(self, recruiter_client):
@@ -39,7 +41,7 @@ class Commander(object):
             name=self.name,
             endpoint=self.endpoint,
             subordinates=list(self.subordinates.keys()),
-            campaigns=self.campaigns)
+            campaigns=list(self.campaigns.values()))
 
     def generate_ui(self):
         # TODO: implementation
@@ -71,10 +73,7 @@ class Commander(object):
             mission.author = t_id
             self.subordinates[t_id].missions.append(mission)
 
-        # 自身のデータ送信スレッドを生成する
-        pass  # not implemented yet
-
-        self.campaigns.append(campaign)
+        self.campaigns[campaign.get_id()] = campaign
         return campaign
 
     def accept_subordinate(self, sub_info):
@@ -89,7 +88,20 @@ class Commander(object):
         return sub_info
 
     def accept_report(self, sub_id, report):
-        if self.check_subordinate(sub_id):
+        if not self.check_subordinate(sub_id):
             return False
+        if report.purpose in self.campaigns:
+            campaign = self.campaigns[report.purpose]
+            col = pymongo.MongoClient(campaign.destination)['troops']['values']
+            values = [{
+                "purpose": campaign.purpose,
+                "time": w["time"],
+                "values": w["values"]
+            } for w in report.values]
+            col.insert_many(values)
+
+        logger.info("accept_report: {0}".format(
+            json.dumps(report.to_dict(), sort_keys=True, indent=2)
+        ))
         self.report_cache.append(report)
         return True

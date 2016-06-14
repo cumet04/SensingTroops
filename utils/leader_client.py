@@ -83,7 +83,8 @@ class LeaderClient(object):
 
     def post_work(self, sub_id: str, obj: Work) -> (Work, str):
         try:
-            st, res = self.client.post('subordinates/' + sub_id, obj)
+            st, res = self.client.post('subordinates/' + sub_id + '/work',
+                                       obj.to_dict())
             if st != 200:
                 return None, res['_status']['msg']
             return Work.make(res['accepted']), None

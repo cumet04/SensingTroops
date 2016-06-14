@@ -1,6 +1,8 @@
+import random
+import datetime
 from typing import List
 from threading import Event, Thread
-from model import SoldierInfo, Order
+from model import SoldierInfo, Order, Work
 from utils.recruiter_client import RecruiterClient
 from utils.leader_client import LeaderClient
 from logging import getLogger, StreamHandler, DEBUG
@@ -16,10 +18,14 @@ class Soldier(object):
     def __init__(self, sol_id, name):
         self.id = sol_id
         self.name = name
-        self.weapons = {}
+        self.weapons = {
+            "zero": lambda: 0,
+            "random": random.random
+        }
         self.orders = []
         self.superior_client = None  # type: LeaderClient
         self.heartbeat_thread = HeartBeat(self, 0)
+        self.working_threads = []  # type: List[WorkingThread]
 
     def awake(self, rec_client: RecruiterClient, heartbeat_rate: int):
         # 上官を解決する
@@ -56,16 +62,44 @@ class Soldier(object):
             orders=self.orders)
 
     def accept_order(self, order: Order):
-        pass
+        th = WorkingThread(self, order)
+        self.working_threads.append(th)
+        th.start()
 
     def start_heartbeat(self, interval):
         self.heartbeat_thread.interval = interval
         self.heartbeat_thread.start()
 
 
+class WorkingThread(Thread):
+    def __init__(self, soldier: Soldier,order: Order):
+        super(WorkingThread, self).__init__(daemon=True)
+        self.order = order
+        self.soldier = soldier
+        self.lock = Event()
+
+    def run(self):
+        if 'timer' in self.order.trigger.keys():
+            interval = self.order.trigger['timer']
+            while not self.lock.wait(timeout=interval):
+                values = [self.soldier.weapons[w]() for w in self.order.values]
+                time = datetime.datetime.utcnow().isoformat()
+                work = Work(time, self.order.purpose, values)
+
+                lea_client = self.soldier.superior_client
+                res, err = lea_client.post_work(self.soldier.id, work)
+                if err is not None:
+                    logger.error("in WorkingThread run")
+                    logger.error(
+                        "[GET]leader/subordinates/sub_id/work failed: {0}".
+                         format(err))
+        else:
+            pass
+
+
 class HeartBeat(Thread):
     def __init__(self, soldier: Soldier, interval: int):
-        super(HeartBeat, self).__init__()
+        super(HeartBeat, self).__init__(daemon=True)
         self.lock = Event()
         self.soldier = soldier
         self.interval = interval
@@ -85,5 +119,8 @@ class HeartBeat(Thread):
 
             self.etag = lea_client.client.last_response.headers['ETag']
             logger.info([str(m) for m in res.orders])
+            [w.lock.set() for w in self.soldier.working_threads]
+            self.soldier.working_threads.clear()
             for m in res.orders:
                 self.soldier.accept_order(m)
+
