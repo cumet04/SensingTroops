@@ -128,7 +128,10 @@
           "type": "string"
         },
         "values": {
-          "type": "string"
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
         }
       },
       "type": "object"
