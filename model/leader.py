@@ -1,6 +1,7 @@
 import copy
+import datetime
 from threading import Event, Thread
-from model import SoldierInfo, LeaderInfo, Mission, Order
+from model import SoldierInfo, LeaderInfo, Mission, Order, Report, Work
 from typing import List, Dict
 from utils.commander_client import CommanderClient
 from logging import getLogger, StreamHandler, DEBUG
@@ -19,9 +20,10 @@ class Leader(object):
         self.endpoint = endpoint
         self.subordinates = {}  # type:Dict[str, SoldierInfo]
         self.missions = {}  # type:Dict[str, Mission]
-        self.work_cache = []
+        self.work_cache = []  # type:List[Work]
         self.superior_client = None  # type:CommanderClient
         self.heartbeat_thread = HeartBeat(self, 0)
+        self.working_threads = []  # type: List[WorkingThread]
 
     def awake(self, rec_client, heartbeat_rate: int):
         # 上官を解決する
@@ -89,7 +91,9 @@ class Leader(object):
             self.subordinates[t_id].orders.append(order)
 
         # 自身のデータ送信スレッドを生成する
-        pass  # not implemented yet
+        th = WorkingThread(self, mission)
+        self.working_threads.append(th)
+        th.start()
 
         self.missions[mission.purpose] = mission
         return mission
@@ -115,6 +119,38 @@ class Leader(object):
             return False
         self.work_cache.append(work)
         return True
+
+
+class WorkingThread(Thread):
+    def __init__(self, leader: Leader, mission: Mission):
+        super(WorkingThread, self).__init__()
+        self.mission = mission
+        self.leader = leader
+        self.lock = Event()
+
+    def run(self):
+        if 'timer' in self.mission.trigger.keys():
+            interval = self.mission.trigger['timer']
+            while not self.lock.wait(timeout=interval):
+                m_id = self.mission.get_id()
+                works = [w for w in self.leader.work_cache if w.purpose == m_id]
+                time = datetime.datetime.utcnow().isoformat()
+                report = Report(time,
+                                self.mission.purpose,
+                                [{"time": w.time, "values": w.values}
+                                 for w in works])
+
+                com_client = self.leader.superior_client
+                res, err = com_client.post_report(self.leader.id, report)
+                if err is not None:
+                    logger.error("in WorkingThread run")
+                    logger.error(
+                        "[GET]commander/subordinates/sub_id/report failed: {0}".
+                            format(err))
+                self.leader.work_cache = \
+                    [w for w in self.leader.work_cache if w.purpose != m_id]
+        else:
+            pass
 
 
 class HeartBeat(Thread):

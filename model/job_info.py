@@ -160,14 +160,14 @@ definitions['Report'] = {
     'properties': {
         'time': {'type': 'string'},
         'purpose': {'type': 'string'},
-        'values': {'type': 'string'}
+        'values': {'type': 'array', 'items': {'type': 'object'}},
     }
 }
 class Report(InformationObject):
     def __init__(self,
                  time: str,
                  purpose: str,
-                 values: object):
+                 values: List[Dict]):
         self.time = time
         self.purpose = purpose
         self.values = values
