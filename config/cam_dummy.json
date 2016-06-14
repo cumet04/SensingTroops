@@ -11,5 +11,5 @@
   },
   "place": "All",
   "purpose": "test",
-  "destination": "cache"
+  "destination": "mongodb://localhost:27017/"
 }

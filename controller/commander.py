@@ -76,7 +76,7 @@ def get_campaigns():
                 $ref: '#/definitions/Campaign'
     """
     camps_raw = commander.campaigns
-    camps_dicts = [camp.to_dict() for camp in camps_raw]
+    camps_dicts = [camp.to_dict() for camp in camps_raw.values()]
     return jsonify(_status=ResponseStatus.Success, campaigns=camps_dicts), 200
 
 
