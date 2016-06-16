@@ -1,7 +1,7 @@
 {
   "author": "cxxx0",
   "requirement": {
-    "values": ["zero", "random"],
+    "values": ["zero", "random", "brightness"],
     "trigger": {
       "timer": 1
     }
