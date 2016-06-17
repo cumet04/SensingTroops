@@ -1,8 +1,9 @@
 import copy
 import json
 import pymongo
-from typing import List, Dict
+from typing import Dict
 from model import LeaderInfo, CommanderInfo, Campaign, Mission
+from utils.helpers import rest_put
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -21,12 +22,10 @@ class Commander(object):
         self.campaigns = {}  # type:Dict[str, Campaign]
         self.report_cache = []
 
-    def awake(self, recruiter_client):
-        info = self.generate_info()
-        res, err = recruiter_client.put_commanders_spec(self.id, info)
+    def awake(self, rec_ep: str):
+        url = "{0}commanders/{1}".format(rec_ep, self.id)
+        res, err = rest_put(url, json=self.generate_info().to_dict())
         if err is not None:
-            logger.error("in Commander awake")
-            logger.error("[PUT]recruiter/commanders/id failed: {0}".format(err))
             return False
         logger.info("register commander to recruiter: success")
         return True
