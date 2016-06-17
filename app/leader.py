@@ -41,9 +41,7 @@ if __name__ == "__main__":
 
     ep = 'http://localhost:{0}{1}/'.format(params.port, params.prefix)
     leader = Leader(params.id, params.name, ep)
-    rec_client = RecruiterClient.gen_rest_client(
-        'http://localhost:50000/recruiter/')
-    leader.awake(rec_client, 2)
+    leader.awake('http://localhost:50000/recruiter/', 2)
     LeaderServer.set_model(leader)
 
     @server.route(params.prefix + '/spec.json')

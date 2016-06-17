@@ -3,7 +3,7 @@ import datetime
 from threading import Event, Thread
 from model import SoldierInfo, LeaderInfo, Mission, Order, Report, Work
 from typing import List, Dict
-from utils.commander_client import CommanderClient
+from utils.helpers import rest_get, rest_post
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -21,33 +21,28 @@ class Leader(object):
         self.subordinates = {}  # type:Dict[str, SoldierInfo]
         self.missions = {}  # type:Dict[str, Mission]
         self.work_cache = []  # type:List[Work]
-        self.superior_client = None  # type:CommanderClient
+        self.superior_ep = ""
         self.heartbeat_thread = HeartBeat(self, 0)
         self.working_threads = []  # type: List[WorkingThread]
 
-    def awake(self, rec_client, heartbeat_rate: int):
+    def awake(self, rec_ep: str, heartbeat_rate: int):
+        from model import CommanderInfo
+
         # 上官を解決する
-        superior, err = rec_client.get_department_troop_commander(self.id)
-        if superior is None and err is None:
-            return False
+        url = rec_ep + 'department/troop/commander?leader_id=' + self.id
+        res, err = rest_get(url)
         if err is not None:
-            logger.error("in Leader awake")
-            logger.error("[GET]recruiter/department/troop/commander" +
-                         " failed: {0}".format(err))
             return False
+        superior = CommanderInfo.make(res.json()['commander'])
+        self.superior_ep = superior.endpoint
         logger.info("superior was resolved: id={0}".format(superior.id))
 
         # 部隊に加入する
-        com_client = CommanderClient.gen_rest_client(superior.endpoint)
-        res, err = com_client.post_subordinates(self.generate_info())
-        if res is None and err is None:
-            return False
+        url = self.superior_ep + "subordinates"
+        res, err = rest_post(url, json=self.generate_info().to_dict())
         if err is not None:
-            logger.error("in Leader awake")
-            logger.error("[POST]commander/subordinates failed: {0}".format(err))
             return False
-        logger.info("joined to troop")
-        self.superior_client = com_client
+        logger.info("joined to squad: commander_id: {0}".format(superior.id))
 
         # missionを取得する
         self.start_heartbeat(heartbeat_rate)
@@ -140,13 +135,12 @@ class WorkingThread(Thread):
                                 [{"time": w.time, "values": w.values}
                                  for w in works])
 
-                com_client = self.leader.superior_client
-                res, err = com_client.post_report(self.leader.id, report)
-                if err is not None:
-                    logger.error("in WorkingThread run")
-                    logger.error(
-                        "[GET]commander/subordinates/sub_id/report failed: {0}".
-                            format(err))
+                url = "{0}{1}".format(
+                    self.leader.superior_ep,
+                    "subordinates/{0}/report".format(self.leader.id))
+                rest_post(url, json=report.to_dict())
+                # TODO: エラー処理
+
                 self.leader.work_cache = \
                     [w for w in self.leader.work_cache if w.purpose != m_id]
         else:
@@ -163,19 +157,15 @@ class HeartBeat(Thread):
 
     def run(self):
         while not self.lock.wait(timeout=self.interval):
-            com_client = self.leader.superior_client
-            res, err = com_client.get_subordinates_spec(self.leader.id,
-                                                        etag=self.etag)
-            if com_client.client.last_response.status_code == 304:
-                # 判定の方法がイケてないが，RESTヘルパーの実装上仕方ない．
-                # できればETagもいい感じに取得できるように再実装したいところ．
-                continue
+            url = self.leader.superior_ep + "subordinates/" + self.leader.id
+            res, err = rest_get(url, etag=self.etag)
             if err is not None:
-                logger.error("in HeartBeat run")
-                logger.error("[GET]commander/subordinates/sub_id failed: {0}".
-                             format(err))
+                return
+            if res.status_code == 304:
+                continue
+            self.etag = res.headers['ETag']
+            info = LeaderInfo.make(res.json()['info'])
 
-            self.etag = com_client.client.last_response.headers['ETag']
-            logger.info([str(m) for m in res.missions])
-            for m in res.missions:
+            logger.info([str(m) for m in info.missions])
+            for m in info.missions:
                 self.leader.accept_mission(m)
