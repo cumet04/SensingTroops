@@ -1,10 +1,10 @@
 import copy
 import datetime
+import utils.rest as rest
 from threading import Event, Thread
 from model.info_obj import InformationObject
 from model import Mission, Order, Report, Work
 from typing import List, Dict
-from utils.helpers import rest_get, rest_post
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -74,7 +74,7 @@ class Leader(object):
 
         # 上官を解決する
         url = rec_ep + 'department/troop/commander?leader_id=' + self.id
-        res, err = rest_get(url)
+        res, err = rest.get(url)
         if err is not None:
             return False
         superior = CommanderInfo.make(res.json()['commander'])
@@ -83,7 +83,7 @@ class Leader(object):
 
         # 部隊に加入する
         url = self.superior_ep + "subordinates"
-        res, err = rest_post(url, json=self.generate_info().to_dict())
+        res, err = rest.post(url, json=self.generate_info().to_dict())
         if err is not None:
             return False
         logger.info("joined to squad: commander_id: {0}".format(superior.id))
@@ -182,7 +182,7 @@ class WorkingThread(Thread):
                 url = "{0}{1}".format(
                     self.leader.superior_ep,
                     "subordinates/{0}/report".format(self.leader.id))
-                rest_post(url, json=report.to_dict())
+                rest.post(url, json=report.to_dict())
                 # TODO: エラー処理
 
                 self.leader.work_cache = \
@@ -202,7 +202,7 @@ class HeartBeat(Thread):
     def run(self):
         while not self.lock.wait(timeout=self.interval):
             url = self.leader.superior_ep + "subordinates/" + self.leader.id
-            res, err = rest_get(url, etag=self.etag)
+            res, err = rest.get(url, etag=self.etag)
             if err is not None:
                 return
             if res.status_code == 304:

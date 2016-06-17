@@ -1,10 +1,10 @@
 import copy
 import json
 import pymongo
+import utils.rest as rest
 from typing import List, Dict
 from model.info_obj import InformationObject
 from model import LeaderInfo, Campaign, Mission
-from utils.helpers import rest_put
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -68,7 +68,7 @@ class Commander(object):
 
     def awake(self, rec_ep: str):
         url = "{0}commanders/{1}".format(rec_ep, self.id)
-        res, err = rest_put(url, json=self.generate_info().to_dict())
+        res, err = rest.put(url, json=self.generate_info().to_dict())
         if err is not None:
             return False
         logger.info("register commander to recruiter: success")

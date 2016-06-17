@@ -1,5 +1,5 @@
 import yaml
-from utils.helpers import rest_get
+import utils.rest as rest
 from model import CommanderInfo, LeaderInfo
 from collections import namedtuple
 from logging import getLogger, StreamHandler, DEBUG
@@ -77,7 +77,7 @@ class Recruiter(object):
         com_id = self.get_troop_commander(leader_id)
         com_info = self.commander_cache[com_id]
         url = "{0}subordinates/{1}".format(com_info.endpoint, leader_id)
-        res, err = rest_get(url)
+        res, err = rest.get(url)
         if err is not None:
             return None
 
