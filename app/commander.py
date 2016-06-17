@@ -7,7 +7,6 @@ from flask_swagger import swagger
 from controller import CommanderServer
 from model import definitions
 from model.commander import Commander
-from utils.recruiter_client import RecruiterClient
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -41,8 +40,7 @@ if __name__ == "__main__":
 
     ep = 'http://localhost:{0}{1}/'.format(params.port, params.prefix)
     commander = Commander(params.id, params.name, ep)
-    commander.awake(RecruiterClient.gen_rest_client(
-        'http://localhost:50000/recruiter/'))
+    commander.awake('http://localhost:50000/recruiter/')
     CommanderServer.set_model(commander)
 
     @server.route(params.prefix + '/spec.json')

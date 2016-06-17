@@ -3,9 +3,9 @@ import datetime
 from typing import List
 from threading import Event, Thread
 from model import SoldierInfo, Order, Work
-from utils.recruiter_client import RecruiterClient
-from utils.leader_client import LeaderClient
+from utils.helpers import rest_get, rest_post
 from logging import getLogger, StreamHandler, DEBUG
+
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -23,29 +23,28 @@ class Soldier(object):
             "random": random.random
         }
         self.orders = []
-        self.superior_client = None  # type: LeaderClient
+        self.superior_ep = ""  # type: str
         self.heartbeat_thread = HeartBeat(self, 0)
         self.working_threads = []  # type: List[WorkingThread]
 
-    def awake(self, rec_client: RecruiterClient, heartbeat_rate: int):
+    def awake(self, rec_ep: str, heartbeat_rate: int):
+        from model import LeaderInfo
+
         # 上官を解決する
-        superior, err = rec_client.get_department_squad_leader(self.id)
+        url = rec_ep + 'department/squad/leader?soldier_id=' + self.id
+        res, err = rest_get(url)
         if err is not None:
-            logger.error("in Leader awake")
-            logger.error("[GET]recruiter/department/squad/leader" +
-                         " failed: {0}".format(err))
             return False
+        superior = LeaderInfo.make(res.json()['leader'])
+        self.superior_ep = superior.endpoint
         logger.info("superior was resolved: id={0}".format(superior.id))
 
         # 分隊に加入する
-        lea_client = LeaderClient.gen_rest_client(superior.endpoint)
-        res, err = lea_client.post_subordinates(self.generate_info())
+        url = self.superior_ep + "subordinates"
+        res, err = rest_post(url, json=self.generate_info().to_dict())
         if err is not None:
-            logger.error("in Soldier awake")
-            logger.error("[POST]leader/subordinates failed: {0}".format(err))
             return False
-        logger.info("joined to squad")
-        self.superior_client = lea_client
+        logger.info("joined to squad: leader_id: {0}".format(superior.id))
 
         # orderを取得する
         self.start_heartbeat(heartbeat_rate)
@@ -72,7 +71,7 @@ class Soldier(object):
 
 
 class WorkingThread(Thread):
-    def __init__(self, soldier: Soldier,order: Order):
+    def __init__(self, soldier: Soldier, order: Order):
         super(WorkingThread, self).__init__(daemon=True)
         self.order = order
         self.soldier = soldier
@@ -86,13 +85,11 @@ class WorkingThread(Thread):
                 time = datetime.datetime.utcnow().isoformat()
                 work = Work(time, self.order.purpose, values)
 
-                lea_client = self.soldier.superior_client
-                res, err = lea_client.post_work(self.soldier.id, work)
-                if err is not None:
-                    logger.error("in WorkingThread run")
-                    logger.error(
-                        "[GET]leader/subordinates/sub_id/work failed: {0}".
-                         format(err))
+                url = "{0}{1}".format(
+                    self.soldier.superior_ep,
+                    "subordinates/{0}/work".format(self.soldier.id))
+                rest_post(url, json=work.to_dict())
+                # TODO: エラー処理
         else:
             pass
 
@@ -107,20 +104,17 @@ class HeartBeat(Thread):
 
     def run(self):
         while not self.lock.wait(timeout=self.interval):
-            lea_client = self.soldier.superior_client
-            res, err = lea_client.get_subordinates_spec(self.soldier.id,
-                                                        etag=self.etag)
-            if lea_client.client.last_response.status_code == 304:
-                continue
+            url = self.soldier.superior_ep + "subordinates/" + self.soldier.id
+            res, err = rest_get(url, etag=self.etag)
             if err is not None:
-                logger.error("in HeartBeat run")
-                logger.error("[GET]leader/subordinates/sub_id failed: {0}".
-                             format(err))
+                return
+            if res.status_code == 304:
+                continue
+            self.etag = res.headers['ETag']
+            info = SoldierInfo.make(res.json()['info'])
 
-            self.etag = lea_client.client.last_response.headers['ETag']
-            logger.info([str(m) for m in res.orders])
+            logger.info([str(m) for m in info.orders])
             [w.lock.set() for w in self.soldier.working_threads]
             self.soldier.working_threads.clear()
-            for m in res.orders:
+            for m in info.orders:
                 self.soldier.accept_order(m)
-

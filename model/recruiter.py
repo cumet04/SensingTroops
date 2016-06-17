@@ -1,6 +1,6 @@
 import yaml
+from utils.helpers import rest_get
 from model import CommanderInfo, LeaderInfo
-from utils.commander_client import CommanderClient
 from collections import namedtuple
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -76,10 +76,12 @@ class Recruiter(object):
         # TODO: エラー処理
         com_id = self.get_troop_commander(leader_id)
         com_info = self.commander_cache[com_id]
-        com_client = CommanderClient.gen_rest_client(com_info.endpoint)
-        lea_info, err = com_client.get_subordinates_spec(leader_id)
+        url = "{0}subordinates/{1}".format(com_info.endpoint, leader_id)
+        res, err = rest_get(url)
+        if err is not None:
+            return None
 
-        return lea_info
+        return LeaderInfo.make(res.json()["info"])
         # TODO: キャッシュまわり
 
     def resolve_commander(self, commander_id) -> CommanderInfo:
