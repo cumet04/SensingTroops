@@ -27,6 +27,7 @@ class RecruiterTestCase(unittest.TestCase):
         recruiter = Recruiter(config_path)
         RecruiterServer.set_model(recruiter)
         server = RecruiterServer.generate_server("/recruiter")
+
         @server.errorhandler(500)
         def internal_error(error):
             logger.error(">> Internal Server Error")

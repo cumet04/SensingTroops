@@ -11,7 +11,6 @@ _info = {
         'msg': {'type': 'string'}
     }
 }
-definitions = {}
-definitions[_name] = _info
+definitions = {_name: _info}
 definitions.update(model.actor_info.definitions)
 definitions.update(model.job_info.definitions)

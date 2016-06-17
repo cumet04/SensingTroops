@@ -6,7 +6,7 @@ import hashlib
 from typing import List, Dict
 from model.info_obj import InformationObject
 
-definitions = {}
+definitions = dict()
 
 definitions['Requirement'] = {
     'type': 'object',
@@ -15,6 +15,8 @@ definitions['Requirement'] = {
         'trigger': {'type': 'object'},
     }
 }
+
+
 class Requirement(InformationObject):
     def __init__(self,
                  values: List[str],
@@ -43,6 +45,8 @@ definitions['Campaign'] = {
         'destination': {'type': 'string'}
     }
 }
+
+
 class Campaign(InformationObject):
     def __init__(self,
                  author: str,
@@ -89,6 +93,8 @@ definitions['Mission'] = {
         'purpose': {'type': 'string'},
     }
 }
+
+
 class Mission(InformationObject):
     def __init__(self,
                  author: str,
@@ -131,6 +137,8 @@ definitions['Order'] = {
         'purpose': {'type': 'string'},
     }
 }
+
+
 class Order(InformationObject):
     def __init__(self,
                  author: str,
@@ -163,6 +171,8 @@ definitions['Report'] = {
         'values': {'type': 'array', 'items': {'type': 'object'}},
     }
 }
+
+
 class Report(InformationObject):
     def __init__(self,
                  time: str,
@@ -191,6 +201,8 @@ definitions['Work'] = {
         'values': {'type': 'array', 'items': {'type': 'object'}},
     }
 }
+
+
 class Work(InformationObject):
     def __init__(self,
                  time: str,
@@ -210,4 +222,3 @@ class Work(InformationObject):
             )
         except KeyError:
             raise TypeError
-

@@ -2,7 +2,7 @@ from model.job_info import Campaign, Mission, Order
 from model.info_obj import InformationObject
 from typing import List
 
-definitions = {}
+definitions = dict()
 
 
 definitions['SoldierInfo'] = {
@@ -18,6 +18,8 @@ definitions['SoldierInfo'] = {
                    'items': {'$ref': '#/definitions/Order'}},
     }
 }
+
+
 class SoldierInfo(InformationObject):
     def __init__(self,
                  id: str,
@@ -56,6 +58,8 @@ definitions['LeaderInfo'] = {
                      'items': {'$ref': '#/definitions/Mission'}},
     }
 }
+
+
 class LeaderInfo(InformationObject):
     def __init__(self,
                  id: str,
@@ -97,6 +101,8 @@ definitions['CommanderInfo'] = {
                       'items': {'$ref': '#/definitions/Campaign'}},
     }
 }
+
+
 class CommanderInfo(InformationObject):
     def __init__(self,
                  id: str,

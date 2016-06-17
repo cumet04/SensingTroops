@@ -17,6 +17,7 @@ logger.addHandler(handler)
 
 
 if __name__ == "__main__":
+    # param setting
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--spec', action="store_true", help='output spec.json and exit')
@@ -26,7 +27,7 @@ if __name__ == "__main__":
         '-F', '--prefix', type=str, default='/recruiter', help='url prefix')
     params = parser.parse_args()
 
-
+    # server setting
     server = RecruiterServer.generate_server(params.prefix)
 
     if params.spec:

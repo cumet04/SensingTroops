@@ -1,5 +1,5 @@
 from functools import wraps
-from model import SoldierInfo, Work, Mission
+from model import SoldierInfo, Work
 from model.leader import Leader
 from utils.helpers import json_input, ResponseStatus
 from flask import jsonify, request, Blueprint, make_response
@@ -164,13 +164,13 @@ def get_sub_info(sub_id):
               $ref: '#/definitions/SoldierInfo'
     """
     info = leader.get_sub_info(sub_id)
-    hash = info.hash()
+    etag = info.hash()
     if_none_match = str(request.if_none_match)[1:-1]  # ダブルクォートを削除
-    if hash == if_none_match:
+    if etag == if_none_match:
         return make_response(), 304
 
     response = jsonify(_status=ResponseStatus.Success, info=info.to_dict())
-    response.set_etag(hash)
+    response.set_etag(etag)
     return response
 
 
