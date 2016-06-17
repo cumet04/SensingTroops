@@ -27,7 +27,6 @@ class Soldier(object):
         self.heartbeat_thread = HeartBeat(self, 0)
         self.working_threads = []  # type: List[WorkingThread]
 
-    # def awake(self, rec_client: RecruiterClient, heartbeat_rate: int):
     def awake(self, rec_ep: str, heartbeat_rate: int):
         from model import LeaderInfo
 
