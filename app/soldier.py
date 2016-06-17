@@ -1,5 +1,4 @@
 import argparse
-from utils.recruiter_client import RecruiterClient
 from model.soldier import Soldier
 
 if __name__ == "__main__":
@@ -11,9 +10,7 @@ if __name__ == "__main__":
     params = parser.parse_args()
 
     soldier = Soldier(params.id, params.name)
-    rec_client = RecruiterClient.gen_rest_client(
-        'http://localhost:50000/recruiter/')
-    soldier.awake(rec_client, 1)
+    soldier.awake('http://localhost:50000/recruiter/', 1)
 
     while True:
         pass
