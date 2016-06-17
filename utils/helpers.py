@@ -1,4 +1,3 @@
-import json
 import requests
 import traceback
 from functools import wraps

@@ -21,11 +21,11 @@ class CommanderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        # utils.helpers.logger.setLevel(ERROR)
         # TODO: commander.logger.setLevel(ERROR)
         commander = Commander("cxxx0", "cmd_http", "http://localhost:50000")
         CommanderServer.set_model(commander)
         server = CommanderServer.generate_server("/commander")
+
         @server.errorhandler(500)
         def internal_error(error):
             logger.error(">> Internal Server Error")

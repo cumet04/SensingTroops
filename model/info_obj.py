@@ -1,5 +1,6 @@
 import hashlib
 
+
 class InformationObject(object):
     def _props(self):
         return filter(lambda key:

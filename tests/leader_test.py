@@ -16,15 +16,15 @@ logger.addHandler(handler)
 
 getLogger("model.leader").setLevel(ERROR)
 
+
 class LeaderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        # utils.helpers.logger.setLevel(ERROR)
-        # leader.logger.setLevel(ERROR)
         self.leader_obj = Leader("lxxx0", "lea_http", "http://localhost:50000")
         LeaderServer.set_model(self.leader_obj)
         server = LeaderServer.generate_server("/leader")
+
         @server.errorhandler(500)
         def internal_error(error):
             logger.error(">> Internal Server Error")

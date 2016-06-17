@@ -233,13 +233,13 @@ def get_sub_info(sub_id):
               $ref: '#/definitions/ResponseStatus'
     """
     info = commander.get_sub_info(sub_id)
-    hash = info.hash()
+    etag = info.hash()
     if_none_match = str(request.if_none_match)[1:-1]  # ダブルクォートを削除
-    if hash == if_none_match:
+    if etag == if_none_match:
         return make_response(), 304
 
     response = jsonify(_status=ResponseStatus.Success, info=info.to_dict())
-    response.set_etag(hash)
+    response.set_etag(etag)
     return response
 
 
