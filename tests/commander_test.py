@@ -21,7 +21,6 @@ class CommanderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        # TODO: commander.logger.setLevel(ERROR)
         commander = Commander("cxxx0", "cmd_http", "http://localhost:50000")
         CommanderServer.set_model(commander)
         server = CommanderServer.generate_server("/commander")
