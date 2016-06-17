@@ -3,10 +3,9 @@ import json
 import copy
 import traceback
 from controller import LeaderServer
-from model.leader import Leader
 from datetime import datetime
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from model import LeaderInfo, SoldierInfo, Requirement, Work, Mission
+from model import Leader, LeaderInfo, SoldierInfo, Requirement, Work, Mission
 
 logger = getLogger(__name__)
 handler = StreamHandler()

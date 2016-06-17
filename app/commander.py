@@ -5,8 +5,7 @@ from flask import render_template, jsonify
 from flask_cors import cross_origin
 from flask_swagger import swagger
 from controller import CommanderServer
-from model import definitions
-from model.commander import Commander
+from model import definitions, Commander
 
 logger = getLogger(__name__)
 handler = StreamHandler()

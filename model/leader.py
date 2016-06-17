@@ -1,7 +1,8 @@
 import copy
 import datetime
 from threading import Event, Thread
-from model import SoldierInfo, LeaderInfo, Mission, Order, Report, Work
+from model.info_obj import InformationObject
+from model import Mission, Order, Report, Work
 from typing import List, Dict
 from utils.helpers import rest_get, rest_post
 from logging import getLogger, StreamHandler, DEBUG
@@ -11,6 +12,49 @@ handler = StreamHandler()
 handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
+
+
+definition = {
+    'type': 'object',
+    'properties': {
+        'id': {'description': "the man's ID",
+               'type': 'string'},
+        'name': {'type': 'string'},
+        'endpoint': {'type': 'string'},
+        'subordinates': {'description': "A list of subordinates's ID",
+                         'type': 'array',
+                         'items': {'type': 'string'}},
+        'missions': {'type': 'array',
+                     'items': {'$ref': '#/definitions/Mission'}},
+    }
+}
+
+
+class LeaderInfo(InformationObject):
+    def __init__(self,
+                 id: str,
+                 name: str,
+                 endpoint: str,
+                 subordinates: List[str],
+                 missions: List[Mission]):
+        self.id = id
+        self.name = name
+        self.endpoint = endpoint
+        self.subordinates = subordinates
+        self.missions = missions
+
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['id'],
+                source['name'],
+                source['endpoint'],
+                source['subordinates'],
+                [Mission.make(m) for m in source['missions']]
+            )
+        except KeyError:
+            raise TypeError
 
 
 class Leader(object):

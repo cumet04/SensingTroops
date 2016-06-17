@@ -1,16 +1,31 @@
-import model.actor_info
-import model.job_info
-from model.actor_info import CommanderInfo, LeaderInfo, SoldierInfo
-from model.job_info import Requirement, Campaign, Mission, Order, Report, Work
+from model.info_obj import Requirement, Campaign, Mission, Order, Report, Work
+from model.soldier import Soldier, SoldierInfo
+from model.leader import Leader, LeaderInfo
+from model.commander import Commander, CommanderInfo
+from model.recruiter import Recruiter
 
-_name = 'ResponseStatus'
-_info = {
-    'type': 'object',
-    'properties': {
-        'success': {'type': 'boolean'},
-        'msg': {'type': 'string'}
+
+definitions = dict()
+
+
+def __init__():
+    import model.soldier
+    import model.leader
+    import model.commander
+    global definitions
+
+    definitions["ResponseStatus"] = {
+        'type': 'object',
+        'properties': {
+            'success': {'type': 'boolean'},
+            'msg': {'type': 'string'}
+        }
     }
-}
-definitions = {_name: _info}
-definitions.update(model.actor_info.definitions)
-definitions.update(model.job_info.definitions)
+
+    definitions["SoldierInfo"] = model.soldier.definition
+    definitions["LeaderInfo"] = model.leader.definition
+    definitions["CommanderInfo"] = model.commander.definition
+
+    definitions.update(model.info_obj.definitions)
+
+__init__()

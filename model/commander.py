@@ -1,8 +1,9 @@
 import copy
 import json
 import pymongo
-from typing import Dict
-from model import LeaderInfo, CommanderInfo, Campaign, Mission
+from typing import List, Dict
+from model.info_obj import InformationObject
+from model import LeaderInfo, Campaign, Mission
 from utils.helpers import rest_put
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -11,6 +12,49 @@ handler = StreamHandler()
 handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
+
+
+definition = {
+    'type': 'object',
+    'properties': {
+        'id': {'description': "the man's ID",
+               'type': 'string'},
+        'name': {'type': 'string'},
+        'endpoint': {'type': 'string'},
+        'subordinates': {'description': "A list of subordinates's ID",
+                         'type': 'array',
+                         'items': {'type': 'string'}},
+        'campaigns': {'type': 'array',
+                      'items': {'$ref': '#/definitions/Campaign'}},
+    }
+}
+
+
+class CommanderInfo(InformationObject):
+    def __init__(self,
+                 id: str,
+                 name: str,
+                 endpoint: str,
+                 subordinates: List[str],
+                 campaigns: List[Campaign]):
+        self.id = id
+        self.name = name
+        self.endpoint = endpoint
+        self.subordinates = subordinates
+        self.campaigns = campaigns
+
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['id'],
+                source['name'],
+                source['endpoint'],
+                source['subordinates'],
+                [Campaign.make(c) for c in source['campaigns']]
+            )
+        except KeyError:
+            raise TypeError
 
 
 class Commander(object):

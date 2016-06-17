@@ -3,10 +3,10 @@ import json
 import copy
 import traceback
 from controller import CommanderServer
-from model.commander import Commander
 from datetime import datetime
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from model import LeaderInfo, CommanderInfo, Requirement, Report, Campaign
+from model import LeaderInfo, Commander, CommanderInfo,\
+    Requirement, Report, Campaign
 
 logger = getLogger(__name__)
 handler = StreamHandler()

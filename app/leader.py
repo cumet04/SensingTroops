@@ -5,8 +5,7 @@ from flask_cors import cross_origin
 from flask_swagger import swagger
 from logging import getLogger, StreamHandler, DEBUG
 from controller import LeaderServer
-from model import definitions
-from model.leader import Leader
+from model import definitions, Leader
 
 logger = getLogger(__name__)
 handler = StreamHandler()

@@ -2,7 +2,8 @@ import random
 import datetime
 from typing import List
 from threading import Event, Thread
-from model import SoldierInfo, Order, Work
+from model.info_obj import InformationObject
+from model import Order, Work
 from utils.helpers import rest_get, rest_post
 from logging import getLogger, StreamHandler, DEBUG
 
@@ -12,6 +13,45 @@ handler = StreamHandler()
 handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
+
+
+definition = {
+    'type': 'object',
+    'properties': {
+        'id': {'description': "the man's ID",
+               'type': 'string'},
+        'name': {'type': 'string'},
+        'weapons': {'description': "A list of weapon",
+                    'type': 'array',
+                    'items': {'type': 'object'}},
+        'orders': {'type': 'array',
+                   'items': {'$ref': '#/definitions/Order'}},
+    }
+}
+
+
+class SoldierInfo(InformationObject):
+    def __init__(self,
+                 id: str,
+                 name: str,
+                 weapons: List[object],
+                 orders: List[Order]):
+        self.id = id
+        self.name = name
+        self.weapons = weapons
+        self.orders = orders
+
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['id'],
+                source['name'],
+                source['weapons'],
+                [Order.make(o) for o in source['orders']]
+            )
+        except KeyError:
+            raise TypeError
 
 
 class Soldier(object):

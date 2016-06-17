@@ -6,8 +6,7 @@ from flask_swagger import swagger
 from flask_cors import cross_origin
 from flask import jsonify, render_template
 from controller import RecruiterServer
-from model import definitions
-from model.recruiter import Recruiter
+from model import definitions, Recruiter
 
 logger = getLogger(__name__)
 handler = StreamHandler()
