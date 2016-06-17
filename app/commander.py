@@ -7,7 +7,6 @@ from flask_swagger import swagger
 from controller import CommanderServer
 from model import definitions
 from model.commander import Commander
-from utils.recruiter_client import RecruiterClient
 
 logger = getLogger(__name__)
 handler = StreamHandler()

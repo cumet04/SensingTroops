@@ -7,7 +7,6 @@ from logging import getLogger, StreamHandler, DEBUG
 from controller import LeaderServer
 from model import definitions
 from model.leader import Leader
-from utils.recruiter_client import RecruiterClient
 
 logger = getLogger(__name__)
 handler = StreamHandler()
