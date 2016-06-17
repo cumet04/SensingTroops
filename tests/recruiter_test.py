@@ -14,6 +14,8 @@ handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
+getLogger("model.recruiter").setLevel(ERROR)
+
 
 # このテストクラスはRecruiter.load_configが正しく動作することを前提にしている
 
@@ -21,8 +23,6 @@ class RecruiterTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        # utils.helpers.logger.setLevel(ERROR)
-        # recruiter.logger.setLevel(ERROR)
         config_path = '{0}/recruit.yml'.format(os.path.dirname(__file__))
         recruiter = Recruiter(config_path)
         RecruiterServer.set_model(recruiter)
