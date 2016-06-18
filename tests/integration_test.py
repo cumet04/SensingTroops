@@ -13,10 +13,7 @@ handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
-getLogger("model.recruiter").setLevel(ERROR)
-getLogger("model.commander").setLevel(ERROR)
-getLogger("model.leader").setLevel(ERROR)
-getLogger("model.soldier").setLevel(ERROR)
+getLogger("model").setLevel(ERROR)
 
 
 def internal_error(error):
@@ -80,6 +77,13 @@ class IntegrationTestCase(unittest.TestCase):
             self.models["lxxx0"].awake("test://recruiter/recruiter/", 2))
         self.assertTrue(
             self.models["sxxx0"].awake("test://recruiter/recruiter/", 1))
+
+    def test_heartbeat(self):
+        import time
+        self.awake_single()
+        time.sleep(3)  # leader, soldierのheartbeatが確実に1回行われるまで待つ
+        self.assertTrue(self.models["lxxx0"].heartbeat_thread.is_alive())
+        self.assertTrue(self.models["sxxx0"].heartbeat_thread.is_alive())
 
 
 if __name__ == "__main__":
