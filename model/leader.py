@@ -63,6 +63,10 @@ class Leader(object):
         self.heartbeat_thread = HeartBeat(self, 0)
         self.working_threads = []  # type: List[WorkingThread]
 
+    def __del__(self):
+        self.heartbeat_thread.lock.set()
+        [w.lock.set() for w in self.working_threads]
+
     def awake(self, rec_ep: str, heartbeat_rate: int):
         from model import CommanderInfo
 

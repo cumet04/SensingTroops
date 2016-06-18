@@ -61,6 +61,11 @@ class IntegrationTestCase(unittest.TestCase):
         global clients
         clients.clear()
 
+    def tearDown(self):
+        for m in self.models.values():
+            if hasattr(m, "__del__"):
+                m.__del__()
+
     def start_single_without_awake(self):
         self.models["recruiter"], clients["recruiter"] = gen_recruiter()
         self.models["cxxx0"], clients["cxxx0"] = gen_commander("cxxx0")
