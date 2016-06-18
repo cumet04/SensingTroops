@@ -5,7 +5,7 @@ from json import dumps
 from functools import wraps
 
 
-test_clients = None
+test_clients = dict()
 
 
 def _set_etag(f):
@@ -147,21 +147,21 @@ def _test_put(url, data=None, json=None, etag=None, **kwargs):
 
 
 def get(*args, **kwargs):
-    if test_clients is None:
+    if len(test_clients) == 0:
         return _get(*args, **kwargs)
     else:
         return _test_get(*args, **kwargs)
 
 
 def post(*args, **kwargs):
-    if test_clients is None:
+    if len(test_clients) == 0:
         return _post(*args, **kwargs)
     else:
         return _test_post(*args, **kwargs)
 
 
 def put(*args, **kwargs):
-    if test_clients is None:
+    if len(test_clients) == 0:
         return _put(*args, **kwargs)
     else:
         return _test_put(*args, **kwargs)

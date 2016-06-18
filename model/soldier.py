@@ -2,7 +2,7 @@ import random
 import datetime
 import utils.rest as rest
 from model import Order, Work, logger
-from typing import List
+from typing import List, Dict
 from threading import Event, Thread
 from model.info_obj import InformationObject
 
@@ -54,7 +54,7 @@ class Soldier(object):
             "zero": lambda: 0,
             "random": random.random
         }
-        self.orders = []
+        self.orders = {}  # type:Dict[str, Order]
         self.superior_ep = ""  # type: str
         self.heartbeat_thread = HeartBeat(self, 0)
         self.working_threads = []  # type: List[WorkingThread]
@@ -91,12 +91,13 @@ class Soldier(object):
             id=self.id,
             name=self.name,
             weapons=list(self.weapons.keys()),
-            orders=self.orders)
+            orders=list(self.orders.values()))
 
     def accept_order(self, order: Order):
         th = WorkingThread(self, order)
         self.working_threads.append(th)
         th.start()
+        self.orders[order.purpose] = order
 
     def start_heartbeat(self, interval):
         self.heartbeat_thread.interval = interval

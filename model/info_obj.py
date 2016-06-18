@@ -41,6 +41,10 @@ class InformationObject(object):
         if self.__class__ != other.__class__:
             return False
         for key in self._props():
+            if isinstance(getattr(self, key), list):
+                if set(getattr(self, key)) != set(getattr(other, key)):
+                    return False
+                continue
             if getattr(self, key) != getattr(other, key):
                 return False
         return True
