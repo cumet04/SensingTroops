@@ -11,6 +11,9 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
+test_clients = None
+
+
 def _set_etag(f):
     @wraps(f)
     def set_etag(*args, **kwargs):
@@ -22,7 +25,7 @@ def _set_etag(f):
 
 
 @_set_etag
-def get(url, params=None, etag=None, **kwargs):
+def _get(url, params=None, etag=None, **kwargs):
     try:
         res = requests.get(url, params=params, **kwargs)
     except requests.exceptions.RequestException as e:
@@ -32,7 +35,7 @@ def get(url, params=None, etag=None, **kwargs):
 
 
 @_set_etag
-def post(url, data=None, json=None, etag=None, **kwargs):
+def _post(url, data=None, json=None, etag=None, **kwargs):
     try:
         res = requests.post(url, data=data, json=json, **kwargs)
     except requests.exceptions.RequestException as e:
@@ -42,7 +45,7 @@ def post(url, data=None, json=None, etag=None, **kwargs):
 
 
 @_set_etag
-def put(url, data=None, json=None, etag=None, **kwargs):
+def _put(url, data=None, json=None, etag=None, **kwargs):
     try:
         # requestsのputにはjsonオプションが無いので手動で設定する
         if json is not None:
@@ -105,60 +108,66 @@ class ResponseEx(flask.Response):
         return json.loads(self.data.decode("utf-8"))
 
 
-def test_client(clients):
-    """
-    restラッパーをflask.test_client利用のものに差し替える
-    """
-    from unittest import mock
-    from json import dumps
-    from functools import wraps
+def _select_client(url):
+    import re
+    m = re.match(r"test://(.*?)/(.*)", url)
+    if m is None:
+        logger.error("rest_wrapper is called without test protocol")
+        return None, None
+    key = m.group(1)
+    path = m.group(2)
+    return test_clients[key], path
 
-    def select_client(url):
-        import re
-        m = re.match(r"test://(.*?)/(.*)", url)
-        if m is None:
-            logger.error("rest_wrapper is called without test protocol")
-            return None, None
-        key = m.group(1)
-        path = m.group(2)
-        return clients[key], path
 
-    @_set_etag
-    def test_get(url, etag=None, **kwargs):
-        c, path = select_client(url)
-        # paramsはFlaskClientのgetには無いのでひとまず握りつぶす
-        res = c.get(path, **kwargs)
-        res = ResponseEx(res, "GET", url)
-        return _rest_check_response(res)
+@_set_etag
+def _test_get(url, etag=None, **kwargs):
+    c, path = _select_client(url)
+    # paramsはFlaskClientのgetには無いのでひとまず握りつぶす
+    res = c.get(path, **kwargs)
+    res = ResponseEx(res, "GET", url)
+    return _rest_check_response(res)
 
-    @_set_etag
-    def test_post(url, data=None, json=None, etag=None, **kwargs):
-        c, path = select_client(url)
-        if json is not None:
-            res = c.post(path, data=dumps(json),
-                         content_type='application/json', **kwargs)
-        else:
-            res = c.post(path, data=data, **kwargs)
-        res = ResponseEx(res, "GET", url)
-        return _rest_check_response(res)
 
-    @_set_etag
-    def test_put(url, data=None, json=None, etag=None, **kwargs):
-        c, path = select_client(url)
-        if json is not None:
-            res = c.put(path, data=dumps(json),
-                        content_type='application/json', **kwargs)
-        else:
-            res = c.put(path, data=data, **kwargs)
-        res = ResponseEx(res, "GET", url)
-        return _rest_check_response(res)
+@_set_etag
+def _test_post(url, data=None, json=None, etag=None, **kwargs):
+    c, path = _select_client(url)
+    if json is not None:
+        res = c.post(path, data=dumps(json),
+                     content_type='application/json', **kwargs)
+    else:
+        res = c.post(path, data=data, **kwargs)
+    res = ResponseEx(res, "GET", url)
+    return _rest_check_response(res)
 
-    def _test_client(f):
-        @wraps(f)
-        def patch_rest(*args, **kwargs):
-            with mock.patch("utils.rest.get", side_effect=test_get), \
-                 mock.patch("utils.rest.post", side_effect=test_post), \
-                 mock.patch("utils.rest.put", side_effect=test_put):
-                return f(*args, **kwargs)
-        return patch_rest
-    return _test_client
+
+@_set_etag
+def _test_put(url, data=None, json=None, etag=None, **kwargs):
+    c, path = _select_client(url)
+    if json is not None:
+        res = c.put(path, data=dumps(json),
+                    content_type='application/json', **kwargs)
+    else:
+        res = c.put(path, data=data, **kwargs)
+    res = ResponseEx(res, "GET", url)
+    return _rest_check_response(res)
+
+
+def get(*args, **kwargs):
+    if test_clients is None:
+        return _get(*args, **kwargs)
+    else:
+        return _test_get(*args, **kwargs)
+
+
+def post(*args, **kwargs):
+    if test_clients is None:
+        return _post(*args, **kwargs)
+    else:
+        return _test_post(*args, **kwargs)
+
+
+def put(*args, **kwargs):
+    if test_clients is None:
+        return _put(*args, **kwargs)
+    else:
+        return _test_put(*args, **kwargs)
