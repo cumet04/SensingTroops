@@ -1,13 +1,7 @@
+from utils import logger
 from functools import wraps
 from flask import jsonify, request
 from werkzeug.exceptions import BadRequest
-from logging import getLogger, StreamHandler, DEBUG
-
-logger = getLogger("utils")
-handler = StreamHandler()
-handler.setLevel(DEBUG)
-logger.setLevel(DEBUG)
-logger.addHandler(handler)
 
 
 class UnexpectedServerError(Exception):

@@ -1,18 +1,10 @@
 import random
 import datetime
 import utils.rest as rest
+from model import Order, Work, logger
 from typing import List
 from threading import Event, Thread
 from model.info_obj import InformationObject
-from model import Order, Work
-from logging import getLogger, StreamHandler, DEBUG
-
-
-logger = getLogger(__name__)
-handler = StreamHandler()
-handler.setLevel(DEBUG)
-logger.setLevel(DEBUG)
-logger.addHandler(handler)
 
 
 definition = {

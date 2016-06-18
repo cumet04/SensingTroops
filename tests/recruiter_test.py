@@ -13,7 +13,7 @@ handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
-getLogger("model.recruiter").setLevel(ERROR)
+getLogger("model").setLevel(ERROR)
 
 
 # このテストクラスはRecruiter.load_configが正しく動作することを前提にしている

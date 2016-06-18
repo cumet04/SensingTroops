@@ -1,9 +1,15 @@
+from logging import getLogger, StreamHandler, DEBUG
+logger = getLogger(__name__)
+handler = StreamHandler()
+handler.setLevel(DEBUG)
+logger.setLevel(DEBUG)
+logger.addHandler(handler)
+
 from model.info_obj import Requirement, Campaign, Mission, Order, Report, Work
 from model.soldier import Soldier, SoldierInfo
 from model.leader import Leader, LeaderInfo
 from model.commander import Commander, CommanderInfo
 from model.recruiter import Recruiter
-
 
 definitions = dict()
 

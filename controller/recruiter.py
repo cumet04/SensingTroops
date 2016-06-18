@@ -2,13 +2,7 @@ from model import CommanderInfo
 from model.recruiter import Recruiter
 from utils.helpers import json_input, ResponseStatus
 from flask import jsonify, request, Blueprint
-from logging import getLogger, StreamHandler, DEBUG
-
-logger = getLogger(__name__)
-handler = StreamHandler()
-handler.setLevel(DEBUG)
-logger.setLevel(DEBUG)
-logger.addHandler(handler)
+from controller import logger
 
 
 server = Blueprint('recruiter', __name__)

@@ -5,13 +5,7 @@ import utils.rest as rest
 from typing import List, Dict
 from model.info_obj import InformationObject
 from model import LeaderInfo, Campaign, Mission
-from logging import getLogger, StreamHandler, DEBUG
-
-logger = getLogger(__name__)
-handler = StreamHandler()
-handler.setLevel(DEBUG)
-logger.setLevel(DEBUG)
-logger.addHandler(handler)
+from model import logger
 
 
 definition = {

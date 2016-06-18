@@ -13,7 +13,7 @@ handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
-getLogger("model.leader").setLevel(ERROR)
+getLogger("model").setLevel(ERROR)
 
 
 class LeaderTestCase(unittest.TestCase):

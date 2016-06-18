@@ -1,14 +1,8 @@
 import requests
 import flask
+from utils import logger
 from json import dumps
 from functools import wraps
-from logging import getLogger, StreamHandler, DEBUG
-
-logger = getLogger("utils")
-handler = StreamHandler()
-handler.setLevel(DEBUG)
-logger.setLevel(DEBUG)
-logger.addHandler(handler)
 
 
 test_clients = None

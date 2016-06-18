@@ -2,13 +2,7 @@ import yaml
 import utils.rest as rest
 from model import CommanderInfo, LeaderInfo
 from collections import namedtuple
-from logging import getLogger, StreamHandler, DEBUG
-
-logger = getLogger(__name__)
-handler = StreamHandler()
-handler.setLevel(DEBUG)
-logger.setLevel(DEBUG)
-logger.addHandler(handler)
+from model import logger
 
 Squad = namedtuple('Squad', ['leader', 'subordinates'])
 Troop = namedtuple('Troop', ['commander', 'subordinates'])

@@ -14,7 +14,7 @@ handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
-getLogger("model.commander").setLevel(ERROR)
+getLogger("model").setLevel(ERROR)
 
 
 class CommanderTestCase(unittest.TestCase):
