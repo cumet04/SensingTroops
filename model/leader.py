@@ -90,6 +90,7 @@ class Leader(object):
 
         # missionを取得する
         self.start_heartbeat(heartbeat_rate)
+        return True
 
     def generate_info(self) -> LeaderInfo:
         """
