@@ -1,5 +1,4 @@
 import requests
-import traceback
 import flask
 from json import dumps
 from functools import wraps
@@ -27,7 +26,7 @@ def get(url, params=None, etag=None, **kwargs):
     try:
         res = requests.get(url, params=params, **kwargs)
     except requests.exceptions.RequestException as e:
-        logger.error(traceback.format_exc())
+        logger.error(">> [GET] {0} failed with exception: {1}".format(url, e))
         return None, e
     return _rest_check_response(res)
 
@@ -37,7 +36,7 @@ def post(url, data=None, json=None, etag=None, **kwargs):
     try:
         res = requests.post(url, data=data, json=json, **kwargs)
     except requests.exceptions.RequestException as e:
-        logger.error(traceback.format_exc())
+        logger.error(">> [POST] {0} failed with exception: {1}".format(url, e))
         return None, e
     return _rest_check_response(res)
 
@@ -52,7 +51,7 @@ def put(url, data=None, json=None, etag=None, **kwargs):
         else:
             res = requests.put(url, data=data, **kwargs)
     except requests.exceptions.RequestException as e:
-        logger.error(traceback.format_exc())
+        logger.error(">> [PUT] {0} failed with exception: {1}".format(url, e))
         return None, e
     return _rest_check_response(res)
 
@@ -98,9 +97,7 @@ class ResponseEx(flask.Response):
         super().__init__()
         for attr_name in base.__dict__:
             setattr(self, attr_name, getattr(base, attr_name))
-        self.request = MagicMock()
-        self.request.return_value = MagicMock()
-        self.request.return_value.method = method
+        self.request = MagicMock(method=method)
         self.url = url
 
     def json(self):
@@ -127,7 +124,7 @@ def test_client(clients):
         return clients[key], path
 
     @_set_etag
-    def test_get(url, params=None, etag=None, **kwargs):
+    def test_get(url, etag=None, **kwargs):
         c, path = select_client(url)
         # paramsはFlaskClientのgetには無いのでひとまず握りつぶす
         res = c.get(path, **kwargs)
