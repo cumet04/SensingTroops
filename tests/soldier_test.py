@@ -32,7 +32,7 @@ class SoldierTestCase(unittest.TestCase):
                       values=["zero", "random"],
                       trigger={"timer": 0.7},
                       purpose="some purpose hash")
-        def accept_work(url, data=None, json=None, etag=None, **kwargs):
+        def post_work(url, data=None, json=None, etag=None, **kwargs):
             res = requests.Response()
             res.status_code = 200
             res_dict = {
@@ -42,7 +42,7 @@ class SoldierTestCase(unittest.TestCase):
             res._content = dumps(res_dict).encode()
             return res, None
 
-        with patch("utils.rest.post", side_effect=accept_work) as m:
+        with patch("utils.rest.post", side_effect=post_work) as m:
             self.soldier.accept_order(order)
             time.sleep(1)
             self.assertEqual(m.call_count, 1)
