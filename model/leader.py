@@ -1,16 +1,54 @@
 import copy
 import datetime
+import utils.rest as rest
 from threading import Event, Thread
-from model import SoldierInfo, LeaderInfo, Mission, Order, Report, Work
+from model.info_obj import InformationObject
+from model import Mission, Order, Report, Work
 from typing import List, Dict
-from utils.helpers import rest_get, rest_post
-from logging import getLogger, StreamHandler, DEBUG
+from model import logger
 
-logger = getLogger(__name__)
-handler = StreamHandler()
-handler.setLevel(DEBUG)
-logger.setLevel(DEBUG)
-logger.addHandler(handler)
+
+definition = {
+    'type': 'object',
+    'properties': {
+        'id': {'description': "the man's ID",
+               'type': 'string'},
+        'name': {'type': 'string'},
+        'endpoint': {'type': 'string'},
+        'subordinates': {'description': "A list of subordinates's ID",
+                         'type': 'array',
+                         'items': {'type': 'string'}},
+        'missions': {'type': 'array',
+                     'items': {'$ref': '#/definitions/Mission'}},
+    }
+}
+
+
+class LeaderInfo(InformationObject):
+    def __init__(self,
+                 id: str,
+                 name: str,
+                 endpoint: str,
+                 subordinates: List[str],
+                 missions: List[Mission]):
+        self.id = id
+        self.name = name
+        self.endpoint = endpoint
+        self.subordinates = subordinates
+        self.missions = missions
+
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['id'],
+                source['name'],
+                source['endpoint'],
+                source['subordinates'],
+                [Mission.make(m) for m in source['missions']]
+            )
+        except KeyError:
+            raise TypeError
 
 
 class Leader(object):
@@ -25,12 +63,16 @@ class Leader(object):
         self.heartbeat_thread = HeartBeat(self, 0)
         self.working_threads = []  # type: List[WorkingThread]
 
+    def __del__(self):
+        self.heartbeat_thread.lock.set()
+        [w.lock.set() for w in self.working_threads]
+
     def awake(self, rec_ep: str, heartbeat_rate: int):
         from model import CommanderInfo
 
         # 上官を解決する
         url = rec_ep + 'department/troop/commander?leader_id=' + self.id
-        res, err = rest_get(url)
+        res, err = rest.get(url)
         if err is not None:
             return False
         superior = CommanderInfo.make(res.json()['commander'])
@@ -39,13 +81,14 @@ class Leader(object):
 
         # 部隊に加入する
         url = self.superior_ep + "subordinates"
-        res, err = rest_post(url, json=self.generate_info().to_dict())
+        res, err = rest.post(url, json=self.generate_info().to_dict())
         if err is not None:
             return False
         logger.info("joined to squad: commander_id: {0}".format(superior.id))
 
         # missionを取得する
         self.start_heartbeat(heartbeat_rate)
+        return True
 
     def generate_info(self) -> LeaderInfo:
         """
@@ -138,7 +181,7 @@ class WorkingThread(Thread):
                 url = "{0}{1}".format(
                     self.leader.superior_ep,
                     "subordinates/{0}/report".format(self.leader.id))
-                rest_post(url, json=report.to_dict())
+                rest.post(url, json=report.to_dict())
                 # TODO: エラー処理
 
                 self.leader.work_cache = \
@@ -158,7 +201,7 @@ class HeartBeat(Thread):
     def run(self):
         while not self.lock.wait(timeout=self.interval):
             url = self.leader.superior_ep + "subordinates/" + self.leader.id
-            res, err = rest_get(url, etag=self.etag)
+            res, err = rest.get(url, etag=self.etag)
             if err is not None:
                 return
             if res.status_code == 304:

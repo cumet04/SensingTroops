@@ -3,8 +3,7 @@ import unittest
 import json
 import traceback
 from controller import RecruiterServer
-from model import CommanderInfo
-from model.recruiter import Recruiter
+from model import Recruiter, CommanderInfo
 from logging import getLogger, StreamHandler, DEBUG, ERROR
 
 
@@ -14,7 +13,7 @@ handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
-getLogger("model.recruiter").setLevel(ERROR)
+getLogger("model").setLevel(ERROR)
 
 
 # このテストクラスはRecruiter.load_configが正しく動作することを前提にしている
@@ -27,7 +26,6 @@ class RecruiterTestCase(unittest.TestCase):
         recruiter = Recruiter(config_path)
         RecruiterServer.set_model(recruiter)
         server = RecruiterServer.generate_server("/recruiter")
-
         @server.errorhandler(500)
         def internal_error(error):
             logger.error(">> Internal Server Error")

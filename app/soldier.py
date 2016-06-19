@@ -1,5 +1,5 @@
 import argparse
-from model.soldier import Soldier
+from model import Soldier
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

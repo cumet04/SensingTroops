@@ -3,10 +3,10 @@ import json
 import copy
 import traceback
 from controller import CommanderServer
-from model.commander import Commander
 from datetime import datetime
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from model import LeaderInfo, CommanderInfo, Requirement, Report, Campaign
+from model import LeaderInfo, Commander, CommanderInfo,\
+    Requirement, Report, Campaign
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -14,14 +14,13 @@ handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
-getLogger("model.commander").setLevel(ERROR)
+getLogger("model").setLevel(ERROR)
 
 
 class CommanderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        # TODO: commander.logger.setLevel(ERROR)
         commander = Commander("cxxx0", "cmd_http", "http://localhost:50000")
         CommanderServer.set_model(commander)
         server = CommanderServer.generate_server("/commander")

@@ -1,17 +1,49 @@
 import random
 import datetime
-from typing import List
+import utils.rest as rest
+from model import Order, Work, logger
+from typing import List, Dict
 from threading import Event, Thread
-from model import SoldierInfo, Order, Work
-from utils.helpers import rest_get, rest_post
-from logging import getLogger, StreamHandler, DEBUG
+from model.info_obj import InformationObject
 
 
-logger = getLogger(__name__)
-handler = StreamHandler()
-handler.setLevel(DEBUG)
-logger.setLevel(DEBUG)
-logger.addHandler(handler)
+definition = {
+    'type': 'object',
+    'properties': {
+        'id': {'description': "the man's ID",
+               'type': 'string'},
+        'name': {'type': 'string'},
+        'weapons': {'description': "A list of weapon",
+                    'type': 'array',
+                    'items': {'type': 'object'}},
+        'orders': {'type': 'array',
+                   'items': {'$ref': '#/definitions/Order'}},
+    }
+}
+
+
+class SoldierInfo(InformationObject):
+    def __init__(self,
+                 id: str,
+                 name: str,
+                 weapons: List[object],
+                 orders: List[Order]):
+        self.id = id
+        self.name = name
+        self.weapons = weapons
+        self.orders = orders
+
+    @classmethod
+    def make(cls, source: dict):
+        try:
+            return cls(
+                source['id'],
+                source['name'],
+                source['weapons'],
+                [Order.make(o) for o in source['orders']]
+            )
+        except KeyError:
+            raise TypeError
 
 
 class Soldier(object):
@@ -22,17 +54,21 @@ class Soldier(object):
             "zero": lambda: 0,
             "random": random.random
         }
-        self.orders = []
+        self.orders = {}  # type:Dict[str, Order]
         self.superior_ep = ""  # type: str
         self.heartbeat_thread = HeartBeat(self, 0)
         self.working_threads = []  # type: List[WorkingThread]
+
+    def __del__(self):
+        self.heartbeat_thread.lock.set()
+        [w.lock.set() for w in self.working_threads]
 
     def awake(self, rec_ep: str, heartbeat_rate: int):
         from model import LeaderInfo
 
         # 上官を解決する
         url = rec_ep + 'department/squad/leader?soldier_id=' + self.id
-        res, err = rest_get(url)
+        res, err = rest.get(url)
         if err is not None:
             return False
         superior = LeaderInfo.make(res.json()['leader'])
@@ -41,13 +77,14 @@ class Soldier(object):
 
         # 分隊に加入する
         url = self.superior_ep + "subordinates"
-        res, err = rest_post(url, json=self.generate_info().to_dict())
+        res, err = rest.post(url, json=self.generate_info().to_dict())
         if err is not None:
             return False
         logger.info("joined to squad: leader_id: {0}".format(superior.id))
 
         # orderを取得する
         self.start_heartbeat(heartbeat_rate)
+        return True
 
     def generate_info(self) -> SoldierInfo:
         """
@@ -58,12 +95,13 @@ class Soldier(object):
             id=self.id,
             name=self.name,
             weapons=list(self.weapons.keys()),
-            orders=self.orders)
+            orders=list(self.orders.values()))
 
     def accept_order(self, order: Order):
         th = WorkingThread(self, order)
         self.working_threads.append(th)
         th.start()
+        self.orders[order.purpose] = order
 
     def start_heartbeat(self, interval):
         self.heartbeat_thread.interval = interval
@@ -88,7 +126,7 @@ class WorkingThread(Thread):
                 url = "{0}{1}".format(
                     self.soldier.superior_ep,
                     "subordinates/{0}/work".format(self.soldier.id))
-                rest_post(url, json=work.to_dict())
+                rest.post(url, json=work.to_dict())
                 # TODO: エラー処理
         else:
             pass
@@ -105,7 +143,7 @@ class HeartBeat(Thread):
     def run(self):
         while not self.lock.wait(timeout=self.interval):
             url = self.soldier.superior_ep + "subordinates/" + self.soldier.id
-            res, err = rest_get(url, etag=self.etag)
+            res, err = rest.get(url, etag=self.etag)
             if err is not None:
                 return
             if res.status_code == 304:

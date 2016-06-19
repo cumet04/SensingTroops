@@ -3,13 +3,7 @@ from flask import jsonify, request, Blueprint, make_response
 from model import LeaderInfo, Report, Campaign
 from model.commander import Commander
 from utils.helpers import json_input, ResponseStatus
-from logging import getLogger, StreamHandler, DEBUG
-
-logger = getLogger(__name__)
-handler = StreamHandler()
-handler.setLevel(DEBUG)
-logger.setLevel(DEBUG)
-logger.addHandler(handler)
+from controller import logger
 
 
 server = Blueprint('commander', __name__)

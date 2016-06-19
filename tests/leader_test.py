@@ -3,10 +3,9 @@ import json
 import copy
 import traceback
 from controller import LeaderServer
-from model.leader import Leader
 from datetime import datetime
 from logging import getLogger, StreamHandler, DEBUG, ERROR
-from model import LeaderInfo, SoldierInfo, Requirement, Work, Mission
+from model import Leader, LeaderInfo, SoldierInfo, Requirement, Work, Mission
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -14,7 +13,7 @@ handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
-getLogger("model.leader").setLevel(ERROR)
+getLogger("model").setLevel(ERROR)
 
 
 class LeaderTestCase(unittest.TestCase):
