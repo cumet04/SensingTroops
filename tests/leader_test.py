@@ -1,7 +1,10 @@
 import unittest
-import json
 import copy
+import requests
+import time
 import traceback
+from json import dumps, loads
+from unittest.mock import patch
 from controller import LeaderServer
 from datetime import datetime
 from logging import getLogger, StreamHandler, DEBUG, ERROR
@@ -32,13 +35,13 @@ class LeaderTestCase(unittest.TestCase):
         self.app = server.test_client()
 
     def tearDown(self):
-        pass
+        self.leader_obj.__del__()
 
 # [GET] /
     def test_get_info(self):
         response = self.app.get('/leader', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
-        actual = json.loads(response.data.decode("utf-8"))
+        actual = loads(response.data.decode("utf-8"))
 
         lea = LeaderInfo(id='lxxx0',
                          name='lea_http',
@@ -55,7 +58,7 @@ class LeaderTestCase(unittest.TestCase):
     def test_get_missions_none(self):
         response = self.app.get('/leader/missions')
         self.assertEqual(response.status_code, 200)
-        actual = json.loads(response.data.decode("utf-8"))
+        actual = loads(response.data.decode("utf-8"))
 
         # assert
         expected = {
@@ -79,7 +82,7 @@ class LeaderTestCase(unittest.TestCase):
         # get subordinates
         response = self.app.get('/leader/missions')
         self.assertEqual(response.status_code, 200)
-        actual = json.loads(response.data.decode("utf-8"))
+        actual = loads(response.data.decode("utf-8"))
 
         # assert
         expected = {
@@ -110,7 +113,7 @@ class LeaderTestCase(unittest.TestCase):
         # get missions
         response = self.app.get('/leader/missions')
         self.assertEqual(response.status_code, 200)
-        actual = json.loads(response.data.decode("utf-8"))
+        actual = loads(response.data.decode("utf-8"))
         actual_list = actual['missions']
 
         # assert status
@@ -129,7 +132,7 @@ class LeaderTestCase(unittest.TestCase):
     def test_get_subordinates_none(self):
         response = self.app.get('/leader/subordinates')
         self.assertEqual(response.status_code, 200)
-        actual = json.loads(response.data.decode("utf-8"))
+        actual = loads(response.data.decode("utf-8"))
 
         # assert
         expected = {
@@ -145,13 +148,13 @@ class LeaderTestCase(unittest.TestCase):
                               weapons=[],
                               orders=[])
         self.app.post('/leader/subordinates',
-                      data=json.dumps(soldier.to_dict()),
+                      data=dumps(soldier.to_dict()),
                       content_type='application/json')
 
         # get subordinates
         response = self.app.get('/leader/subordinates')
         self.assertEqual(response.status_code, 200)
-        actual = json.loads(response.data.decode("utf-8"))
+        actual = loads(response.data.decode("utf-8"))
 
         # assert
         expected = {
@@ -173,13 +176,13 @@ class LeaderTestCase(unittest.TestCase):
             soldier_list.append(s)
         for s in soldier_list:
             self.app.post('/leader/subordinates',
-                          data=json.dumps(s.to_dict()),
+                          data=dumps(s.to_dict()),
                           content_type='application/json')
 
         # get subordinates
         response = self.app.get('/leader/subordinates')
         self.assertEqual(response.status_code, 200)
-        actual = json.loads(response.data.decode("utf-8"))
+        actual = loads(response.data.decode("utf-8"))
         actual_list = actual['subordinates']
 
         # assert status
@@ -201,10 +204,10 @@ class LeaderTestCase(unittest.TestCase):
                               weapons=[],
                               orders=[])
         response = self.app.post('/leader/subordinates',
-                                 data=json.dumps(soldier.to_dict()),
+                                 data=dumps(soldier.to_dict()),
                                  content_type='application/json')
         self.assertEqual(response.status_code, 200)
-        actual = json.loads(response.data.decode("utf-8"))
+        actual = loads(response.data.decode("utf-8"))
 
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
@@ -220,13 +223,13 @@ class LeaderTestCase(unittest.TestCase):
                               weapons=[],
                               orders=[])
         self.app.post('/leader/subordinates',
-                      data=json.dumps(soldier.to_dict()),
+                      data=dumps(soldier.to_dict()),
                       content_type='application/json')
 
         # get the soldier
         response = self.app.get('/leader/subordinates/sxxx0')
         self.assertEqual(response.status_code, 200)
-        actual = json.loads(response.data.decode("utf-8"))
+        actual = loads(response.data.decode("utf-8"))
 
         # assert
         expected = {
@@ -239,7 +242,7 @@ class LeaderTestCase(unittest.TestCase):
         # get the soldier
         response = self.app.get('/leader/subordinates/bad_id')
         self.assertEqual(response.status_code, 404)
-        actual = json.loads(response.data.decode("utf-8"))
+        actual = loads(response.data.decode("utf-8"))
 
         # assert
         expected = {
@@ -256,7 +259,7 @@ class LeaderTestCase(unittest.TestCase):
                               weapons=[],
                               orders=[])
         self.app.post('/leader/subordinates',
-                      data=json.dumps(soldier.to_dict()),
+                      data=dumps(soldier.to_dict()),
                       content_type='application/json')
 
         # submit a work
@@ -264,10 +267,10 @@ class LeaderTestCase(unittest.TestCase):
                     time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                     values="some values")
         response = self.app.post('/leader/subordinates/sxxx0/work',
-                                 data=json.dumps(work.to_dict()),
+                                 data=dumps(work.to_dict()),
                                  content_type='application/json')
         self.assertEqual(response.status_code, 200)
-        actual = json.loads(response.data.decode("utf-8"))
+        actual = loads(response.data.decode("utf-8"))
 
         # assert
         expected = {
@@ -275,6 +278,67 @@ class LeaderTestCase(unittest.TestCase):
             "accepted": work.to_dict()
         }
         self.assertEqual(actual, expected)
+
+# internal logic test ----------------------------------------------------------
+
+    def test_missoin_do(self):
+        def post_report(url, data=None, json=None, etag=None, **kwargs):
+            res = requests.Response()
+            res.status_code = 200
+            res_dict = {
+                "_status": {"msg": "ok", "success": True},
+                "accepted": json
+            }
+            res._content = dumps(res_dict).encode()
+            return res, None
+
+        self.leader_obj.superior_ep = "test://cxxx0/commander/"
+        soldier = SoldierInfo(id="sxxx0", name="sol-test",
+                              weapons=[], orders=[])
+        self.leader_obj.accept_subordinate(soldier)
+
+        mission = Mission(author="sxxx0",
+                          requirement=Requirement(
+                              values=["zero", "random"],
+                              trigger={"timer": 0.4}
+                          ),
+                          trigger={"timer": 0.7},
+                          place="All",
+                          purpose="some purpose hash")
+
+        work_1 = Work(time=datetime.utcnow().isoformat(),
+                      purpose=mission.get_id(),
+                      values=[0, 0.584249])
+        work_2 = Work(time=datetime.utcnow().isoformat(),
+                      purpose=mission.get_id(),
+                      values=[0, 0.238491])
+        work_3 = Work(time=datetime.utcnow().isoformat(),
+                      purpose="0" + mission.get_id()[:-1],  # 上２つとずらす
+                      values=[0, 0.045066])
+        self.leader_obj.accept_work("sxxx0", work_1)
+        self.leader_obj.accept_work("sxxx0", work_2)
+        self.leader_obj.accept_work("sxxx0", work_3)
+
+        with patch("utils.rest.post", side_effect=post_report) as m:
+            self.leader_obj.accept_mission(mission)
+            time.sleep(1)
+            self.assertEqual(m.call_count, 1)
+            self.assertEqual(m.call_args[0][0],
+                             "test://cxxx0/commander/subordinates/lxxx0/report")
+
+            # reportのチェック
+            actual = m.call_args[1]["json"]
+            self.assertEqual(set(actual.keys()), {"time", "purpose", "values"})
+            self.assertEqual(actual["purpose"], "some purpose hash")
+            self.assertEqual(len(actual["values"]), 2)
+
+            # report.valuesのチェック
+            work_in_1 = work_1.to_dict()
+            del work_in_1["purpose"]
+            work_in_2 = work_2.to_dict()
+            del work_in_2["purpose"]
+            self.assertIn(work_in_1, actual["values"])
+            self.assertIn(work_in_2, actual["values"])
 
 
 if __name__ == "__main__":
