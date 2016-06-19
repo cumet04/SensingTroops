@@ -75,8 +75,8 @@ class IntegrationTestCase(unittest.TestCase):
     def awake_single(self):
         self.start_single_without_awake()
         self.models["cxxx0"].awake("test://recruiter/recruiter/")
-        self.models["lxxx0"].awake("test://recruiter/recruiter/", 2)
-        self.models["sxxx0"].awake("test://recruiter/recruiter/", 1)
+        self.models["lxxx0"].awake("test://recruiter/recruiter/", 0.7)
+        self.models["sxxx0"].awake("test://recruiter/recruiter/", 0.4)
 
     def test_awake_single(self):
         self.start_single_without_awake()
@@ -89,7 +89,7 @@ class IntegrationTestCase(unittest.TestCase):
 
     def test_heartbeat(self):
         self.awake_single()
-        time.sleep(3)  # leader, soldierのheartbeatが確実に1回行われるまで待つ
+        time.sleep(1)  # leader, soldierのheartbeatが確実に1回行われるまで待つ
         self.assertTrue(self.models["lxxx0"].heartbeat_thread.is_alive())
         self.assertTrue(self.models["sxxx0"].heartbeat_thread.is_alive())
 
@@ -106,7 +106,7 @@ class IntegrationTestCase(unittest.TestCase):
         clients["cxxx0"].post('/commander/campaigns',
                               data=json.dumps(campaign.to_dict()),
                               content_type='application/json')
-        time.sleep(3)  # heartbeatを待つ
+        time.sleep(1.5)  # heartbeatを待つ; 0.7 + 0.4 + alpha
 
         # missionを確認
         mission = Mission(author="lxxx0",
