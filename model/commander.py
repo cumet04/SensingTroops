@@ -128,6 +128,8 @@ class Commander(object):
         if self.check_subordinate(sub_info.id):
             return None
         self.subordinates[sub_info.id] = sub_info
+        old_campaigns = self.campaigns.values()
+        [self.accept_campaign(c) for c in old_campaigns]
         return sub_info
 
     def accept_report(self, sub_id, report):
@@ -165,4 +167,6 @@ class MongoPush(object):
         self.col = pymongo.MongoClient(host)[db_name][col_name]
 
     def push_values(self, values):
+        if len(values) == 0:
+            return
         self.col.insert_many(values)
