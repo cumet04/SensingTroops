@@ -150,6 +150,8 @@ class Leader(object):
         if self.check_subordinate(sub_info.id):
             return False
         self.subordinates[sub_info.id] = sub_info
+        old_missions = self.missions.values()
+        [self.accept_mission(c) for c in old_missions]
         return True
 
     def accept_work(self, sub_id, work):
