@@ -11,5 +11,5 @@
   },
   "place": "All",
   "purpose": "test",
-  "destination": "mongodb://localhost:27017/"
+  "destination": "mongodb://localhost:27017/troops/values"
 }
