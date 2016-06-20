@@ -119,7 +119,12 @@ class WorkingThread(Thread):
         if 'timer' in self.order.trigger.keys():
             interval = self.order.trigger['timer']
             while not self.lock.wait(timeout=interval):
-                values = [self.soldier.weapons[w]() for w in self.order.values]
+                values = [
+                    {
+                        "type": w,
+                        "value": self.soldier.weapons[w](),
+                        "unit": "-"
+                    } for w in self.order.values]
                 time = datetime.datetime.utcnow().isoformat()
                 work = Work(time, self.order.purpose, values)
 
