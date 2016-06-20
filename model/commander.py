@@ -1,6 +1,5 @@
 import copy
 import json
-import pymongo
 import utils.rest as rest
 from typing import List, Dict
 from model.info_obj import InformationObject
@@ -136,16 +135,34 @@ class Commander(object):
             return False
         if report.purpose in self.campaigns:
             campaign = self.campaigns[report.purpose]
-            col = pymongo.MongoClient(campaign.destination)['troops']['values']
-            values = [{
-                "purpose": campaign.purpose,
-                "time": w["time"],
-                "values": w["values"]
-            } for w in report.values]
-            col.insert_many(values)
+            if "mongodb://" in campaign.destination:
+                push = MongoPush(campaign.destination)
+                values = [{
+                    "purpose": campaign.purpose,
+                    "time": w["time"],
+                    "values": w["values"]
+                } for w in report.values]
+                push.push_values(values)
 
-        logger.info("accept_report: {0}".format(
-            json.dumps(report.to_dict(), sort_keys=True, indent=2)
-        ))
-        self.report_cache.append(report)
+            logger.info("accept_report: {0}".format(
+                json.dumps(report.to_dict(), sort_keys=True, indent=2)
+            ))
+            self.report_cache.append(report)
         return True
+
+
+class MongoPush(object):
+    def __init__(self, uri):
+        import pymongo
+        import re
+        match_result = re.match(r"mongodb://(.*?)/(.*?)/(.*)", uri)
+        if match_result is None:
+            logger.error("uri is not mongodb-uri: {0}".format(uri))
+            return
+        host = match_result.group(1)
+        db_name = match_result.group(2)
+        col_name = match_result.group(3)
+        self.col = pymongo.MongoClient(host)[db_name][col_name]
+
+    def push_values(self, values):
+        self.col.insert_many(values)

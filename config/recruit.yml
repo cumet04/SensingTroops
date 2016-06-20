@@ -15,6 +15,7 @@ squads:
       - sxxx0
       - sxxx1
       - CC2650-a0:e6:f8:ae:ad:82
+      - CC2650-a0:e6:f8:c1:a6:00
   - leader: lxxx1
     subordinates:
       - sxxx2
