@@ -96,6 +96,13 @@ class Commander(object):
         return self.subordinates[sub_id]
 
     def accept_campaign(self, campaign: Campaign):
+        # Campaignの更新であれば（=IDが同じであれば）既存のものを消す
+        if campaign.get_id() in self.campaigns:
+            old_cam = self.campaigns[campaign.get_id()]
+            for sub in self.subordinates.values():
+                [sub.missions.remove(m) for m in sub.missions
+                 if m.purpose == old_cam.hash()]
+
         # 部下のMissionを生成・割り当てる
         target_subs = []
         if campaign.place == "All":
