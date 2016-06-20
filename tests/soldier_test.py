@@ -54,6 +54,8 @@ class SoldierTestCase(unittest.TestCase):
             self.assertEqual(set(actual.keys()), {"time", "purpose", "values"})
             self.assertEqual(actual["purpose"], "some purpose hash")
             self.assertEqual(len(actual["values"]), 2)
+            for v in actual["values"]:
+                self.assertEqual({"type", "value", "unit"}, set(v.keys()))
 
 
 if __name__ == "__main__":

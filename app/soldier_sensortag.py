@@ -2,7 +2,6 @@ import argparse
 from bluepy.sensortag import SensorTag
 from bluepy.btle import Scanner, ScanEntry,DefaultDelegate, BTLEException
 from model.soldier import Soldier
-from utils.recruiter_client import RecruiterClient
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -45,9 +44,7 @@ class ScanDelegate(DefaultDelegate):
 
         soldier = Soldier("CC2650-" + dev.addr, "tag_soldier")
         soldier.weapons.update(tag_weapons)
-        rec_client = RecruiterClient.gen_rest_client(
-            'http://localhost:50000/recruiter/')
-        soldier.awake(rec_client, 1)
+        soldier.awake('http://localhost:50000/recruiter/', 1)
 
 
 
