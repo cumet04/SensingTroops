@@ -42,13 +42,28 @@ class ScanDelegate(DefaultDelegate):
             "brightness":   tag.lightmeter.read
         }
 
-        soldier = Soldier("CC2650-" + dev.addr, "tag_soldier")
+        soldier = Soldier("CC2650-" + dev.addr, name)
         soldier.weapons.update(tag_weapons)
-        soldier.awake('http://localhost:50000/recruiter/', 1)
+        soldier.awake(rec_addr, 1)
 
 
+rec_addr = ""
+name = ""
 
 if __name__ == "__main__":
+    global rec_addr
+    global name
+    parser = argparse.ArgumentParser()
+    # parser.add_argument(
+    #     'name', metavar='name', type=str, help='Target name of app')
+    parser.add_argument(
+        '-R', '--rec_addr', type=str, help="recruiter url",
+        default="http://localhost:50000/recruiter/")
+    params = parser.parse_args()
+    rec_addr = params.rec_addr
+    name = "tag_soldier"
+
+
     scanner = Scanner().withDelegate(ScanDelegate())
     try:
         devices = scanner.scan(10.0)
