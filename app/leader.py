@@ -1,5 +1,6 @@
 import argparse
 import json
+import socket
 from flask import render_template, jsonify
 from flask_cors import cross_origin
 from flask_swagger import swagger
@@ -27,6 +28,9 @@ if __name__ == "__main__":
         '-P', '--port', type=int, default=50002, help='port')
     parser.add_argument(
         '-F', '--prefix', type=str, default='/leader', help='url prefix')
+    parser.add_argument(
+        '-R', '--rec_addr', type=str, help="recruiter url",
+        default="http://localhost:50000/recruiter/")
     params = parser.parse_args()
 
     # server setting
@@ -38,9 +42,10 @@ if __name__ == "__main__":
         print(json.dumps(spec_dict, sort_keys=True, indent=2))
         exit()
 
-    ep = 'http://localhost:{0}{1}/'.format(params.port, params.prefix)
+    host_addr = socket.gethostbyname(socket.gethostname())
+    ep = 'http://{0}:{1}{2}/'.format(host_addr, params.port, params.prefix)
     leader = Leader(params.id, params.name, ep)
-    leader.awake('http://localhost:50000/recruiter/', 2)
+    leader.awake(params.rec_addr, 2)
     LeaderServer.set_model(leader)
 
     @server.route(params.prefix + '/spec.json')
