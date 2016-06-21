@@ -115,6 +115,17 @@ class Leader(object):
         self.heartbeat_thread.start()
 
     def accept_mission(self, mission: Mission) -> Mission:
+        # Missionの更新であれば（=IDが同じであれば）既存のものを消す
+        if mission.get_id() in self.missions:
+            old_mis = self.missions[mission.get_id()]
+            for sub in self.subordinates.values():
+                [sub.orders.remove(o) for o in sub.orders
+                     if o.purpose == old_mis.get_id()]
+        for th in self.working_threads:
+            if mission.get_id() == th.mission.get_id():
+                th.lock.set()
+                self.working_threads.remove(th)
+
         # 部下のOrderを生成・割り当てる
         target_subs = []
         if mission.place == "All":
@@ -133,7 +144,7 @@ class Leader(object):
         self.working_threads.append(th)
         th.start()
 
-        self.missions[mission.purpose] = mission
+        self.missions[mission.get_id()] = mission
         return mission
 
     def get_sub_info(self, sub_id):
@@ -157,7 +168,7 @@ class Leader(object):
     def accept_work(self, sub_id, work):
         if not self.check_subordinate(sub_id):
             return False
-        logger.debug(work)
+        # logger.debug(work)
         self.work_cache.append(work)
         return True
 

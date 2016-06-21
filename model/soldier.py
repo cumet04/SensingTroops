@@ -98,6 +98,10 @@ class Soldier(object):
             orders=list(self.orders.values()))
 
     def accept_order(self, order: Order):
+        for th in self.working_threads:
+            if order.purpose() == th.order.purpose():
+                th.lock.set()
+                self.working_threads.remove(th)
         th = WorkingThread(self, order)
         self.working_threads.append(th)
         th.start()

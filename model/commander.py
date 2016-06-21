@@ -100,7 +100,7 @@ class Commander(object):
             old_cam = self.campaigns[campaign.get_id()]
             for sub in self.subordinates.values():
                 [sub.missions.remove(m) for m in sub.missions
-                 if m.purpose == old_cam.hash()]
+                 if m.purpose == old_cam.get_id()]
 
         # 部下のMissionを生成・割り当てる
         target_subs = []
@@ -116,6 +116,8 @@ class Commander(object):
             mission.author = t_id
             self.subordinates[t_id].missions.append(mission)
 
+        logger.info(">> got campaign:")
+        logger.info(json.dumps(campaign.to_dict(), sort_keys=True, indent=2))
         self.campaigns[campaign.get_id()] = campaign
         return campaign
 
