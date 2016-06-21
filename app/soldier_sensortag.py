@@ -48,7 +48,6 @@ class ScanDelegate(DefaultDelegate):
 
 
 rec_addr = ""
-name = ""
 
 if __name__ == "__main__":
     global rec_addr
@@ -61,7 +60,6 @@ if __name__ == "__main__":
         default="http://localhost:50000/recruiter/")
     params = parser.parse_args()
     rec_addr = params.rec_addr
-    name = "tag_soldier"
 
 
     scanner = Scanner().withDelegate(ScanDelegate())
