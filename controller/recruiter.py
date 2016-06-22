@@ -122,8 +122,11 @@ def register_commanders(com_id):
         return jsonify(_status=ResponseStatus.make_error(msgs[400]),
                        input=request.json), 400
 
-    recruiter.commander_cache[com_id] = com
-    return jsonify(_status=ResponseStatus.Success, commander=com.to_dict())
+    accepted = recruiter.register_commander_info(com)
+    if accepted is None:
+        return jsonify(_status=ResponseStatus.NotFound), 404
+
+    return jsonify(_status=ResponseStatus.Success, commander=accepted.to_dict())
 
 
 @server.route('/department/squad/leader', methods=['GET'])
@@ -147,6 +150,8 @@ def get_squad_leader():
               $ref: '#/definitions/ResponseStatus'
             leader:
               $ref: '#/definitions/LeaderInfo'
+            place:
+              type: string
       400:
         description: Query-param soldier_id is required.
         schema:
@@ -186,7 +191,9 @@ def get_squad_leader():
     if info is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[500])), 500
 
-    return jsonify(_status=ResponseStatus.Success, leader=info.to_dict())
+    return jsonify(_status=ResponseStatus.Success,
+                   leader=info.to_dict(),
+                   place=recruiter.get_soldier_ep(soldier_id))
 
 
 @server.route('/department/troop/commander', methods=['GET'])
@@ -210,6 +217,8 @@ def get_troop_commander():
               $ref: '#/definitions/ResponseStatus'
             commander:
               $ref: '#/definitions/CommanderInfo'
+            place:
+              type: string
       400:
         description: Query-param leader_id is required.
         schema:
@@ -249,7 +258,9 @@ def get_troop_commander():
     if info is None:
         return jsonify(_status=ResponseStatus.make_error(msgs[500])), 500
 
-    return jsonify(_status=ResponseStatus.Success, commander=info.to_dict())
+    return jsonify(_status=ResponseStatus.Success,
+                   commander=info.to_dict(),
+                   place=recruiter.get_leader_ep(leader_id))
 
 
 @server.route('/error/squad', methods=['POST'])

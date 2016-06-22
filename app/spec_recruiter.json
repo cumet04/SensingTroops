@@ -357,6 +357,9 @@
                 },
                 "leader": {
                   "$ref": "#/definitions/LeaderInfo"
+                },
+                "place": {
+                  "type": "string"
                 }
               }
             }
@@ -421,6 +424,9 @@
                 },
                 "commander": {
                   "$ref": "#/definitions/CommanderInfo"
+                },
+                "place": {
+                  "type": "string"
                 }
               }
             }
