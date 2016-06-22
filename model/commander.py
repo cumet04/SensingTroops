@@ -69,6 +69,8 @@ class Commander(object):
         res, err = rest.put(url, json=self.generate_info().to_dict())
         if err is not None:
             return False
+        new_info = CommanderInfo.make(res.json()["commander"])
+        self.place = new_info.place
         logger.info("register commander to recruiter: success")
         return True
 

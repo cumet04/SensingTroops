@@ -80,6 +80,7 @@ class Leader(object):
         res, err = rest.get(url)
         if err is not None:
             return False
+        self.place = res.json()["place"]
         superior = CommanderInfo.make(res.json()['commander'])
         self.superior_ep = superior.endpoint
         logger.info("superior was resolved: id={0}".format(superior.id))

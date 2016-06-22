@@ -76,6 +76,7 @@ class Soldier(object):
         res, err = rest.get(url)
         if err is not None:
             return False
+        self.place = res.json()["place"]
         superior = LeaderInfo.make(res.json()['leader'])
         self.superior_ep = superior.endpoint
         logger.info("superior was resolved: id={0}".format(superior.id))
