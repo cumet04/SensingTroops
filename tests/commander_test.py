@@ -43,6 +43,7 @@ class CommanderTestCase(unittest.TestCase):
 
         com = CommanderInfo(id='cxxx0',
                             name='cmd_http',
+                            place="",
                             endpoint='http://localhost:50000',
                             subordinates=[],
                             campaigns=[])
