@@ -182,6 +182,9 @@
           },
           "type": "array"
         },
+        "place": {
+          "type": "string"
+        },
         "weapons": {
           "description": "A list of weapon",
           "items": {
