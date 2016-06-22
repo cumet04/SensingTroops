@@ -1,7 +1,8 @@
 import argparse
 import json
 import socket
-from flask import render_template, jsonify
+import signal
+from flask import render_template, jsonify, request
 from flask_cors import cross_origin
 from flask_swagger import swagger
 from logging import getLogger, StreamHandler, DEBUG
@@ -58,6 +59,13 @@ if __name__ == "__main__":
     @server.route(params.prefix + '/spec.html')
     def spec_html():
         return render_template('swagger_ui.html')
+
+    # 強制終了のハンドラ
+    original_shutdown = signal.getsignal(signal.SIGINT)
+    def shutdown(signum, frame):
+        leader.__del__()
+        original_shutdown(signum, frame)
+    signal.signal(signal.SIGINT, shutdown)
 
     server.debug = True
     server.run(host='0.0.0.0', port=params.port, use_reloader=False)

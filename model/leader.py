@@ -3,10 +3,9 @@ import datetime
 import utils.rest as rest
 from threading import Event, Thread
 from model.info_obj import InformationObject
-from model import Mission, Order, Report, Work
+from model import SoldierInfo, Mission, Order, Report, Work
 from typing import List, Dict
 from model import logger
-
 
 definition = {
     'type': 'object',
@@ -127,7 +126,7 @@ class Leader(object):
             old_mis = self.missions[mission.get_id()]
             for sub in self.subordinates.values():
                 [sub.orders.remove(o) for o in sub.orders
-                     if o.purpose == old_mis.get_id()]
+                 if o.purpose == old_mis.get_id()]
         for th in self.working_threads:
             if mission.get_id() == th.mission.get_id():
                 th.lock.set()

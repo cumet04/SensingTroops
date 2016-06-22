@@ -64,6 +64,9 @@ class Commander(object):
         self.campaigns = {}  # type:Dict[str, Campaign]
         self.report_cache = []
 
+    def __del__(self):
+        pass
+
     def awake(self, rec_ep: str):
         url = "{0}commanders/{1}".format(rec_ep, self.id)
         res, err = rest.put(url, json=self.generate_info().to_dict())
