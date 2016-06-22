@@ -305,6 +305,7 @@ class CommanderTestCase(unittest.TestCase):
         # submit a report
         report = Report(purpose="some app",
                         time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        place="desk",
                         values="some values")
         response = self.app.post('/commander/subordinates/lxxx0/report',
                                  data=json.dumps(report.to_dict()),

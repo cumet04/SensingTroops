@@ -211,6 +211,7 @@ definitions['Report'] = {
     'type': 'object',
     'properties': {
         'time': {'type': 'string'},
+        'place': {'type': 'string'},
         'purpose': {'type': 'string'},
         'values': {'type': 'array', 'items': {'type': 'object'}},
     }
@@ -220,9 +221,11 @@ definitions['Report'] = {
 class Report(InformationObject):
     def __init__(self,
                  time: str,
+                 place: str,
                  purpose: str,
                  values: List[Dict]):
         self.time = time
+        self.place = place
         self.purpose = purpose
         self.values = values
 
@@ -231,6 +234,7 @@ class Report(InformationObject):
         try:
             return cls(
                 source['time'],
+                source['place'],
                 source['purpose'],
                 source['values'],
             )
@@ -241,6 +245,7 @@ definitions['Work'] = {
     'type': 'object',
     'properties': {
         'time': {'type': 'string'},
+        'place': {'type': 'string'},
         'purpose': {'type': 'string'},
         'values': {'type': 'array', 'items': {'type': 'object'}},
     }

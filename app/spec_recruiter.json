@@ -127,6 +127,9 @@
     },
     "Report": {
       "properties": {
+        "place": {
+          "type": "string"
+        },
         "purpose": {
           "type": "string"
         },
@@ -197,6 +200,9 @@
     },
     "Work": {
       "properties": {
+        "place": {
+          "type": "string"
+        },
         "purpose": {
           "type": "string"
         },

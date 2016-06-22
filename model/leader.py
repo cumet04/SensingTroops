@@ -63,7 +63,7 @@ class Leader(object):
         self.endpoint = endpoint
         self.subordinates = {}  # type:Dict[str, SoldierInfo]
         self.missions = {}  # type:Dict[str, Mission]
-        self.work_cache = []  # type:List[Work]
+        self.work_cache = []  # type:List[(str, Work)]
         self.superior_ep = ""
         self.heartbeat_thread = HeartBeat(self, 0)
         self.working_threads = []  # type: List[WorkingThread]
@@ -175,8 +175,7 @@ class Leader(object):
     def accept_work(self, sub_id, work):
         if not self.check_subordinate(sub_id):
             return False
-        # logger.debug(work)
-        self.work_cache.append(work)
+        self.work_cache.append((sub_id, work))
         return True
 
 
@@ -192,12 +191,18 @@ class WorkingThread(Thread):
             interval = self.mission.trigger['timer']
             while not self.lock.wait(timeout=interval):
                 m_id = self.mission.get_id()
-                works = [w for w in self.leader.work_cache if w.purpose == m_id]
                 time = datetime.datetime.utcnow().isoformat()
+                works = []
+                for sid, w in self.leader.work_cache:
+                    if w.purpose != m_id:
+                        continue
+                    works.append({"time": w.time,
+                                  "place": self.leader.subordinates[sid].place,
+                                  "values": w.values})
                 report = Report(time,
+                                self.leader.place,
                                 self.mission.purpose,
-                                [{"time": w.time, "values": w.values}
-                                 for w in works])
+                                works)
 
                 url = "{0}{1}".format(
                     self.leader.superior_ep,
@@ -206,7 +211,8 @@ class WorkingThread(Thread):
                 # TODO: エラー処理
 
                 self.leader.work_cache = \
-                    [w for w in self.leader.work_cache if w.purpose != m_id]
+                    [(sid, w) for sid, w in self.leader.work_cache
+                     if w.purpose != m_id]
         else:
             pass
 

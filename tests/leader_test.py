@@ -334,15 +334,18 @@ class LeaderTestCase(unittest.TestCase):
 
             # reportのチェック
             actual = m.call_args[1]["json"]
-            self.assertEqual(set(actual.keys()), {"time", "purpose", "values"})
+            self.assertEqual(set(actual.keys()),
+                             {"time", "place", "purpose", "values"})
             self.assertEqual(actual["purpose"], "some purpose hash")
             self.assertEqual(len(actual["values"]), 2)
 
             # report.valuesのチェック
             work_in_1 = work_1.to_dict()
             del work_in_1["purpose"]
+            work_in_1["place"] = "left"
             work_in_2 = work_2.to_dict()
             del work_in_2["purpose"]
+            work_in_2["place"] = "left"
             self.assertIn(work_in_1, actual["values"])
             self.assertIn(work_in_2, actual["values"])
 
