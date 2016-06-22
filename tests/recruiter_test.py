@@ -163,7 +163,7 @@ class RecruiterTestCase(unittest.TestCase):
                      content_type='application/json')
 
         # get commander's info with all leader_ids
-        leaders = ['lxxx3', 'lxxx4', 'lxxx5']
+        leaders = ['lxxx2', 'lxxx3', 'lxxx4']
         for leader_id in leaders:
             response = self.app.get('/recruiter/department/troop/commander' +
                                     '?leader_id=' + leader_id)

@@ -1,36 +1,46 @@
 troops:
   - commander: cxxx0
+    place: S101
     subordinates:
       - lxxx0
       - lxxx1
-      - lxxx2
   - commander: cxxx1
+    place: S103
     subordinates:
+      - lxxx2
       - lxxx3
       - lxxx4
-      - lxxx5
 squads:
   - leader: lxxx0
+    place: desk0
     subordinates:
-      - sxxx0
-      - sxxx1
+      - soldier: sxxx0
+        place: left
+      - soldier: sxxx1
+        place: right
   - leader: lxxx1
+    place: desk1
     subordinates:
-      - sxxx2
-      - sxxx3
+      - soldier: sxxx2
+        place: left
+      - soldier: sxxx3
+        place: right
   - leader: lxxx2
+    place: desk2
     subordinates:
-      - sxxx4
-      - sxxx5
+      - soldier: sxxx4
+        place: left
+      - soldier: sxxx5
+        place: right
   - leader: lxxx3
+    place: desk3
     subordinates:
-      - sxxx6
-      - sxxx7
+      - soldier: sxxx6
+        place: left
+      - soldier: sxxx7
+        place: right
   - leader: lxxx4
+    place: desk4
     subordinates:
-      - sxxx8
-  - leader: lxxx5
-    subordinates:
-      - sxxx9
-      - sxx10
-      - sxx11
+      - soldier: sxxx8
+        place: right

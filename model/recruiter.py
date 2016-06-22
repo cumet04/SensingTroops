@@ -32,7 +32,7 @@ class Recruiter(object):
 
         for sq in data['squads']:
             lea_id = sq['leader']
-            subs = sq['subordinates']
+            subs = [s["soldier"] for s in sq['subordinates']]
             self.SquadList[lea_id] = subs
 
         logger.info('load_config done')
