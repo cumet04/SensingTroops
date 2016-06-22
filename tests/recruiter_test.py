@@ -54,6 +54,7 @@ class RecruiterTestCase(unittest.TestCase):
         # add a commander
         commander = CommanderInfo(id='cxxx0',
                                   name='cmd_http',
+                                  place="S101",
                                   endpoint='http://localhost:50000',
                                   subordinates=[],
                                   campaigns=[])
@@ -103,6 +104,7 @@ class RecruiterTestCase(unittest.TestCase):
         # add a commander
         commander = CommanderInfo(id='cxxx0',
                                   name='cmd_http',
+                                  place="S101",
                                   endpoint='http://localhost:50000',
                                   subordinates=[],
                                   campaigns=[])
@@ -155,6 +157,7 @@ class RecruiterTestCase(unittest.TestCase):
         # add a commander
         commander = CommanderInfo(id='cxxx1',
                                   name='cmd_http',
+                                  place="S103",
                                   endpoint='http://localhost:50000',
                                   subordinates=[],
                                   campaigns=[])
@@ -163,7 +166,8 @@ class RecruiterTestCase(unittest.TestCase):
                      content_type='application/json')
 
         # get commander's info with all leader_ids
-        leaders = ['lxxx3', 'lxxx4', 'lxxx5']
+        leaders = ['lxxx2', 'lxxx3', 'lxxx4']
+        places = {"lxxx2": "desk2", "lxxx3": "desk3", "lxxx4": "desk4"}
         for leader_id in leaders:
             response = self.app.get('/recruiter/department/troop/commander' +
                                     '?leader_id=' + leader_id)
@@ -173,7 +177,8 @@ class RecruiterTestCase(unittest.TestCase):
             # assert
             expected = {
                 "_status": {'success': True, 'msg': "status is ok"},
-                'commander': commander.to_dict()
+                "commander": commander.to_dict(),
+                "place": places[leader_id]
             }
             self.assertEqual(actual, expected)
         pass

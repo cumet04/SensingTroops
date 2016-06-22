@@ -43,6 +43,7 @@ class CommanderTestCase(unittest.TestCase):
 
         com = CommanderInfo(id='cxxx0',
                             name='cmd_http',
+                            place="",
                             endpoint='http://localhost:50000',
                             subordinates=[],
                             campaigns=[])
@@ -174,6 +175,7 @@ class CommanderTestCase(unittest.TestCase):
         # add a leader
         leader = LeaderInfo(id='lxxx0',
                             name='cmd_http',
+                            place="desk",
                             endpoint='http://localhost:50000',
                             subordinates=[],
                             missions=[])
@@ -197,6 +199,7 @@ class CommanderTestCase(unittest.TestCase):
         # add some leader
         leader_base = LeaderInfo(id='lxxx0',
                                  name='cmd_http',
+                                 place="desk",
                                  endpoint='http://localhost:50000',
                                  subordinates=[],
                                  missions=[])
@@ -232,6 +235,7 @@ class CommanderTestCase(unittest.TestCase):
     def test_add_subordinate(self):
         leader = LeaderInfo(id='lxxx0',
                             name='cmd_http',
+                            place="desk",
                             endpoint='http://localhost:50000',
                             subordinates=[],
                             missions=[])
@@ -252,6 +256,7 @@ class CommanderTestCase(unittest.TestCase):
         # add leader
         leader = LeaderInfo(id='lxxx0',
                             name='lea_http',
+                            place="desk",
                             endpoint='http://localhost:50000',
                             subordinates=[],
                             missions=[])
@@ -289,6 +294,7 @@ class CommanderTestCase(unittest.TestCase):
         # add leader
         leader = LeaderInfo(id='lxxx0',
                             name='lea_http',
+                            place="desk",
                             endpoint='http://localhost:50000',
                             subordinates=[],
                             missions=[])
@@ -299,6 +305,7 @@ class CommanderTestCase(unittest.TestCase):
         # submit a report
         report = Report(purpose="some app",
                         time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        place="desk",
                         values="some values")
         response = self.app.post('/commander/subordinates/lxxx0/report',
                                  data=json.dumps(report.to_dict()),

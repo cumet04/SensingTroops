@@ -13,6 +13,7 @@ definition = {
         'id': {'description': "the man's ID",
                'type': 'string'},
         'name': {'type': 'string'},
+        'place': {'type': 'string'},
         'weapons': {'description': "A list of weapon",
                     'type': 'array',
                     'items': {'type': 'object'}},
@@ -26,10 +27,12 @@ class SoldierInfo(InformationObject):
     def __init__(self,
                  id: str,
                  name: str,
+                 place: str,
                  weapons: List[object],
                  orders: List[Order]):
         self.id = id
         self.name = name
+        self.place = place
         self.weapons = weapons
         self.orders = orders
 
@@ -39,6 +42,7 @@ class SoldierInfo(InformationObject):
             return cls(
                 source['id'],
                 source['name'],
+                source['place'],
                 source['weapons'],
                 [Order.make(o) for o in source['orders']]
             )
@@ -50,6 +54,7 @@ class Soldier(object):
     def __init__(self, sol_id, name):
         self.id = sol_id
         self.name = name
+        self.place = ""
         self.weapons = {
             "zero": lambda: 0,
             "random": random.random
@@ -71,6 +76,7 @@ class Soldier(object):
         res, err = rest.get(url)
         if err is not None:
             return False
+        self.place = res.json()["place"]
         superior = LeaderInfo.make(res.json()['leader'])
         self.superior_ep = superior.endpoint
         logger.info("superior was resolved: id={0}".format(superior.id))
@@ -94,6 +100,7 @@ class Soldier(object):
         return SoldierInfo(
             id=self.id,
             name=self.name,
+            place=self.place,
             weapons=list(self.weapons.keys()),
             orders=list(self.orders.values()))
 

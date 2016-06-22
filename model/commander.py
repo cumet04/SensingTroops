@@ -13,6 +13,7 @@ definition = {
         'id': {'description': "the man's ID",
                'type': 'string'},
         'name': {'type': 'string'},
+        'place': {'type': 'string'},
         'endpoint': {'type': 'string'},
         'subordinates': {'description': "A list of subordinates's ID",
                          'type': 'array',
@@ -27,11 +28,13 @@ class CommanderInfo(InformationObject):
     def __init__(self,
                  id: str,
                  name: str,
+                 place: str,
                  endpoint: str,
                  subordinates: List[str],
                  campaigns: List[Campaign]):
         self.id = id
         self.name = name
+        self.place = place
         self.endpoint = endpoint
         self.subordinates = subordinates
         self.campaigns = campaigns
@@ -42,6 +45,7 @@ class CommanderInfo(InformationObject):
             return cls(
                 source['id'],
                 source['name'],
+                source['place'],
                 source['endpoint'],
                 source['subordinates'],
                 [Campaign.make(c) for c in source['campaigns']]
@@ -54,6 +58,7 @@ class Commander(object):
     def __init__(self, com_id, name, endpoint):
         self.id = com_id
         self.name = name
+        self.place = ""
         self.endpoint = endpoint
         self.subordinates = {}  # type:Dict[str, LeaderInfo]
         self.campaigns = {}  # type:Dict[str, Campaign]
@@ -64,6 +69,8 @@ class Commander(object):
         res, err = rest.put(url, json=self.generate_info().to_dict())
         if err is not None:
             return False
+        new_info = CommanderInfo.make(res.json()["commander"])
+        self.place = new_info.place
         logger.info("register commander to recruiter: success")
         return True
 
@@ -75,6 +82,7 @@ class Commander(object):
         return CommanderInfo(
             id=self.id,
             name=self.name,
+            place=self.place,
             endpoint=self.endpoint,
             subordinates=list(self.subordinates.keys()),
             campaigns=list(self.campaigns.values()))

@@ -45,6 +45,7 @@ class LeaderTestCase(unittest.TestCase):
 
         lea = LeaderInfo(id='lxxx0',
                          name='lea_http',
+                         place="",
                          endpoint='http://localhost:50000',
                          subordinates=[],
                          missions=[])
@@ -145,6 +146,7 @@ class LeaderTestCase(unittest.TestCase):
         # add a soldier
         soldier = SoldierInfo(id='sxxx0',
                               name='sol_http',
+                              place="left",
                               weapons=[],
                               orders=[])
         self.app.post('/leader/subordinates',
@@ -167,6 +169,7 @@ class LeaderTestCase(unittest.TestCase):
         # add some soldier
         soldier_base = SoldierInfo(id='sxxx0',
                                    name='sol_http',
+                                   place="left",
                                    weapons=[],
                                    orders=[])
         soldier_list = []
@@ -201,6 +204,7 @@ class LeaderTestCase(unittest.TestCase):
     def test_add_subordinates(self):
         soldier = SoldierInfo(id='sxxx0',
                               name='sol_http',
+                              place="left",
                               weapons=[],
                               orders=[])
         response = self.app.post('/leader/subordinates',
@@ -220,6 +224,7 @@ class LeaderTestCase(unittest.TestCase):
         # add soldier
         soldier = SoldierInfo(id='sxxx0',
                               name='sol_http',
+                              place="left",
                               weapons=[],
                               orders=[])
         self.app.post('/leader/subordinates',
@@ -256,6 +261,7 @@ class LeaderTestCase(unittest.TestCase):
         # add soldier
         soldier = SoldierInfo(id='sxxx0',
                               name='sol_http',
+                              place="left",
                               weapons=[],
                               orders=[])
         self.app.post('/leader/subordinates',
@@ -293,7 +299,7 @@ class LeaderTestCase(unittest.TestCase):
             return res, None
 
         self.leader_obj.superior_ep = "test://cxxx0/commander/"
-        soldier = SoldierInfo(id="sxxx0", name="sol-test",
+        soldier = SoldierInfo(id="sxxx0", name="sol-test", place="left",
                               weapons=[], orders=[])
         self.leader_obj.accept_subordinate(soldier)
 
@@ -328,15 +334,18 @@ class LeaderTestCase(unittest.TestCase):
 
             # reportのチェック
             actual = m.call_args[1]["json"]
-            self.assertEqual(set(actual.keys()), {"time", "purpose", "values"})
+            self.assertEqual(set(actual.keys()),
+                             {"time", "place", "purpose", "values"})
             self.assertEqual(actual["purpose"], "some purpose hash")
             self.assertEqual(len(actual["values"]), 2)
 
             # report.valuesのチェック
             work_in_1 = work_1.to_dict()
             del work_in_1["purpose"]
+            work_in_1["place"] = "left"
             work_in_2 = work_2.to_dict()
             del work_in_2["purpose"]
+            work_in_2["place"] = "left"
             self.assertIn(work_in_1, actual["values"])
             self.assertIn(work_in_2, actual["values"])
 

@@ -87,6 +87,10 @@ class IntegrationTestCase(unittest.TestCase):
         self.assertTrue(
             self.models["sxxx0"].awake("test://recruiter/recruiter/", 1))
 
+        self.assertEqual(self.models["cxxx0"].place, "S101")
+        self.assertEqual(self.models["lxxx0"].place, "desk0")
+        self.assertEqual(self.models["sxxx0"].place, "left")
+
     def test_heartbeat(self):
         self.awake_single()
         time.sleep(1)  # leader, soldierのheartbeatが確実に1回行われるまで待つ

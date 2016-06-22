@@ -14,6 +14,7 @@ definition = {
         'id': {'description': "the man's ID",
                'type': 'string'},
         'name': {'type': 'string'},
+        'place': {'type': 'string'},
         'endpoint': {'type': 'string'},
         'subordinates': {'description': "A list of subordinates's ID",
                          'type': 'array',
@@ -28,11 +29,13 @@ class LeaderInfo(InformationObject):
     def __init__(self,
                  id: str,
                  name: str,
+                 place: str,
                  endpoint: str,
                  subordinates: List[str],
                  missions: List[Mission]):
         self.id = id
         self.name = name
+        self.place = place
         self.endpoint = endpoint
         self.subordinates = subordinates
         self.missions = missions
@@ -43,6 +46,7 @@ class LeaderInfo(InformationObject):
             return cls(
                 source['id'],
                 source['name'],
+                source['place'],
                 source['endpoint'],
                 source['subordinates'],
                 [Mission.make(m) for m in source['missions']]
@@ -55,10 +59,11 @@ class Leader(object):
     def __init__(self, leader_id, name, endpoint):
         self.id = leader_id
         self.name = name
+        self.place = ""
         self.endpoint = endpoint
         self.subordinates = {}  # type:Dict[str, SoldierInfo]
         self.missions = {}  # type:Dict[str, Mission]
-        self.work_cache = []  # type:List[Work]
+        self.work_cache = []  # type:List[(str, Work)]
         self.superior_ep = ""
         self.heartbeat_thread = HeartBeat(self, 0)
         self.working_threads = []  # type: List[WorkingThread]
@@ -75,6 +80,7 @@ class Leader(object):
         res, err = rest.get(url)
         if err is not None:
             return False
+        self.place = res.json()["place"]
         superior = CommanderInfo.make(res.json()['commander'])
         self.superior_ep = superior.endpoint
         logger.info("superior was resolved: id={0}".format(superior.id))
@@ -98,6 +104,7 @@ class Leader(object):
         return LeaderInfo(
             id=self.id,
             name=self.name,
+            place=self.place,
             endpoint=self.endpoint,
             subordinates=list(self.subordinates.keys()),
             missions=list(self.missions.values()))
@@ -168,8 +175,7 @@ class Leader(object):
     def accept_work(self, sub_id, work):
         if not self.check_subordinate(sub_id):
             return False
-        # logger.debug(work)
-        self.work_cache.append(work)
+        self.work_cache.append((sub_id, work))
         return True
 
 
@@ -185,12 +191,18 @@ class WorkingThread(Thread):
             interval = self.mission.trigger['timer']
             while not self.lock.wait(timeout=interval):
                 m_id = self.mission.get_id()
-                works = [w for w in self.leader.work_cache if w.purpose == m_id]
                 time = datetime.datetime.utcnow().isoformat()
+                works = []
+                for sid, w in self.leader.work_cache:
+                    if w.purpose != m_id:
+                        continue
+                    works.append({"time": w.time,
+                                  "place": self.leader.subordinates[sid].place,
+                                  "values": w.values})
                 report = Report(time,
+                                self.leader.place,
                                 self.mission.purpose,
-                                [{"time": w.time, "values": w.values}
-                                 for w in works])
+                                works)
 
                 url = "{0}{1}".format(
                     self.leader.superior_ep,
@@ -199,7 +211,8 @@ class WorkingThread(Thread):
                 # TODO: エラー処理
 
                 self.leader.work_cache = \
-                    [w for w in self.leader.work_cache if w.purpose != m_id]
+                    [(sid, w) for sid, w in self.leader.work_cache
+                     if w.purpose != m_id]
         else:
             pass
 

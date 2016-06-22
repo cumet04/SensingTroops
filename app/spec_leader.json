@@ -41,6 +41,9 @@
         "name": {
           "type": "string"
         },
+        "place": {
+          "type": "string"
+        },
         "subordinates": {
           "description": "A list of subordinates's ID",
           "items": {
@@ -67,6 +70,9 @@
           "type": "array"
         },
         "name": {
+          "type": "string"
+        },
+        "place": {
           "type": "string"
         },
         "subordinates": {
@@ -121,6 +127,9 @@
     },
     "Report": {
       "properties": {
+        "place": {
+          "type": "string"
+        },
         "purpose": {
           "type": "string"
         },
@@ -176,6 +185,9 @@
           },
           "type": "array"
         },
+        "place": {
+          "type": "string"
+        },
         "weapons": {
           "description": "A list of weapon",
           "items": {
@@ -188,6 +200,9 @@
     },
     "Work": {
       "properties": {
+        "place": {
+          "type": "string"
+        },
         "purpose": {
           "type": "string"
         },
