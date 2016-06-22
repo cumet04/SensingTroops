@@ -14,6 +14,7 @@ definition = {
         'id': {'description': "the man's ID",
                'type': 'string'},
         'name': {'type': 'string'},
+        'place': {'type': 'string'},
         'endpoint': {'type': 'string'},
         'subordinates': {'description': "A list of subordinates's ID",
                          'type': 'array',
@@ -28,11 +29,13 @@ class LeaderInfo(InformationObject):
     def __init__(self,
                  id: str,
                  name: str,
+                 place: str,
                  endpoint: str,
                  subordinates: List[str],
                  missions: List[Mission]):
         self.id = id
         self.name = name
+        self.place = place
         self.endpoint = endpoint
         self.subordinates = subordinates
         self.missions = missions
@@ -43,6 +46,7 @@ class LeaderInfo(InformationObject):
             return cls(
                 source['id'],
                 source['name'],
+                source['place'],
                 source['endpoint'],
                 source['subordinates'],
                 [Mission.make(m) for m in source['missions']]
@@ -55,6 +59,7 @@ class Leader(object):
     def __init__(self, leader_id, name, endpoint):
         self.id = leader_id
         self.name = name
+        self.place = ""
         self.endpoint = endpoint
         self.subordinates = {}  # type:Dict[str, SoldierInfo]
         self.missions = {}  # type:Dict[str, Mission]
@@ -98,6 +103,7 @@ class Leader(object):
         return LeaderInfo(
             id=self.id,
             name=self.name,
+            place=self.place,
             endpoint=self.endpoint,
             subordinates=list(self.subordinates.keys()),
             missions=list(self.missions.values()))

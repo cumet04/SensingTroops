@@ -175,6 +175,7 @@ class CommanderTestCase(unittest.TestCase):
         # add a leader
         leader = LeaderInfo(id='lxxx0',
                             name='cmd_http',
+                            place="desk",
                             endpoint='http://localhost:50000',
                             subordinates=[],
                             missions=[])
@@ -198,6 +199,7 @@ class CommanderTestCase(unittest.TestCase):
         # add some leader
         leader_base = LeaderInfo(id='lxxx0',
                                  name='cmd_http',
+                                 place="desk",
                                  endpoint='http://localhost:50000',
                                  subordinates=[],
                                  missions=[])
@@ -233,6 +235,7 @@ class CommanderTestCase(unittest.TestCase):
     def test_add_subordinate(self):
         leader = LeaderInfo(id='lxxx0',
                             name='cmd_http',
+                            place="desk",
                             endpoint='http://localhost:50000',
                             subordinates=[],
                             missions=[])
@@ -253,6 +256,7 @@ class CommanderTestCase(unittest.TestCase):
         # add leader
         leader = LeaderInfo(id='lxxx0',
                             name='lea_http',
+                            place="desk",
                             endpoint='http://localhost:50000',
                             subordinates=[],
                             missions=[])
@@ -290,6 +294,7 @@ class CommanderTestCase(unittest.TestCase):
         # add leader
         leader = LeaderInfo(id='lxxx0',
                             name='lea_http',
+                            place="desk",
                             endpoint='http://localhost:50000',
                             subordinates=[],
                             missions=[])

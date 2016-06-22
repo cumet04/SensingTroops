@@ -72,6 +72,9 @@
         "name": {
           "type": "string"
         },
+        "place": {
+          "type": "string"
+        },
         "subordinates": {
           "description": "A list of subordinates's ID",
           "items": {

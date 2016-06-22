@@ -45,6 +45,7 @@ class LeaderTestCase(unittest.TestCase):
 
         lea = LeaderInfo(id='lxxx0',
                          name='lea_http',
+                         place="",
                          endpoint='http://localhost:50000',
                          subordinates=[],
                          missions=[])
