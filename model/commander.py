@@ -1,11 +1,11 @@
 import copy
 import json
 import utils.rest as rest
+from threading import Thread, Event
 from typing import List, Dict
 from model.info_obj import InformationObject
 from model import LeaderInfo, Campaign, Mission
 from model import logger
-from requests import Response
 
 
 definition = {
@@ -62,6 +62,7 @@ class Commander(object):
         self.place = ""
         self.endpoint = endpoint
         self.subordinates = {}  # type:Dict[str, LeaderInfo]
+        self.sub_heart_waits = {}  # type:Dict[str, Event]
         self.campaigns = {}  # type:Dict[str, Campaign]
         self.report_cache = []
         self.recruiter_ep = ""
@@ -149,14 +150,32 @@ class Commander(object):
         if self.check_subordinate(sub_info.id):
             return None
         self.subordinates[sub_info.id] = sub_info
+        self.sub_heart_waits[sub_info.id] = Event()
+        Thread(target=self._heart_watch,
+               args=(sub_info.id, ), daemon=True).start()
+
         old_campaigns = self.campaigns.values()
         [self.accept_campaign(c) for c in old_campaigns]
         return sub_info
+
+    def _heart_watch(self, sid):
+        while self.sub_heart_waits[sid].wait(timeout=5):
+            # timeoutまでにevent.setされたら待ち続行
+            # timeoutしたらK.I.A.
+            self.sub_heart_waits[sid].clear()
+        logger.error("へんじがない ただのしかばねのようだ :{0}".format(sid))
+        self.remove_subordinate(sid)
+
+    def receive_heartbeat(self, sid):
+        if not self.check_subordinate(sid):
+            return False
+        self.sub_heart_waits[sid].set()
 
     def remove_subordinate(self, sub_id):
         if not self.check_subordinate(sub_id):
             return False
         del self.subordinates[sub_id]
+        del self.sub_heart_waits[sub_id]
         return True
 
     def accept_report(self, sub_id, report):

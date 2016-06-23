@@ -158,6 +158,7 @@ def get_sub_info(sub_id):
               $ref: '#/definitions/SoldierInfo'
     """
     info = leader.get_sub_info(sub_id)
+    leader.receive_heartbeat(sub_id)
     etag = info.hash()
     if_none_match = str(request.if_none_match)[1:-1]  # ダブルクォートを削除
     if etag == if_none_match:
