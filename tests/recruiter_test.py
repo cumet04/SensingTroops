@@ -30,7 +30,7 @@ class RecruiterTestCase(unittest.TestCase):
         def internal_error(error):
             logger.error(">> Internal Server Error")
             logger.error(traceback.format_exc())
-            return "internal server error"
+            return "internal server error", 500
         self.app = server.test_client()
 
     def tearDown(self):
@@ -104,7 +104,7 @@ class RecruiterTestCase(unittest.TestCase):
         # add a commander
         commander = CommanderInfo(id='cxxx0',
                                   name='cmd_http',
-                                  place="S101",
+                                  place="",
                                   endpoint='http://localhost:50000',
                                   subordinates=[],
                                   campaigns=[])
@@ -116,11 +116,34 @@ class RecruiterTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         actual = json.loads(response.data.decode("utf-8"))
 
+        commander.place = "S101"
         expected = {
             "_status": {'success': True, 'msg': "status is ok"},
-            'commander': commander.to_dict()
+            "commander": commander.to_dict()
         }
         self.assertEqual(actual, expected)
+
+# [DELETE] /commanders/{cid}
+    def test_delete_commander_info(self):
+        # add a commander
+        commander = CommanderInfo(id='cxxx0',
+                                  name='cmd_http',
+                                  place="",
+                                  endpoint='http://localhost:50000',
+                                  subordinates=[],
+                                  campaigns=[])
+        self.app.put('/recruiter/commanders/cxxx0',
+                     data=json.dumps(commander.to_dict()),
+                     content_type='application/json')
+
+        response = self.app.delete('/recruiter/commanders/cxxx0')
+        self.assertEqual(response.status_code, 200)
+        actual = json.loads(response.data.decode("utf-8"))
+        expected = {
+            "_status": {'success': True, 'msg': "status is ok"}
+        }
+        self.assertEqual(actual, expected)
+
 
 # [GET] /department/squad/leader
     def test_get_squad_leader(self):

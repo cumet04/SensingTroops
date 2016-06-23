@@ -168,6 +168,38 @@ def get_sub_info(sub_id):
     return response
 
 
+@server.route('/subordinates/<sid>', methods=['DELETE'])
+def delete_commander_info(sid):
+    """
+    Remove a registered subordinate info
+    ---
+    parameters:
+      - name: sid
+        description: ID of a requested soldier
+        in: path
+        type: string
+    responses:
+      200:
+        description: ok
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+      404:
+        description: "[NT] Specified Soldier ID is not found"
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+    """
+    if leader.remove_subordinate(sid):
+        return jsonify(_status=ResponseStatus.Success)
+    else:
+        return jsonify(_status=ResponseStatus.NotFound), 404
+
+
 @server.route('/subordinates/<sub_id>/work', methods=['POST'])
 @access_subordinate
 @json_input

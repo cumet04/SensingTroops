@@ -3,10 +3,9 @@ import datetime
 import utils.rest as rest
 from threading import Event, Thread
 from model.info_obj import InformationObject
-from model import Mission, Order, Report, Work
+from model import SoldierInfo, Mission, Order, Report, Work
 from typing import List, Dict
 from model import logger
-
 
 definition = {
     'type': 'object',
@@ -68,9 +67,18 @@ class Leader(object):
         self.heartbeat_thread = HeartBeat(self, 0)
         self.working_threads = []  # type: List[WorkingThread]
 
-    def __del__(self):
+    def shutdown(self):
         self.heartbeat_thread.lock.set()
         [w.lock.set() for w in self.working_threads]
+
+        if self.superior_ep == "":
+            return True
+        url = "{0}subordinates/{1}".format(self.superior_ep, self.id)
+        res, err = rest.delete(url)
+        if err is not None:
+            logger.error("Removing leader info from commander is failed.")
+            return False
+        return True
 
     def awake(self, rec_ep: str, heartbeat_rate: int):
         from model import CommanderInfo
@@ -127,7 +135,7 @@ class Leader(object):
             old_mis = self.missions[mission.get_id()]
             for sub in self.subordinates.values():
                 [sub.orders.remove(o) for o in sub.orders
-                     if o.purpose == old_mis.get_id()]
+                 if o.purpose == old_mis.get_id()]
         for th in self.working_threads:
             if mission.get_id() == th.mission.get_id():
                 th.lock.set()
@@ -170,6 +178,12 @@ class Leader(object):
         self.subordinates[sub_info.id] = sub_info
         old_missions = self.missions.values()
         [self.accept_mission(c) for c in old_missions]
+        return True
+
+    def remove_subordinate(self, sub_id):
+        if not self.check_subordinate(sub_id):
+            return False
+        del self.subordinates[sub_id]
         return True
 
     def accept_work(self, sub_id, work):

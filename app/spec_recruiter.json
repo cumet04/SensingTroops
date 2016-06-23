@@ -249,6 +249,44 @@
         "summary": "A list of Commander's ID, that is registered in config"
       }
     },
+    "/recruiter/commanders/{cid}": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "description": "ID of a requested commander",
+            "in": "path",
+            "name": "cid",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "[NT] Specified Commander ID is not found",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Remove a registered commander info"
+      }
+    },
     "/recruiter/commanders/{com_id}": {
       "get": {
         "description": "\u6307\u5b9a\u3055\u308c\u305fID\u306b\u5bfe\u5fdc\u3059\u308bCommanderInfo\u3092\u8fd4\u3059<br/>config\u306b\u306f\u5b58\u5728\u3059\u308b\u304c\u5b9f\u4f53\u304c\u672a\u767b\u9332\u306eID\u3092\u6307\u5b9a\u3057\u305f\u5834\u5408\u306f\u7a7a\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\u3092\u8fd4\u3059",

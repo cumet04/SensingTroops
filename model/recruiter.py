@@ -14,7 +14,7 @@ class Recruiter(object):
         self.TroopList = {}
         self.leader_cache = {}
         self.commander_cache = {}
-        self.endpoints = {}
+        self.places = {}
         self.load_config(config_name)
 
     def load_config(self, filename):
@@ -28,17 +28,17 @@ class Recruiter(object):
 
         for tr in data['troops']:
             com_id = tr['commander']
-            self.endpoints[com_id] = tr["place"]
+            self.places[com_id] = tr["place"]
             subs = tr['subordinates']
             self.TroopList[com_id] = subs
 
         for sq in data['squads']:
             lea_id = sq['leader']
-            self.endpoints[lea_id] = sq["place"]
+            self.places[lea_id] = sq["place"]
             subs = []
             for s in sq["subordinates"]:
                 subs.append(s["soldier"])
-                self.endpoints[s["soldier"]] = s["place"]
+                self.places[s["soldier"]] = s["place"]
             self.SquadList[lea_id] = subs
 
         logger.info('load_config done')
@@ -48,15 +48,21 @@ class Recruiter(object):
     def register_commander_info(self, com_info: CommanderInfo):
         if com_info.id not in self.TroopList:
             return None
-        com_info.place = self.endpoints[com_info.id]
+        com_info.place = self.places[com_info.id]
         self.commander_cache[com_info.id] = com_info
         return com_info
 
+    def remove_commander_info(self, cid):
+        if cid not in self.commander_cache:
+            return False
+        del self.commander_cache[cid]
+        return True
+
     def get_leader_ep(self, leader_id):
-        return self.endpoints.get(leader_id, None)
+        return self.places.get(leader_id, None)
 
     def get_soldier_ep(self, soldier_id):
-        return self.endpoints.get(soldier_id, None)
+        return self.places.get(soldier_id, None)
 
     def get_squad_leader(self, soldier_id):
         """

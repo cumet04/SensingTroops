@@ -237,6 +237,38 @@ def get_sub_info(sub_id):
     return response
 
 
+@server.route('/subordinates/<lid>', methods=['DELETE'])
+def delete_commander_info(lid):
+    """
+    Remove a registered subordinate info
+    ---
+    parameters:
+      - name: lid
+        description: ID of a requested leader
+        in: path
+        type: string
+    responses:
+      200:
+        description: ok
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+      404:
+        description: "[NT] Specified Leader ID is not found"
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+    """
+    if commander.remove_subordinate(lid):
+        return jsonify(_status=ResponseStatus.Success)
+    else:
+        return jsonify(_status=ResponseStatus.NotFound), 404
+
+
 @server.route('/subordinates/<sub_id>/report', methods=['POST'])
 @access_subordinate
 @json_input

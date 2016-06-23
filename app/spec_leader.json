@@ -330,6 +330,44 @@
         "summary": "Add new soldier"
       }
     },
+    "/leader/subordinates/{sid}": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "description": "ID of a requested soldier",
+            "in": "path",
+            "name": "sid",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "[NT] Specified Soldier ID is not found",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Remove a registered subordinate info"
+      }
+    },
     "/leader/subordinates/{sub_id}": {
       "get": {
         "description": "",

@@ -373,6 +373,44 @@
         "summary": "Add a new leader"
       }
     },
+    "/commander/subordinates/{lid}": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "description": "ID of a requested leader",
+            "in": "path",
+            "name": "lid",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "[NT] Specified Leader ID is not found",
+            "schema": {
+              "properties": {
+                "_status": {
+                  "$ref": "#/definitions/ResponseStatus",
+                  "description": "Response status"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Remove a registered subordinate info"
+      }
+    },
     "/commander/subordinates/{sub_id}": {
       "get": {
         "description": "",

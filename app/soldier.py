@@ -1,4 +1,5 @@
 import argparse
+import signal
 from model import Soldier
 
 if __name__ == "__main__":
@@ -14,6 +15,13 @@ if __name__ == "__main__":
 
     soldier = Soldier(params.id, params.name)
     soldier.awake(params.rec_addr, 1)
+
+    # 強制終了のハンドラ
+    original_shutdown = signal.getsignal(signal.SIGINT)
+    def shutdown(signum, frame):
+        soldier.shutdown()
+        original_shutdown(signum, frame)
+    signal.signal(signal.SIGINT, shutdown)
 
     while True:
         pass

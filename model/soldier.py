@@ -64,9 +64,18 @@ class Soldier(object):
         self.heartbeat_thread = HeartBeat(self, 0)
         self.working_threads = []  # type: List[WorkingThread]
 
-    def __del__(self):
+    def shutdown(self):
         self.heartbeat_thread.lock.set()
         [w.lock.set() for w in self.working_threads]
+
+        if self.superior_ep == "":
+            return True
+        url = "{0}subordinates/{1}".format(self.superior_ep, self.id)
+        res, err = rest.delete(url)
+        if err is not None:
+            logger.error("Removing soldier info from leader is failed.")
+            return False
+        return True
 
     def awake(self, rec_ep: str, heartbeat_rate: int):
         from model import LeaderInfo

@@ -5,6 +5,7 @@ from typing import List, Dict
 from model.info_obj import InformationObject
 from model import LeaderInfo, Campaign, Mission
 from model import logger
+from requests import Response
 
 
 definition = {
@@ -63,8 +64,18 @@ class Commander(object):
         self.subordinates = {}  # type:Dict[str, LeaderInfo]
         self.campaigns = {}  # type:Dict[str, Campaign]
         self.report_cache = []
+        self.recruiter_ep = ""
+
+    def shutdown(self):
+        url = "{0}commanders/{1}".format(self.recruiter_ep, self.id)
+        res, err = rest.delete(url)  # type: Response, str
+        if err is not None:
+            logger.error("Removing commander info from recruiter is failed.")
+            return False
+        return True
 
     def awake(self, rec_ep: str):
+        self.recruiter_ep = rec_ep
         url = "{0}commanders/{1}".format(rec_ep, self.id)
         res, err = rest.put(url, json=self.generate_info().to_dict())
         if err is not None:
@@ -141,6 +152,12 @@ class Commander(object):
         old_campaigns = self.campaigns.values()
         [self.accept_campaign(c) for c in old_campaigns]
         return sub_info
+
+    def remove_subordinate(self, sub_id):
+        if not self.check_subordinate(sub_id):
+            return False
+        del self.subordinates[sub_id]
+        return True
 
     def accept_report(self, sub_id, report):
         if not self.check_subordinate(sub_id):
