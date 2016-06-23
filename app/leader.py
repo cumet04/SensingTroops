@@ -5,15 +5,17 @@ import signal
 from flask import render_template, jsonify, request
 from flask_cors import cross_origin
 from flask_swagger import swagger
-from logging import getLogger, StreamHandler, DEBUG
+from logging import getLogger, StreamHandler, DEBUG, ERROR
 from controller import LeaderServer
 from model import definitions, Leader
+from utils.helpers import DelegateHandler
 
 logger = getLogger(__name__)
 handler = StreamHandler()
 handler.setLevel(DEBUG)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
+
 
 
 if __name__ == "__main__":
@@ -59,6 +61,11 @@ if __name__ == "__main__":
     @server.route(params.prefix + '/spec.html')
     def spec_html():
         return render_template('swagger_ui.html')
+
+    # エラーログ送信用ログハンドラ
+    error_handler = DelegateHandler(leader.submit_error)
+    error_handler.setLevel(ERROR)
+    getLogger("model").addHandler(error_handler)
 
     # 強制終了のハンドラ
     original_shutdown = signal.getsignal(signal.SIGINT)

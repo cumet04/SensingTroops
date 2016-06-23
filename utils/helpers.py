@@ -1,3 +1,4 @@
+import logging
 from utils import logger
 from functools import wraps
 from flask import jsonify, request
@@ -64,3 +65,13 @@ def json_input(f):
                                msg="param couldn't decode to json"), 400
         return f(*args, **kwargs)
     return check_json
+
+
+class DelegateHandler(logging.Handler):
+    def __init__(self, func):
+        super(DelegateHandler, self).__init__()
+        self.func = func
+
+
+    def emit(self, record):
+        self.func(record.message)

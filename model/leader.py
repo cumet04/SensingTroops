@@ -61,6 +61,7 @@ class Leader(object):
         self.place = ""
         self.endpoint = endpoint
         self.subordinates = {}  # type:Dict[str, SoldierInfo]
+        self.sub_heart_waits = {}  # type:Dict[str, Event]
         self.missions = {}  # type:Dict[str, Mission]
         self.work_cache = []  # type:List[(str, Work)]
         self.superior_ep = ""
@@ -176,14 +177,32 @@ class Leader(object):
         if self.check_subordinate(sub_info.id):
             return False
         self.subordinates[sub_info.id] = sub_info
+        self.sub_heart_waits[sub_info.id] = Event()
+        Thread(target=self._heart_watch,
+               args=(sub_info.id, ), daemon=True).start()
+
         old_missions = self.missions.values()
         [self.accept_mission(c) for c in old_missions]
         return True
+
+    def _heart_watch(self, sid):
+        while self.sub_heart_waits[sid].wait(timeout=5):
+            # timeoutまでにevent.setされたら待ち続行
+            # timeoutしたらK.I.A.
+            self.sub_heart_waits[sid].clear()
+        logger.error("へんじがない ただのしかばねのようだ :{0}".format(sid))
+        self.remove_subordinate(sid)
+
+    def receive_heartbeat(self, sid):
+        if not self.check_subordinate(sid):
+            return False
+        self.sub_heart_waits[sid].set()
 
     def remove_subordinate(self, sub_id):
         if not self.check_subordinate(sub_id):
             return False
         del self.subordinates[sub_id]
+        del self.sub_heart_waits[sub_id]
         return True
 
     def accept_work(self, sub_id, work):
@@ -191,6 +210,16 @@ class Leader(object):
             return False
         self.work_cache.append((sub_id, work))
         return True
+
+    def submit_error(self, msg):
+        time = datetime.datetime.utcnow().isoformat()
+        report = Report(time=time,
+                        place="internal",
+                        purpose="_error",
+                        values=[{"type": "error_msg", "msg": msg}])
+
+        url = "{0}subordinates/{1}/report".format(self.superior_ep, self.id)
+        rest.post(url, json=report.to_dict())
 
 
 class WorkingThread(Thread):
@@ -218,9 +247,8 @@ class WorkingThread(Thread):
                                 self.mission.purpose,
                                 works)
 
-                url = "{0}{1}".format(
-                    self.leader.superior_ep,
-                    "subordinates/{0}/report".format(self.leader.id))
+                url = "{0}subordinates/{1}/report".\
+                    format(self.leader.superior_ep, self.leader.id)
                 rest.post(url, json=report.to_dict())
                 # TODO: エラー処理
 
