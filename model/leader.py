@@ -211,6 +211,16 @@ class Leader(object):
         self.work_cache.append((sub_id, work))
         return True
 
+    def submit_error(self, msg):
+        time = datetime.datetime.utcnow().isoformat()
+        report = Report(time=time,
+                        place="internal",
+                        purpose="_error",
+                        values=[{"type": "error_msg", "msg": msg}])
+
+        url = "{0}subordinates/{1}/report".format(self.superior_ep, self.id)
+        rest.post(url, json=report.to_dict())
+
 
 class WorkingThread(Thread):
     def __init__(self, leader: Leader, mission: Mission):
@@ -237,9 +247,8 @@ class WorkingThread(Thread):
                                 self.mission.purpose,
                                 works)
 
-                url = "{0}{1}".format(
-                    self.leader.superior_ep,
-                    "subordinates/{0}/report".format(self.leader.id))
+                url = "{0}subordinates/{1}/report".\
+                    format(self.leader.superior_ep, self.leader.id)
                 rest.post(url, json=report.to_dict())
                 # TODO: エラー処理
 

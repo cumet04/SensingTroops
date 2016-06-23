@@ -181,6 +181,12 @@ class Commander(object):
     def accept_report(self, sub_id, report):
         if not self.check_subordinate(sub_id):
             return False
+
+        if report.purpose == "_error":
+            logger.info(">> error report is received from {0}".format(sub_id))
+            logger.info(report.values[0]["msg"])
+            return True
+
         if report.purpose in self.campaigns:
             campaign = self.campaigns[report.purpose]
             if "mongodb://" in campaign.destination:
