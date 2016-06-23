@@ -144,15 +144,15 @@ class Leader(object):
         # 部下のOrderを生成・割り当てる
         target_subs = []
         if mission.place == "All":
-            target_subs = list(self.subordinates.keys())
-        o_base = Order(author="",
-                       values=mission.requirement.values,
-                       trigger=mission.requirement.trigger,
-                       purpose=mission.get_id())
-        for t_id in target_subs:
-            order = copy.deepcopy(o_base)
-            order.author = t_id
-            self.subordinates[t_id].orders.append(order)
+            target_subs = list(self.subordinates.values())
+        for sol in target_subs:
+            m_req = mission.requirement
+            values = list(set(m_req.values).intersection(sol.weapons))
+            order = Order(author=sol.id,
+                          values=values,
+                          trigger=m_req.trigger,
+                          purpose=mission.get_id())
+            sol.orders.append(order)
 
         # 自身のデータ送信スレッドを生成する
         th = WorkingThread(self, mission)
