@@ -35,7 +35,7 @@ class LeaderTestCase(unittest.TestCase):
         self.app = server.test_client()
 
     def tearDown(self):
-        self.leader_obj.__del__()
+        self.leader_obj.shutdown()
 
 # [GET] /
     def test_get_info(self):
@@ -348,6 +348,8 @@ class LeaderTestCase(unittest.TestCase):
             work_in_2["place"] = "left"
             self.assertIn(work_in_1, actual["values"])
             self.assertIn(work_in_2, actual["values"])
+
+        self.leader_obj.superior_ep = ""  # shutdownでDELETEを送信するのを阻止
 
 
 if __name__ == "__main__":

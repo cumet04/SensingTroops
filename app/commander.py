@@ -63,7 +63,7 @@ if __name__ == "__main__":
     # 強制終了のハンドラ
     original_shutdown = signal.getsignal(signal.SIGINT)
     def shutdown(signum, frame):
-        commander.__del__()
+        commander.shutdown()
         original_shutdown(signum, frame)
     signal.signal(signal.SIGINT, shutdown)
 

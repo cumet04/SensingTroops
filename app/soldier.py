@@ -19,12 +19,9 @@ if __name__ == "__main__":
     # 強制終了のハンドラ
     original_shutdown = signal.getsignal(signal.SIGINT)
     def shutdown(signum, frame):
-        soldier.__del__()
+        soldier.shutdown()
         original_shutdown(signum, frame)
     signal.signal(signal.SIGINT, shutdown)
 
     while True:
-        try:
-            pass
-        except KeyboardInterrupt:
-            break
+        pass

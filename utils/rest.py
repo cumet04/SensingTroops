@@ -53,6 +53,15 @@ def _put(url, data=None, json=None, etag=None, **kwargs):
     return _rest_check_response(res)
 
 
+def _delete(url, **kwargs):
+    try:
+        res = requests.delete(url, **kwargs)
+    except requests.exceptions.RequestException as e:
+        logger.error(">> [DELETE] {0} failed with exception: {1}".format(url, e))
+        return None, e
+    return _rest_check_response(res)
+
+
 def _rest_check_response(res):
     import json
     # check whether resource is not modified
@@ -146,6 +155,13 @@ def _test_put(url, data=None, json=None, etag=None, **kwargs):
     return _rest_check_response(res)
 
 
+def _test_delete(url, **kwargs):
+    c, path = _select_client(url)
+    res = c.delete(path, **kwargs)
+    res = ResponseEx(res, "DELETE", url)
+    return _rest_check_response(res)
+
+
 def get(*args, **kwargs):
     if len(test_clients) == 0:
         return _get(*args, **kwargs)
@@ -165,3 +181,10 @@ def put(*args, **kwargs):
         return _put(*args, **kwargs)
     else:
         return _test_put(*args, **kwargs)
+
+
+def delete(*args, **kwargs):
+    if len(test_clients) == 0:
+        return _delete(*args, **kwargs)
+    else:
+        return _test_delete(*args, **kwargs)

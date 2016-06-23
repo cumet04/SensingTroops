@@ -129,6 +129,38 @@ def register_commanders(com_id):
     return jsonify(_status=ResponseStatus.Success, commander=accepted.to_dict())
 
 
+@server.route('/commanders/<cid>', methods=['DELETE'])
+def delete_commander_info(cid):
+    """
+    Remove a registered commander info
+    ---
+    parameters:
+      - name: cid
+        description: ID of a requested commander
+        in: path
+        type: string
+    responses:
+      200:
+        description: ok
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+      404:
+        description: "[NT] Specified Commander ID is not found"
+        schema:
+          properties:
+            _status:
+              description: Response status
+              $ref: '#/definitions/ResponseStatus'
+    """
+    if recruiter.remove_commander_info(cid):
+        return jsonify(_status=ResponseStatus.Success)
+    else:
+        return jsonify(_status=ResponseStatus.NotFound), 404
+
+
 @server.route('/department/squad/leader', methods=['GET'])
 def get_squad_leader():
     """

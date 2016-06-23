@@ -24,7 +24,7 @@ class SoldierTestCase(unittest.TestCase):
         self.soldier = Soldier("sxxx0", "sol_test")
 
     def tearDown(self):
-        self.soldier.__del__()
+        self.soldier.shutdown()
 
     def test_order_do(self):
         self.soldier.superior_ep = "test://lxxx0/leader/"
@@ -56,6 +56,8 @@ class SoldierTestCase(unittest.TestCase):
             self.assertEqual(len(actual["values"]), 2)
             for v in actual["values"]:
                 self.assertEqual({"type", "value", "unit"}, set(v.keys()))
+
+        self.soldier.superior_ep = ""  # shutdownでDELETEを送信するのを阻止
 
 
 if __name__ == "__main__":
