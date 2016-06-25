@@ -4,7 +4,6 @@ import socket
 import signal
 from logging import getLogger, StreamHandler, DEBUG
 from flask import render_template, jsonify, request
-from flask_cors import cross_origin
 from flask_swagger import swagger
 from controller import CommanderServer
 from model import definitions, Commander
@@ -50,7 +49,6 @@ if __name__ == "__main__":
     CommanderServer.set_model(commander)
 
     @server.route(params.prefix + '/spec.json')
-    @cross_origin()
     def output_spec_json():
         spec_dict = swagger(server, template={'definitions': definitions})
         spec_dict['info']['title'] = 'SensingTroops'

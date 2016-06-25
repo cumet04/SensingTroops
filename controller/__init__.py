@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
@@ -19,6 +20,7 @@ class RecruiterServer:
         import controller.recruiter as rec
         server = Flask(__name__, static_url_path=url_prefix + "/static")
         server.register_blueprint(rec.server, url_prefix=url_prefix)
+        CORS(server, resources={r"/*": {"origins": "*"}})
         return server
 
 
@@ -33,6 +35,7 @@ class CommanderServer:
         import controller.commander as com
         server = Flask(__name__, static_url_path=url_prefix + "/static")
         server.register_blueprint(com.server, url_prefix=url_prefix)
+        CORS(server, resources={r"/*": {"origins": "*"}})
         return server
 
 
@@ -47,4 +50,5 @@ class LeaderServer:
         import controller.leader as lea
         server = Flask(__name__, static_url_path=url_prefix + "/static")
         server.register_blueprint(lea.server, url_prefix=url_prefix)
+        CORS(server, resources={r"/*": {"origins": "*"}})
         return server
