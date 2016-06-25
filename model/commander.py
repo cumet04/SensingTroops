@@ -195,7 +195,7 @@ class Commander(object):
                 push = MongoPush(campaign.destination)
                 values = [{
                     "purpose": campaign.purpose,
-                    "place": report.place,
+                    "place": "{0}.{1}".format(report.place, w["place"]),
                     "time": w["time"],
                     "values": w["values"]
                 } for w in report.values]
@@ -224,4 +224,7 @@ class MongoPush(object):
     def push_values(self, values):
         if len(values) == 0:
             return
+        logger.info("<<<<<<<<<<>>>>>>>>>>")
+        logger.info(values)
+        logger.info("<<<<<<<<<<>>>>>>>>>>")
         self.col.insert_many(values)
