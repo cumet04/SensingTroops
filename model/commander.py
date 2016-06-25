@@ -195,6 +195,7 @@ class Commander(object):
                 push = MongoPush(campaign.destination)
                 values = [{
                     "purpose": campaign.purpose,
+                    "place": report.place,
                     "time": w["time"],
                     "values": w["values"]
                 } for w in report.values]
