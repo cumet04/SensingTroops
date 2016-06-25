@@ -190,8 +190,10 @@ class Leader(object):
             # timeoutまでにevent.setされたら待ち続行
             # timeoutしたらK.I.A.
             self.sub_heart_waits[sid].clear()
-        logger.error("へんじがない ただのしかばねのようだ :{0}".format(sid))
-        self.remove_subordinate(sid)
+
+        if self.remove_subordinate(sid):
+            # removeが失敗すれば（そもそも削除済であれば）実行しない
+            logger.error("へんじがない ただのしかばねのようだ :{0}".format(sid))
 
     def receive_heartbeat(self, sid):
         if not self.check_subordinate(sid):
@@ -202,6 +204,7 @@ class Leader(object):
         if not self.check_subordinate(sub_id):
             return False
         del self.subordinates[sub_id]
+        self.sub_heart_waits[sub_id].set()
         del self.sub_heart_waits[sub_id]
         return True
 
