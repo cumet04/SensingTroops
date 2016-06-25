@@ -6,6 +6,7 @@ from flask_swagger import swagger
 from logging import getLogger, StreamHandler, DEBUG
 from controller import LeaderServer
 from model import definitions, Leader
+import utils.current_viewer.troops_viewer as tr_viewer
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -14,12 +15,15 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
-app = Blueprint('leader', __name__)
-leader = None  # type: Leader
+server = Flask(__name__)
 
+@server.route('/troops.html', methods=['GET'])
+def show_troops():
+    return render_template('troops_viewer.html',
+                           troops_data=tr_viewer.generate_data_str())
 
-@app.route('/', methods=['GET'])
-def get_info():
+@server.route('/values.html', methods=['GET'])
+def show_values():
     return render_template('swagger_ui.html')
 
 
@@ -27,12 +31,8 @@ if __name__ == "__main__":
     # param setting
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-P', '--port', type=int, default=50002, help='port')
+        '-P', '--port', type=int, default=50010, help='port')
     params = parser.parse_args()
-
-    # server setting
-    server = Flask(__name__)
-    server.register_blueprint(app)
 
     server.debug = True
     server.run(host='0.0.0.0', port=params.port, use_reloader=False)
