@@ -22,6 +22,7 @@ if __name__ == "__main__":
         soldier.shutdown()
         original_shutdown(signum, frame)
     signal.signal(signal.SIGINT, shutdown)
+    signal.signal(signal.SIGTERM, shutdown)
 
     while True:
         pass

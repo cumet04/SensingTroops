@@ -73,6 +73,7 @@ if __name__ == "__main__":
         leader.shutdown()
         original_shutdown(signum, frame)
     signal.signal(signal.SIGINT, shutdown)
+    signal.signal(signal.SIGTERM, shutdown)
 
     server.debug = True
     server.run(host='0.0.0.0', port=params.port, use_reloader=False)
