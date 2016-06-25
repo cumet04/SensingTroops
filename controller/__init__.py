@@ -17,7 +17,7 @@ class RecruiterServer:
     @staticmethod
     def generate_server(url_prefix):
         import controller.recruiter as rec
-        server = Flask(__name__)
+        server = Flask(__name__, static_url_path=url_prefix + "/static")
         server.register_blueprint(rec.server, url_prefix=url_prefix)
         return server
 
@@ -31,7 +31,7 @@ class CommanderServer:
     @staticmethod
     def generate_server(url_prefix):
         import controller.commander as com
-        server = Flask(__name__)
+        server = Flask(__name__, static_url_path=url_prefix + "/static")
         server.register_blueprint(com.server, url_prefix=url_prefix)
         return server
 
@@ -45,6 +45,6 @@ class LeaderServer:
     @staticmethod
     def generate_server(url_prefix):
         import controller.leader as lea
-        server = Flask(__name__)
+        server = Flask(__name__, static_url_path=url_prefix + "/static")
         server.register_blueprint(lea.server, url_prefix=url_prefix)
         return server
