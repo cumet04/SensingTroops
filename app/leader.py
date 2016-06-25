@@ -48,7 +48,7 @@ if __name__ == "__main__":
     host_addr = socket.gethostbyname(socket.gethostname())
     ep = 'http://{0}:{1}{2}/'.format(host_addr, params.port, params.prefix)
     leader = Leader(params.id, params.name, ep)
-    leader.awake(params.rec_addr, 2)
+    leader.awake(params.rec_addr, 5)
     LeaderServer.set_model(leader)
 
     @server.route(params.prefix + '/spec.json')

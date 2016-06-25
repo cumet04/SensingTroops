@@ -41,11 +41,9 @@ class ScanDelegate(DefaultDelegate):
 
         soldier = Soldier("CC2650-" + dev.addr, name)
         soldier.weapons.update(tag_weapons)
-        if not soldier.awake(rec_addr, 1):
+        if not soldier.awake(rec_addr, 3):
             soldier.shutdown()
 
-
-rec_addr = ""
 
 if __name__ == "__main__":
     global rec_addr
@@ -59,6 +57,7 @@ if __name__ == "__main__":
     scanner = Scanner().withDelegate(ScanDelegate())
     while True:
         try:
+            logger.info("scanning ...")
             devices = scanner.scan(10.0)
         except BTLEException as e:
             if e.message != "Device disconnected":

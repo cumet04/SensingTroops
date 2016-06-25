@@ -159,7 +159,7 @@ class Commander(object):
         return sub_info
 
     def _heart_watch(self, sid):
-        while self.sub_heart_waits[sid].wait(timeout=5):
+        while self.sub_heart_waits[sid].wait(timeout=20):
             # timeoutまでにevent.setされたら待ち続行
             # timeoutしたらK.I.A.
             self.sub_heart_waits[sid].clear()
