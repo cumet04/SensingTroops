@@ -178,7 +178,6 @@ class Commander(object):
             return False
         del self.subordinates[sub_id]
         self.sub_heart_waits[sub_id].set()
-        del self.sub_heart_waits[sub_id]
         return True
 
     def accept_report(self, sub_id, report):
