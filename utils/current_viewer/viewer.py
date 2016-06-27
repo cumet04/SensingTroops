@@ -1,12 +1,8 @@
 import argparse
-import json
-from flask import render_template, jsonify, Blueprint, Flask
-from flask_cors import cross_origin
-from flask_swagger import swagger
+from flask import render_template, jsonify, Flask
 from logging import getLogger, StreamHandler, DEBUG
-from controller import LeaderServer
-from model import definitions, Leader
 import utils.current_viewer.troops_viewer as tr_viewer
+import utils.current_viewer.values_viewer as vl_viewer
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -31,7 +27,13 @@ def troops_json():
 
 @server.route('/values.html', methods=['GET'])
 def show_values():
-    return render_template('swagger_ui.html')
+    return render_template('values_viewer.html')
+
+
+@server.route('/values/<name>', methods=['GET'])
+def values_data(name):
+    data_func = getattr(vl_viewer, "get_{0}_data".format(name))
+    return jsonify(values=data_func())
 
 
 if __name__ == "__main__":
