@@ -75,3 +75,12 @@ class DelegateHandler(logging.Handler):
 
     def emit(self, record):
         self.func(record.message)
+
+
+def get_ip():
+    import socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.connect(("8.8.8.8", 80))
+    ip = sock.getsockname()[0]
+    sock.close()
+    return ip

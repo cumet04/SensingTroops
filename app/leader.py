@@ -1,13 +1,12 @@
 import argparse
 import json
-import socket
 import signal
 from flask import render_template, jsonify, request
 from flask_swagger import swagger
 from logging import getLogger, StreamHandler, DEBUG, ERROR
 from controller import LeaderServer
 from model import definitions, Leader
-from utils.helpers import DelegateHandler
+from utils.helpers import DelegateHandler, get_ip
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -44,7 +43,7 @@ if __name__ == "__main__":
         print(json.dumps(spec_dict, sort_keys=True, indent=2))
         exit()
 
-    host_addr = socket.gethostbyname(socket.gethostname())
+    host_addr = get_ip()
     ep = 'http://{0}:{1}{2}/'.format(host_addr, params.port, params.prefix)
     leader = Leader(params.id, params.name, ep)
     leader.awake(params.rec_addr, 5)
