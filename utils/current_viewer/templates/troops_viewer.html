@@ -8,12 +8,44 @@
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-treeview/1.2.0/bootstrap-treeview.min.js"></script>
+    <style>
+        @font-face {
+            font-family: "icomoon";
+            src: url("/static/icomoon.ttf") format('truetype');
+        }
+        .troops{
+            font-family: "icomoon";
+            font-size: 150%;
+            position: relative;
+        }
+        .troops.commander:before{
+            content:"\e900";
+            color: #AA5656;
+        }
+        .troops.leader:before{
+            content:"\e901";
+            color: #56AA56;
+        }
+        .troops.soldier:before{
+            content:"\e902";
+            color: #808080;
+        }
+    </style>
 </head>
 <body>
     <div id="tree"></div>
 
     <script>
-        $('#tree').treeview({data: JSON.parse('{{ troops_data | safe }}') });
+        function refresh_troops() {
+            $.getJSON("./troops.json", function (res) {
+                $("#tree").treeview({
+                    data: res.data,
+                    enableLinks: true
+                });
+                $('#tree').treeview('expandAll', { silent: true });
+            });
+        }
+        refresh_troops();
     </script>
 </body>
 </html>
