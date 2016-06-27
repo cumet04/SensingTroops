@@ -11,14 +11,11 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
-tag = None  # type: SensorTag
-
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
         DefaultDelegate.__init__(self)
 
     def handleDiscovery(self, dev: ScanEntry, isNewDev, isNewData):
-        global tag
         name = str(dev.getValueText(9))  # 9 = Complete Local Name
         if not (isNewDev and "CC2650" in name):
             return
@@ -33,41 +30,35 @@ class ScanDelegate(DefaultDelegate):
         tag.gyroscope.enable()
         tag.lightmeter.enable()
         tag_weapons = {
-            "temperature":  tag.IRtemperature.read,
-            "humidity":     tag.humidity.read,
-            "barometer":    tag.barometer.read,
-            "accelerometer":tag.accelerometer.read,
-            "magnetometer": tag.magnetometer.read,
-            "gyroscope":    tag.gyroscope.read,
-            "brightness":   tag.lightmeter.read
+            "temperature":   tag.IRtemperature.read,
+            "humidity":      tag.humidity.read,
+            "barometer":     tag.barometer.read,
+            "accelerometer": tag.accelerometer.read,
+            "magnetometer":  tag.magnetometer.read,
+            "gyroscope":     tag.gyroscope.read,
+            "brightness":    tag.lightmeter.read
         }
 
         soldier = Soldier("CC2650-" + dev.addr, name)
         soldier.weapons.update(tag_weapons)
-        soldier.awake(rec_addr, 1)
+        if not soldier.awake(rec_addr, 3):
+            soldier.shutdown()
 
-
-rec_addr = ""
 
 if __name__ == "__main__":
     global rec_addr
-    global name
     parser = argparse.ArgumentParser()
-    # parser.add_argument(
-    #     'name', metavar='name', type=str, help='Target name of app')
     parser.add_argument(
         '-R', '--rec_addr', type=str, help="recruiter url",
         default="http://localhost:50000/recruiter/")
     params = parser.parse_args()
     rec_addr = params.rec_addr
 
-
     scanner = Scanner().withDelegate(ScanDelegate())
-    try:
-        devices = scanner.scan(10.0)
-    except BTLEException as e:
-        if e.message != "Device disconnected":
-            raise
-
     while True:
-        pass
+        try:
+            logger.info("scanning ...")
+            devices = scanner.scan(10.0)
+        except BTLEException as e:
+            if e.message != "Device disconnected":
+                raise

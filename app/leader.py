@@ -48,7 +48,7 @@ if __name__ == "__main__":
     host_addr = socket.gethostbyname(socket.gethostname())
     ep = 'http://{0}:{1}{2}/'.format(host_addr, params.port, params.prefix)
     leader = Leader(params.id, params.name, ep)
-    leader.awake(params.rec_addr, 2)
+    leader.awake(params.rec_addr, 5)
     LeaderServer.set_model(leader)
 
     @server.route(params.prefix + '/spec.json')
@@ -73,6 +73,7 @@ if __name__ == "__main__":
         leader.shutdown()
         original_shutdown(signum, frame)
     signal.signal(signal.SIGINT, shutdown)
+    signal.signal(signal.SIGTERM, shutdown)
 
     server.debug = True
     server.run(host='0.0.0.0', port=params.port, use_reloader=False)

@@ -159,12 +159,14 @@ class Commander(object):
         return sub_info
 
     def _heart_watch(self, sid):
-        while self.sub_heart_waits[sid].wait(timeout=5):
+        while self.sub_heart_waits[sid].wait(timeout=20):
             # timeoutまでにevent.setされたら待ち続行
             # timeoutしたらK.I.A.
             self.sub_heart_waits[sid].clear()
-        logger.error("へんじがない ただのしかばねのようだ :{0}".format(sid))
-        self.remove_subordinate(sid)
+
+        if self.remove_subordinate(sid):
+            # removeが失敗すれば（そもそも削除済であれば）実行しない
+            logger.error("へんじがない ただのしかばねのようだ :{0}".format(sid))
 
     def receive_heartbeat(self, sid):
         if not self.check_subordinate(sid):
@@ -175,7 +177,7 @@ class Commander(object):
         if not self.check_subordinate(sub_id):
             return False
         del self.subordinates[sub_id]
-        del self.sub_heart_waits[sub_id]
+        self.sub_heart_waits[sub_id].set()
         return True
 
     def accept_report(self, sub_id, report):
@@ -193,6 +195,7 @@ class Commander(object):
                 push = MongoPush(campaign.destination)
                 values = [{
                     "purpose": campaign.purpose,
+                    "place": "{0}.{1}".format(report.place, w["place"]),
                     "time": w["time"],
                     "values": w["values"]
                 } for w in report.values]
@@ -221,4 +224,7 @@ class MongoPush(object):
     def push_values(self, values):
         if len(values) == 0:
             return
+        logger.info("<<<<<<<<<<>>>>>>>>>>")
+        logger.info(values)
+        logger.info("<<<<<<<<<<>>>>>>>>>>")
         self.col.insert_many(values)
