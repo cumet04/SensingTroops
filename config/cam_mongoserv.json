@@ -1,0 +1,15 @@
+{
+  "author": "cxxx0",
+  "requirement": {
+    "values": ["brightness", "humidity"],
+    "trigger": {
+      "timer": 1
+    }
+  },
+  "trigger": {
+    "timer": 5
+  },
+  "place": "All",
+  "purpose": "test",
+  "destination": "mongodb://192.168.0.21:27017/test/troops"
+}
