@@ -13,7 +13,15 @@
     <div id="tree"></div>
 
     <script>
-        $('#tree').treeview({data: JSON.parse('{{ troops_data | safe }}') });
+        function refresh_troops() {
+            $.getJSON("./troops.json", function (res) {
+                $("#tree").treeview({
+                    data: res.data,
+                    enableLinks: true
+                });
+            });
+        }
+        refresh_troops();
     </script>
 </body>
 </html>

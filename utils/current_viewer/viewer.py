@@ -16,11 +16,18 @@ logger.addHandler(handler)
 
 
 server = Flask(__name__)
+rec_addr = "http://localhost:50000/recruiter/"
+
 
 @server.route('/troops.html', methods=['GET'])
 def show_troops():
-    return render_template('troops_viewer.html',
-                           troops_data=tr_viewer.generate_data_str())
+    return render_template('troops_viewer.html')
+
+
+@server.route('/troops.json', methods=['GET'])
+def troops_json():
+    return jsonify(data=tr_viewer.generate_data(rec_addr))
+
 
 @server.route('/values.html', methods=['GET'])
 def show_values():
