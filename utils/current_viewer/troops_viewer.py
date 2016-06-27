@@ -1,4 +1,4 @@
-from model import CommanderInfo, LeaderInfo, SoldierInfo,\
+from model import CommanderInfo, LeaderInfo, SoldierInfo, \
     Campaign, Mission, Order
 import utils.rest as rest
 
@@ -40,6 +40,7 @@ def gen_commander_data(com_addr):
     return {
         "text": "Commander: {0}({1}) at {2}".
             format(info.name, info.id, info.place),
+        "icon": "troops commander",
         "href": info.endpoint,
         "nodes": [
             {
@@ -76,8 +77,9 @@ def gen_leader_data(lea_addr):
     return {
         "text": "Leader: {0}({1}) at {2}".
             format(info.name, info.id, info.place),
+        "icon": "troops leader",
         "href": info.endpoint,
-        "nodes":[
+        "nodes": [
             {
                 "text": "missions",
                 "nodes": [gen_mission_data(m) for m in info.missions]
@@ -100,6 +102,7 @@ def gen_soldier_data(info: SoldierInfo):
     return {
         "text": "Soldier: {0}({1}) at {2}".
             format(info.name, info.id, info.place),
+        "icon": "troops soldier",
         "nodes": [
             {
                 "text": "weapons: {0}".format(info.weapons),
@@ -116,4 +119,3 @@ def gen_order_data(order):
     return {
         "text": str(order)
     }
-
