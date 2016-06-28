@@ -1,33 +1,36 @@
 <html>
- <script type="text/javascript" src="http://www.google.com/jsapi"></script>
- <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
- <script type="text/javascript">
-   google.load("visualization", "1", {packages:["corechart"]});
-   google.setOnLoadCallback(draw);
-   function draw() {
-       var data = google.visualization.arrayToDataTable([
-           ['年月', '身長', '体重'],
-           ['2011年', 173, 55],
-           ['2012年', 175, 70],
-           ['2013年', 180, 68],
-           ['2014年', 175, 67],
-           ['2015年', 173, 65]
-       ]);
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(draw);
 
-       var options = {
-           title: '年別身長体重サンプル',
-           hAxis: {title: '年月'},
-           vAxis: {title: 'cm/kg'},
-           width: 500,
-           height: 250,
-           pointSize: 6
-       };
+    function draw() {
+        var options = {
+            title: '年別身長体重サンプル',
+            hAxis: {title: '年月'},
+            vAxis: {title: 'cm/kg'},
+            width: 700,
+            height: 250,
+            pointSize: 2
+        };
 
-       var chart = new google.visualization.LineChart(document.getElementById('sample'));
-       chart.draw(data, options);
-   }
- </script>
+        $.getJSON("./values/random", function (res) {
+            var data = new google.visualization.DataTable();
+            data.addColumn('datetime', '日時');
+            data.addColumn('number', '値');
+
+            data.addRows(res.values.map(function (elem) {
+                return [new Date(elem[0]), elem[1]]
+            }));
+
+            var chart = new google.visualization.LineChart(
+                    document.getElementById('sample'));
+            chart.draw(data, options);
+        });
+    }
+</script>
 <body>
- <div id="sample" style="width: 400px;"></div>
+<div id="sample" style="width: 400px;"></div>
 </body>
 </html>
