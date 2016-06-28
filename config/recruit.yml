@@ -4,6 +4,8 @@ troops:
     subordinates:
       - lxxx0
       - lxxx1
+      - b8:27:eb:ff:39:fc
+      - b8:27:eb:0e:09:08
   - commander: cxxx1
     place: S103
     subordinates:
@@ -11,8 +13,20 @@ troops:
       - lxxx3
       - lxxx4
 squads:
-  - leader: lxxx0
+  - leader: b8:27:eb:ff:39:fc
+    place: desk-wall
+    subordinates:
+      - soldier: CC2650-a0:e6:f8:b6:f4:02
+        place: whiteboard
+  - leader: b8:27:eb:0e:09:08
     place: desk0
+    subordinates:
+      - soldier: CC2650-a0:e6:f8:ae:ad:82
+        place: right1
+      - soldier: CC2650-a0:e6:f8:c1:a6:00
+        place: right2
+  - leader: lxxx0
+    place: desk1
     subordinates:
       - soldier: sxxx0
         place: left
