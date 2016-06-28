@@ -84,3 +84,9 @@ def get_ip():
     ip = sock.getsockname()[0]
     sock.close()
     return ip
+
+
+def get_mac():
+    import netifaces
+    if_name = netifaces.interfaces()[1]  # loopbackの次のやつを取得
+    return netifaces.ifaddresses(if_name).get(netifaces.AF_LINK)[0]["addr"]

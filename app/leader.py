@@ -6,7 +6,7 @@ from flask_swagger import swagger
 from logging import getLogger, StreamHandler, DEBUG, ERROR
 from controller import LeaderServer
 from model import definitions, Leader
-from utils.helpers import DelegateHandler, get_ip
+from utils.helpers import DelegateHandler, get_ip, get_mac
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -15,16 +15,15 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
-
 if __name__ == "__main__":
     # param setting
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--spec', action="store_true", help='output spec.json and exit')
     parser.add_argument(
-        'id', metavar='id', type=str, help='Target id of app')
+        '-I', '--id', type=str, default='', help='Target id of app')
     parser.add_argument(
-        'name', metavar='name', type=str, help='Target name of app')
+        '-N', '--name', type=str, default='', help='Target name of app')
     parser.add_argument(
         '-P', '--port', type=int, default=50002, help='port')
     parser.add_argument(
@@ -42,6 +41,11 @@ if __name__ == "__main__":
         spec_dict['info']['title'] = 'SensingTroops'
         print(json.dumps(spec_dict, sort_keys=True, indent=2))
         exit()
+
+    if params.id == "":
+        params.id = get_mac()
+    if params.name == "":
+        params.name = "leader"
 
     host_addr = get_ip()
     ep = 'http://{0}:{1}{2}/'.format(host_addr, params.port, params.prefix)

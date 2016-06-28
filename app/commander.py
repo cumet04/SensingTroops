@@ -6,7 +6,7 @@ from flask import render_template, jsonify, request
 from flask_swagger import swagger
 from controller import CommanderServer
 from model import definitions, Commander
-from utils.helpers import get_ip
+from utils.helpers import get_ip, get_mac
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -21,9 +21,9 @@ if __name__ == "__main__":
     parser.add_argument(
         '--spec', action="store_true", help='output spec.json and exit')
     parser.add_argument(
-        'id', metavar='id', type=str, help='Target id of app')
+        '-I', '--id', type=str, default='', help='Target id of app')
     parser.add_argument(
-        'name', metavar='name', type=str, help='Target name of app')
+        '-N', '--name', type=str, default='', help='Target name of app')
     parser.add_argument(
         '-P', '--port', type=int, default=50001, help='port')
     parser.add_argument(
@@ -41,6 +41,11 @@ if __name__ == "__main__":
         spec_dict['info']['title'] = 'SensingTroops'
         print(json.dumps(spec_dict, sort_keys=True, indent=2))
         exit()
+
+    if params.id == "":
+        params.id = get_mac()
+    if params.name == "":
+        params.name = "commander"
 
     host_addr = get_ip()
     ep = 'http://{0}:{1}{2}/'.format(host_addr, params.port, params.prefix)
