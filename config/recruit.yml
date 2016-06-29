@@ -4,27 +4,65 @@ troops:
     subordinates:
       - lxxx0
       - lxxx1
-      - b8:27:eb:ff:39:fc
-      - b8:27:eb:0e:09:08
-  - commander: cxxx1
-    place: S103
+  - commander: experiment00
+    place: システム棟
     subordinates:
-      - lxxx2
-      - lxxx3
-      - lxxx4
+      - b8:27:eb:be:d9:3c
+      - b8:27:eb:be:f1:e9
+      - b8:27:eb:0e:09:08
+      - b8:27:eb:2b:d5:2a
+      - b8:27:eb:ff:39:fc
 squads:
-  - leader: b8:27:eb:ff:39:fc
-    place: desk-wall
+  - leader: b8:27:eb:be:d9:3c
+    # raspi-00
+    place: Floor-1
+    subordinates:
+      - soldier: CC2650-24:71:89:07:2a:83
+        # tag-00
+        place: east-side
+      - soldier: CC2650-a0:e6:f8:b6:f0:84
+        # tag-01
+        place: west-side
+  - leader: b8:27:eb:be:f1:e9
+    # raspi-01
+    place: Floor-2
+    subordinates:
+      - soldier: CC2650-a0:e6:f8:ae:08:00
+        # tag-02
+        place: east-side
+      - soldier: CC2650-24:71:89:07:4b:03
+        # tag-03
+        place: west-side
+  - leader: b8:27:eb:0e:09:08
+    # raspi-02
+    place: Floor-3
     subordinates:
       - soldier: CC2650-a0:e6:f8:b6:f4:02
-        place: whiteboard
-  - leader: b8:27:eb:0e:09:08
-    place: desk0
+        # tag-04
+        place: east-side
+      - soldier: CC2650-a0:e6:f8:b6:8e:85
+        # tag-05
+        place: west-side
+  - leader: b8:27:eb:2b:d5:2a
+    # raspi-03
+    place: Floor-4
+    subordinates:
+      - soldier: CC2650-a0:e6:f8:c1:a6:00
+        # tag-06
+        place: east-side
+      - soldier: CC2650-a0:e6:f8:c2:48:82
+        # tag-07
+        place: west-side
+  - leader: b8:27:eb:ff:39:fc
+    # raspi-04
+    place: Floor-5
     subordinates:
       - soldier: CC2650-a0:e6:f8:ae:ad:82
-        place: right1
-      - soldier: CC2650-a0:e6:f8:c1:a6:00
-        place: right2
+        # tag-08
+        place: east-side
+      - soldier: CC2650-24:71:89:06:9b:00
+        # tag-09
+        place: west-side
   - leader: lxxx0
     place: desk1
     subordinates:
@@ -43,23 +81,3 @@ squads:
         place: left
       - soldier: sxxx3
         place: right
-  - leader: lxxx2
-    place: desk2
-    subordinates:
-      - soldier: sxxx4
-        place: left
-      - soldier: sxxx5
-        place: right
-  - leader: lxxx3
-    place: desk3
-    subordinates:
-      - soldier: sxxx6
-        place: left
-      - soldier: sxxx7
-        place: right
-  - leader: lxxx4
-    place: desk4
-    subordinates:
-      - soldier: sxxx8
-        place: right
-
