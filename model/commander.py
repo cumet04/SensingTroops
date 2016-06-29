@@ -1,6 +1,7 @@
 import copy
 import json
 import utils.rest as rest
+import requests
 from threading import Thread, Event
 from typing import List, Dict
 from model.info_obj import InformationObject
@@ -66,6 +67,7 @@ class Commander(object):
         self.campaigns = {}  # type:Dict[str, Campaign]
         self.report_cache = []
         self.recruiter_ep = ""
+        self.token = ""
 
     def shutdown(self):
         url = "{0}commanders/{1}".format(self.recruiter_ep, self.id)
@@ -185,8 +187,10 @@ class Commander(object):
             return False
 
         if report.purpose == "_error":
+            msg = report.values[0]["msg"]
             logger.info(">> error report is received from {0}".format(sub_id))
-            logger.info(report.values[0]["msg"])
+            logger.info(msg)
+            self.push_error("leader-{0}'s error: {1}".format(sub_id, msg))
             return True
 
         if report.purpose in self.campaigns:
@@ -206,6 +210,17 @@ class Commander(object):
             ))
             self.report_cache.append(report)
         return True
+
+    def push_error(self, msg):
+        url = "https://slack.com/api/chat.postMessage"
+        data = {
+            "token": self.token,
+            "channel": "@inomoto",
+            "text": msg,
+            "username": "commander",
+
+        }
+        requests.post(url, data=data)
 
 
 class MongoPush(object):

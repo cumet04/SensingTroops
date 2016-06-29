@@ -1,12 +1,12 @@
 import argparse
 import json
 import signal
-from logging import getLogger, StreamHandler, DEBUG
+from logging import getLogger, StreamHandler, DEBUG, ERROR
 from flask import render_template, jsonify, request
 from flask_swagger import swagger
 from controller import CommanderServer
 from model import definitions, Commander
-from utils.helpers import get_ip, get_mac
+from utils.helpers import get_ip, get_mac, DelegateHandler
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -28,6 +28,8 @@ if __name__ == "__main__":
         '-P', '--port', type=int, default=50001, help='port')
     parser.add_argument(
         '-F', '--prefix', type=str, default='/commander', help='url prefix')
+    parser.add_argument(
+        '-T', '--token', type=str, default='', help='slack token')
     parser.add_argument(
         '-R', '--rec_addr', type=str, help="recruiter url",
         default="http://localhost:50000/recruiter/")
@@ -51,6 +53,7 @@ if __name__ == "__main__":
     ep = 'http://{0}:{1}{2}/'.format(host_addr, params.port, params.prefix)
     commander = Commander(params.id, params.name, ep)
     commander.awake(params.rec_addr)
+    commander.token = params.token
     CommanderServer.set_model(commander)
 
     @server.route(params.prefix + '/spec.json')
@@ -62,6 +65,11 @@ if __name__ == "__main__":
     @server.route(params.prefix + '/spec.html')
     def spec_html():
         return render_template('swagger_ui.html')
+
+    # エラーログ送信用ログハンドラ
+    error_handler = DelegateHandler(commander.push_error)
+    error_handler.setLevel(ERROR)
+    getLogger("model").addHandler(error_handler)
 
     # 強制終了のハンドラ
     original_shutdown = signal.getsignal(signal.SIGINT)
