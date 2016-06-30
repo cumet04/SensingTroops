@@ -1,43 +1,13 @@
 <html>
-<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<script src="http://www.google.com/jsapi" type="text/javascript"></script>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-<script type="text/javascript">
-    google.load("visualization", "1", {packages:["corechart"]});
-    google.setOnLoadCallback(draw);
-
-    // get params
-    var purpose = "{{ params.purpose }}";
-    var place = "{{ params.place }}";
-    var type = "{{ params.type }}";
-
-    function draw() {
-        var options = {
-            title: 'data viewer',
-            hAxis: {title: '日時'},
-            vAxis: {title: '-'},
-            width: 700,
-            height: 250,
-            pointSize: 2
-        };
-
-        var url = "./values/" + purpose + "/" + place + "/" + type;
-        $.getJSON(url, function (res) {
-            console.log(res);
-            var data = new google.visualization.DataTable();
-            data.addColumn('datetime', '日時');
-            data.addColumn('number', '値');
-
-            data.addRows(res.values.map(function (elem) {
-                return [new Date(elem[0]), elem[1]]
-            }));
-
-            var chart = new google.visualization.LineChart(
-                    document.getElementById('sample'));
-            chart.draw(data, options);
-        });
-    }
-</script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 <body>
-<div id="sample" style="width: 400px;"></div>
+    <span id="param_purpose" hidden>{{ params.purpose }}</span>
+    <span id="param_place" hidden>{{ params.place }}</span>
+    <span id="param_type" hidden>{{ params.type }}</span>
+    <div id="graphs"></div>
+    <script src="/static/values_viewer.js" type="text/javascript"></script>
 </body>
 </html>
