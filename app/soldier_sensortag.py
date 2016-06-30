@@ -12,6 +12,41 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
+class TagValues():
+    def __init__(self, tag: SensorTag):
+        self.tag = tag
+
+    def brightness(self):
+        return self.tag.lightmeter.read()
+
+    def temperature(self):
+        return self.tag.IRtemperature.read()[0]
+
+    def target_temp(self):
+        return self.tag.IRtemperature.read()[1]
+
+    def humidity(self):
+        return self.tag.humidity.read()[1]
+
+    def humi_temp(self):
+        return self.tag.humidity.read()[0]
+
+    def barometer(self):
+        return self.tag.barometer.read()[1]
+
+    def baro_temp(self):
+        return self.tag.barometer.read()[0]
+
+    def accelerometer(self):
+        return self.tag.accelerometer.read()
+
+    def magnetometer(self):
+        return self.tag.magnetometer.read()
+
+    def gyroscope(self):
+        return self.tag.gyroscope.read()
+
+
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
         DefaultDelegate.__init__(self)
@@ -31,14 +66,18 @@ class ScanDelegate(DefaultDelegate):
         tag.magnetometer.enable()
         tag.gyroscope.enable()
         tag.lightmeter.enable()
+        reader = TagValues(tag)
         tag_weapons = {
-            "temperature":   tag.IRtemperature.read,
-            "humidity":      tag.humidity.read,
-            "barometer":     tag.barometer.read,
-            "accelerometer": tag.accelerometer.read,
-            "magnetometer":  tag.magnetometer.read,
-            "gyroscope":     tag.gyroscope.read,
-            "brightness":    tag.lightmeter.read
+            "temperature":   reader.temperature,
+            "humidity":      reader.humidity,
+            "barometer":     reader.barometer,
+            "accelerometer": reader.accelerometer,
+            "magnetometer":  reader.magnetometer,
+            "gyroscope":     reader.gyroscope,
+            "brightness":    reader.brightness,
+            "target_temp":   reader.target_temp,
+            "humi_temp":     reader.humi_temp,
+            "baro_temp":     reader.baro_temp,
         }
 
         soldier = Soldier("CC2650-" + dev.addr, name)
