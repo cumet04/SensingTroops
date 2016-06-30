@@ -17,34 +17,34 @@ class TagValues():
         self.tag = tag
 
     def brightness(self):
-        return self.tag.lightmeter.read()
+        return (self.tag.lightmeter.read(), "lux")
 
     def temperature(self):
-        return self.tag.IRtemperature.read()[0]
+        return (self.tag.IRtemperature.read()[0], "degC")
 
     def target_temp(self):
-        return self.tag.IRtemperature.read()[1]
+        return (self.tag.IRtemperature.read()[1], "degC")
 
     def humidity(self):
-        return self.tag.humidity.read()[1]
+        return (self.tag.humidity.read()[1], "%")
 
     def humi_temp(self):
-        return self.tag.humidity.read()[0]
+        return (self.tag.humidity.read()[0], "degC")
 
     def barometer(self):
-        return self.tag.barometer.read()[1]
+        return (self.tag.barometer.read()[1], "mbar")
 
     def baro_temp(self):
-        return self.tag.barometer.read()[0]
+        return (self.tag.barometer.read()[0], "degC")
 
     def accelerometer(self):
-        return self.tag.accelerometer.read()
+        return (self.tag.accelerometer.read(), "g")
 
     def magnetometer(self):
-        return self.tag.magnetometer.read()
+        return (self.tag.magnetometer.read(), "uT")
 
     def gyroscope(self):
-        return self.tag.gyroscope.read()
+        return (self.tag.gyroscope.read(), "deg/sec")
 
 
 class ScanDelegate(DefaultDelegate):

@@ -56,8 +56,8 @@ class Soldier(object):
         self.name = name
         self.place = ""
         self.weapons = {
-            "zero": lambda: 0,
-            "random": random.random
+            "zero": lambda: (0, "-"),
+            "random": lambda: (random.random(), "-")
         }
         self.orders = {}  # type:Dict[str, Order]
         self.superior_ep = ""  # type: str
@@ -139,12 +139,14 @@ class WorkingThread(Thread):
         if 'timer' in self.order.trigger.keys():
             interval = self.order.trigger['timer']
             while not self.lock.wait(timeout=interval):
-                values = [
-                    {
-                        "type": w,
-                        "value": self.soldier.weapons[w](),
-                        "unit": "-"
-                    } for w in self.order.values]
+                values = []
+                for type in self.order.values:
+                    val, unit = self.soldier.weapons[type]()
+                    values.append({
+                        "type": type,
+                        "value": val,
+                        "unit": unit
+                    })
                 time = datetime.datetime.now(datetime.timezone.utc).isoformat()
                 work = Work(time, self.order.purpose, values)
 
