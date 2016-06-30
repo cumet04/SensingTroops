@@ -1,4 +1,5 @@
 import argparse
+import time
 from bluepy.sensortag import SensorTag
 from bluepy.btle import Scanner, ScanEntry,DefaultDelegate, BTLEException
 from model.soldier import Soldier
@@ -14,6 +15,7 @@ logger.addHandler(handler)
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
         DefaultDelegate.__init__(self)
+        self.soldiers = []
 
     def handleDiscovery(self, dev: ScanEntry, isNewDev, isNewData):
         name = str(dev.getValueText(9))  # 9 = Complete Local Name
@@ -60,5 +62,6 @@ if __name__ == "__main__":
             logger.info("scanning ...")
             devices = scanner.scan(10.0)
         except BTLEException as e:
-            if e.message != "Device disconnected":
-                raise
+            if e.message != "Device disconnected" and \
+                e.message != "Failed to connect to peripheral":
+                    raise

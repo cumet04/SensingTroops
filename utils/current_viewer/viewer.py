@@ -1,8 +1,9 @@
 import argparse
-from flask import render_template, jsonify, Flask
-from logging import getLogger, StreamHandler, DEBUG
+import hashlib
 import utils.current_viewer.troops_viewer as tr_viewer
 import utils.current_viewer.values_viewer as vl_viewer
+from flask import render_template, jsonify, Flask, request, make_response
+from logging import getLogger, StreamHandler, DEBUG
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -22,18 +23,34 @@ def show_troops():
 
 @server.route('/troops.json', methods=['GET'])
 def troops_json():
-    return jsonify(data=tr_viewer.generate_data(rec_addr))
+    data = tr_viewer.generate_data(rec_addr)
+
+    m = hashlib.md5()
+    m.update(str(data).encode())
+    etag = m.hexdigest()
+    if_none_match = str(request.if_none_match)[1:-1]  # ダブルクォートを削除
+    if etag == if_none_match:
+        return make_response(), 304
+
+    response = jsonify(data=tr_viewer.generate_data(rec_addr))
+    response.set_etag(etag)
+    return response
 
 
 @server.route('/values.html', methods=['GET'])
 def show_values():
-    return render_template('values_viewer.html')
+    params = {
+        "purpose": request.args.get("purpose", default="", type=str),
+        "place": request.args.get("place", default="", type=str),
+        "type": request.args.get("type", default="", type=str),
+    }
+    return render_template('values_viewer.html', params=params)
 
 
-@server.route('/values/<name>', methods=['GET'])
-def values_data(name):
-    data_func = getattr(vl_viewer, "get_{0}_data".format(name))
-    return jsonify(values=data_func())
+@server.route('/values/<purpose>/<place>/<type>', methods=['GET'])
+def values_data(purpose, place, type):
+    data = vl_viewer.get_values(purpose, place, type)
+    return jsonify(values=data)
 
 
 if __name__ == "__main__":

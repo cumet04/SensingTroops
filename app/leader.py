@@ -1,14 +1,12 @@
 import argparse
 import json
-import socket
 import signal
 from flask import render_template, jsonify, request
-from flask_cors import cross_origin
 from flask_swagger import swagger
 from logging import getLogger, StreamHandler, DEBUG, ERROR
 from controller import LeaderServer
 from model import definitions, Leader
-from utils.helpers import DelegateHandler
+from utils.helpers import DelegateHandler, get_ip, get_mac
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -17,16 +15,15 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
-
 if __name__ == "__main__":
     # param setting
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--spec', action="store_true", help='output spec.json and exit')
     parser.add_argument(
-        'id', metavar='id', type=str, help='Target id of app')
+        '-I', '--id', type=str, default='', help='Target id of app')
     parser.add_argument(
-        'name', metavar='name', type=str, help='Target name of app')
+        '-N', '--name', type=str, default='', help='Target name of app')
     parser.add_argument(
         '-P', '--port', type=int, default=50002, help='port')
     parser.add_argument(
@@ -45,14 +42,18 @@ if __name__ == "__main__":
         print(json.dumps(spec_dict, sort_keys=True, indent=2))
         exit()
 
-    host_addr = socket.gethostbyname(socket.gethostname())
+    if params.id == "":
+        params.id = get_mac()
+    if params.name == "":
+        params.name = "leader"
+
+    host_addr = get_ip()
     ep = 'http://{0}:{1}{2}/'.format(host_addr, params.port, params.prefix)
     leader = Leader(params.id, params.name, ep)
-    leader.awake(params.rec_addr, 5)
+    leader.awake(params.rec_addr, 4)
     LeaderServer.set_model(leader)
 
     @server.route(params.prefix + '/spec.json')
-    @cross_origin()
     def output_spec_json():
         spec_dict = swagger(server, template={'definitions': definitions})
         spec_dict['info']['title'] = 'SensingTroops'

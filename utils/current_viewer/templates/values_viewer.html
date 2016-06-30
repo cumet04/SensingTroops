@@ -5,17 +5,24 @@
     google.load("visualization", "1", {packages:["corechart"]});
     google.setOnLoadCallback(draw);
 
+    // get params
+    var purpose = "{{ params.purpose }}";
+    var place = "{{ params.place }}";
+    var type = "{{ params.type }}";
+
     function draw() {
         var options = {
-            title: '年別身長体重サンプル',
-            hAxis: {title: '年月'},
-            vAxis: {title: 'cm/kg'},
+            title: 'data viewer',
+            hAxis: {title: '日時'},
+            vAxis: {title: '-'},
             width: 700,
             height: 250,
             pointSize: 2
         };
 
-        $.getJSON("./values/random", function (res) {
+        var url = "./values/" + purpose + "/" + place + "/" + type;
+        $.getJSON(url, function (res) {
+            console.log(res);
             var data = new google.visualization.DataTable();
             data.addColumn('datetime', '日時');
             data.addColumn('number', '値');

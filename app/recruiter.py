@@ -3,7 +3,6 @@ import argparse
 import json
 from logging import getLogger, StreamHandler, DEBUG
 from flask_swagger import swagger
-from flask_cors import cross_origin
 from flask import jsonify, render_template
 from controller import RecruiterServer
 from model import definitions, Recruiter
@@ -40,7 +39,6 @@ if __name__ == "__main__":
     RecruiterServer.set_model(recruiter)
 
     @server.route(params.prefix + '/spec.json')
-    @cross_origin()
     def output_spec_json():
         spec_dict = swagger(server, template={'definitions': definitions})
         spec_dict['info']['title'] = 'SensingTroops'
