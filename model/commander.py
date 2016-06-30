@@ -237,6 +237,10 @@ class MongoPush(object):
         self.col = pymongo.MongoClient(host)[db_name][col_name]
 
     def push_values(self, values):
+        import dateutil.parser
         if len(values) == 0:
             return
+        # timeの値を文字列からdatetime型に変換する
+        [v.update({"time": dateutil.parser.parse(v["time"])}) for v in values]
+
         self.col.insert_many(values)

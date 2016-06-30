@@ -215,7 +215,7 @@ class Leader(object):
         return True
 
     def submit_error(self, msg):
-        time = datetime.datetime.utcnow().isoformat()
+        time = datetime.datetime.now(datetime.timezone.utc).isoformat()
         report = Report(time=time,
                         place="internal",
                         purpose="_error",
@@ -237,7 +237,7 @@ class WorkingThread(Thread):
             interval = self.mission.trigger['timer']
             while not self.lock.wait(timeout=interval):
                 m_id = self.mission.get_id()
-                time = datetime.datetime.utcnow().isoformat()
+                time = datetime.datetime.now(datetime.timezone.utc).isoformat()
                 works = []
                 for sid, w in self.leader.work_cache:
                     if w.purpose != m_id:

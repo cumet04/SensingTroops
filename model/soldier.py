@@ -145,7 +145,7 @@ class WorkingThread(Thread):
                         "value": self.soldier.weapons[w](),
                         "unit": "-"
                     } for w in self.order.values]
-                time = datetime.datetime.utcnow().isoformat()
+                time = datetime.datetime.now(datetime.timezone.utc).isoformat()
                 work = Work(time, self.order.purpose, values)
 
                 url = "{0}{1}".format(
