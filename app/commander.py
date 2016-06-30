@@ -29,6 +29,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '-F', '--prefix', type=str, default='/commander', help='url prefix')
     parser.add_argument(
+        '-E', '--endpoint', type=str, default='', help='endpoint')
+    parser.add_argument(
         '-T', '--token', type=str, default='', help='slack token')
     parser.add_argument(
         '-R', '--rec_addr', type=str, help="recruiter url",
@@ -48,9 +50,12 @@ if __name__ == "__main__":
         params.id = get_mac()
     if params.name == "":
         params.name = "commander"
+    if params.endpoint == "":
+        host_addr = get_ip()
+        ep = 'http://{0}:{1}{2}/'.format(host_addr, params.port, params.prefix)
+    else:
+        ep = params.endpoint
 
-    host_addr = get_ip()
-    ep = 'http://{0}:{1}{2}/'.format(host_addr, params.port, params.prefix)
     commander = Commander(params.id, params.name, ep)
     commander.awake(params.rec_addr)
     commander.token = params.token
