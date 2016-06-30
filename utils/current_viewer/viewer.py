@@ -39,13 +39,18 @@ def troops_json():
 
 @server.route('/values.html', methods=['GET'])
 def show_values():
-    return render_template('values_viewer.html')
+    params = {
+        "purpose": request.args.get("purpose", default="", type=str),
+        "place": request.args.get("place", default="", type=str),
+        "type": request.args.get("type", default="", type=str),
+    }
+    return render_template('values_viewer.html', params=params)
 
 
-@server.route('/values/<name>', methods=['GET'])
-def values_data(name):
-    data_func = getattr(vl_viewer, "get_{0}_data".format(name))
-    return jsonify(values=data_func())
+@server.route('/values/<purpose>/<place>/<type>', methods=['GET'])
+def values_data(purpose, place, type):
+    data = vl_viewer.get_values(purpose, place, type)
+    return jsonify(values=data)
 
 
 if __name__ == "__main__":
