@@ -161,7 +161,7 @@ class Commander(object):
         return sub_info
 
     def _heart_watch(self, sid):
-        while self.sub_heart_waits[sid].wait(timeout=20):
+        while self.sub_heart_waits[sid].wait(timeout=30):
             # timeoutまでにevent.setされたら待ち続行
             # timeoutしたらK.I.A.
             self.sub_heart_waits[sid].clear()
@@ -197,17 +197,18 @@ class Commander(object):
             campaign = self.campaigns[report.purpose]
             if "mongodb://" in campaign.destination:
                 push = MongoPush(campaign.destination)
-                values = [{
-                    "purpose": campaign.purpose,
-                    "place": "{0}.{1}".format(report.place, w["place"]),
-                    "time": w["time"],
-                    "values": w["values"]
-                } for w in report.values]
-                push.push_values(values)
+                push_data = []
+                for work in report.values:
+                    push_data.extend([{
+                        "purpose": campaign.purpose,
+                        "place": "{0}.{1}".format(report.place, work["place"]),
+                        "time": work["time"],
+                        "data": v
+                    } for v in work["values"]])
+                push.push_values(push_data)
 
-            logger.info("accept_report: {0}".format(
-                json.dumps(report.to_dict(), sort_keys=True, indent=2)
-            ))
+                logger.info("accept_report: {0}".format(push_data))
+
             self.report_cache.append(report)
         return True
 
@@ -218,7 +219,6 @@ class Commander(object):
             "channel": "@inomoto",
             "text": msg,
             "username": "commander",
-
         }
         requests.post(url, data=data)
 
@@ -239,7 +239,4 @@ class MongoPush(object):
     def push_values(self, values):
         if len(values) == 0:
             return
-        logger.info("<<<<<<<<<<>>>>>>>>>>")
-        logger.info(values)
-        logger.info("<<<<<<<<<<>>>>>>>>>>")
         self.col.insert_many(values)

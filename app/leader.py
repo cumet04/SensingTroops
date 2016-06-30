@@ -50,7 +50,7 @@ if __name__ == "__main__":
     host_addr = get_ip()
     ep = 'http://{0}:{1}{2}/'.format(host_addr, params.port, params.prefix)
     leader = Leader(params.id, params.name, ep)
-    leader.awake(params.rec_addr, 5)
+    leader.awake(params.rec_addr, 4)
     LeaderServer.set_model(leader)
 
     @server.route(params.prefix + '/spec.json')
