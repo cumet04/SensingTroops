@@ -58,7 +58,7 @@ class ScanDelegate(DefaultDelegate):
             return
 
         if dev.addr not in tags:
-            logger.info("Tag {0} is found, but it's not mine.")
+            logger.info("Tag {0} is found, but it's not mine.".format(dev.addr))
             return
 
         logger.info("Tag is found: {0}".format(dev.addr))
