@@ -57,6 +57,10 @@ class ScanDelegate(DefaultDelegate):
         if not (isNewDev and "CC2650" in name):
             return
 
+        if dev.addr not in tags:
+            logger.info("Tag {0} is found, but it's not mine.")
+            return
+
         logger.info("Tag is found: {0}".format(dev.addr))
         try:
             tag = SensorTag(dev.addr)
@@ -93,7 +97,11 @@ class ScanDelegate(DefaultDelegate):
             soldier.shutdown()
 
 
+
+
 if __name__ == "__main__":
+    global tags
+    tags = []
     global rec_addr
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -101,6 +109,10 @@ if __name__ == "__main__":
         default="http://localhost:50000/recruiter/")
     params = parser.parse_args()
     rec_addr = params.rec_addr
+
+    for line in open('/opt/tags.conf', 'r'):
+        tags.append(line[:-1])
+    print(tags)
 
     scanner = Scanner().withDelegate(ScanDelegate())
     while True:
