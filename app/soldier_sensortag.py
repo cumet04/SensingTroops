@@ -58,7 +58,14 @@ class ScanDelegate(DefaultDelegate):
             return
 
         logger.info("Tag is found: {0}".format(dev.addr))
-        tag = SensorTag(dev.addr)
+        try:
+            tag = SensorTag(dev.addr)
+        except BTLEException as e:
+            if e.message == "Failed to connect to peripheral":
+                logger.info("connection failed: {0}".format(dev.addr))
+                return
+            raise
+
         tag.IRtemperature.enable()
         tag.humidity.enable()
         tag.barometer.enable()
