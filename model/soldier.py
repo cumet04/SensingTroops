@@ -142,6 +142,8 @@ class WorkingThread(Thread):
                 values = []
                 for type in self.order.values:
                     val, unit = self.soldier.weapons[type]()
+                    if val is None:
+                        return
                     values.append({
                         "type": type,
                         "value": val,

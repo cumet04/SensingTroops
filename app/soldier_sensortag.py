@@ -17,86 +17,122 @@ class TagValues():
         self.tag = tag
 
     def brightness(self):
-        return (self.tag.lightmeter.read(), "lux")
+        try:
+            return (self.tag.lightmeter.read(), "lux")
+        except:
+            logger.info("Disconnected: {0}".format(self.tag.addr))
+            self.tag = None
+            return (None, None)
 
     def temperature(self):
-        return (self.tag.IRtemperature.read()[0], "degC")
+        try:
+            return (self.tag.IRtemperature.read()[0], "degC")
+        except:
+            logger.info("Disconnected: {0}".format(self.tag.addr))
+            self.tag = None
+            return (None, None)
 
     def target_temp(self):
-        return (self.tag.IRtemperature.read()[1], "degC")
+        try:
+            return (self.tag.IRtemperature.read()[1], "degC")
+        except:
+            logger.info("Disconnected: {0}".format(self.tag.addr))
+            self.tag = None
+            return (None, None)
 
     def humidity(self):
-        return (self.tag.humidity.read()[1], "%")
+        try:
+            return (self.tag.humidity.read()[1], "%")
+        except:
+            logger.info("Disconnected: {0}".format(self.tag.addr))
+            self.tag = None
+            return (None, None)
 
     def humi_temp(self):
-        return (self.tag.humidity.read()[0], "degC")
+        try:
+            return (self.tag.humidity.read()[0], "degC")
+        except:
+            logger.info("Disconnected: {0}".format(self.tag.addr))
+            self.tag = None
+            return (None, None)
 
     def barometer(self):
-        return (self.tag.barometer.read()[1], "mbar")
+        try:
+            return (self.tag.barometer.read()[1], "mbar")
+        except:
+            logger.info("Disconnected: {0}".format(self.tag.addr))
+            self.tag = None
+            return (None, None)
 
     def baro_temp(self):
-        return (self.tag.barometer.read()[0], "degC")
+        try:
+            return (self.tag.barometer.read()[0], "degC")
+        except:
+            logger.info("Disconnected: {0}".format(self.tag.addr))
+            self.tag = None
+            return (None, None)
 
     def accelerometer(self):
-        return (self.tag.accelerometer.read(), "g")
+        try:
+            return (self.tag.accelerometer.read(), "g")
+        except:
+            logger.info("Disconnected: {0}".format(self.tag.addr))
+            self.tag = None
+            return (None, None)
 
     def magnetometer(self):
-        return (self.tag.magnetometer.read(), "uT")
+        try:
+            return (self.tag.magnetometer.read(), "uT")
+        except:
+            logger.info("Disconnected: {0}".format(self.tag.addr))
+            self.tag = None
+            return (None, None)
 
     def gyroscope(self):
-        return (self.tag.gyroscope.read(), "deg/sec")
-
-
-class ScanDelegate(DefaultDelegate):
-    def __init__(self):
-        DefaultDelegate.__init__(self)
-        self.soldiers = []
-
-    def handleDiscovery(self, dev: ScanEntry, isNewDev, isNewData):
-        name = str(dev.getValueText(9))  # 9 = Complete Local Name
-        if not (isNewDev and "CC2650" in name):
-            return
-
-        if dev.addr not in tags:
-            logger.info("Tag {0} is found, but it's not mine.".format(dev.addr))
-            return
-
-        logger.info("Tag is found: {0}".format(dev.addr))
         try:
-            tag = SensorTag(dev.addr)
-        except BTLEException as e:
-            if "Failed to connect to peripheral" in e.message:
-                logger.info("connection failed: {0}".format(dev.addr))
-                return
-            raise
-
-        tag.IRtemperature.enable()
-        tag.humidity.enable()
-        tag.barometer.enable()
-        tag.accelerometer.enable()
-        tag.magnetometer.enable()
-        tag.gyroscope.enable()
-        tag.lightmeter.enable()
-        reader = TagValues(tag)
-        tag_weapons = {
-            "temperature":   reader.temperature,
-            "humidity":      reader.humidity,
-            "barometer":     reader.barometer,
-            "accelerometer": reader.accelerometer,
-            "magnetometer":  reader.magnetometer,
-            "gyroscope":     reader.gyroscope,
-            "brightness":    reader.brightness,
-            "target_temp":   reader.target_temp,
-            "humi_temp":     reader.humi_temp,
-            "baro_temp":     reader.baro_temp,
-        }
-
-        soldier = Soldier("CC2650-" + dev.addr, name)
-        soldier.weapons.update(tag_weapons)
-        if not soldier.awake(rec_addr, 10):
-            soldier.shutdown()
+            return (self.tag.gyroscope.read(), "deg/sec")
+        except:
+            logger.info("Disconnected: {0}".format(self.tag.addr))
+            self.tag = None
+            return (None, None)
 
 
+def connect(addr):
+    logger.info("connecting: {0}".format(addr))
+    try:
+        tag = SensorTag(addr)
+    except BTLEException as e:
+        if "Failed to connect to peripheral" in e.message:
+            logger.info("connection failed: {0}".format(addr))
+            return None, None
+        raise
+
+    tag.IRtemperature.enable()
+    tag.humidity.enable()
+    tag.barometer.enable()
+    tag.accelerometer.enable()
+    tag.magnetometer.enable()
+    tag.gyroscope.enable()
+    tag.lightmeter.enable()
+    reader = TagValues(tag)
+    tag_weapons = {
+        "temperature":   reader.temperature,
+        "humidity":      reader.humidity,
+        "barometer":     reader.barometer,
+        "accelerometer": reader.accelerometer,
+        "magnetometer":  reader.magnetometer,
+        "gyroscope":     reader.gyroscope,
+        "brightness":    reader.brightness,
+        "target_temp":   reader.target_temp,
+        "humi_temp":     reader.humi_temp,
+        "baro_temp":     reader.baro_temp,
+    }
+
+    soldier = Soldier("CC2650-" + addr, "SensorTag")
+    soldier.weapons.update(tag_weapons)
+    if not soldier.awake(rec_addr, 10):
+        soldier.shutdown()
+    return reader, soldier
 
 
 if __name__ == "__main__":
@@ -114,12 +150,18 @@ if __name__ == "__main__":
         tags.append(line[:-1])
     print(tags)
 
-    scanner = Scanner().withDelegate(ScanDelegate())
+    soldiers = {
+        tags[0]: (None, None),
+        tags[1]: (None, None)
+    }
     while True:
-        try:
-            logger.info("scanning ...")
-            devices = scanner.scan(10.0)
-        except BTLEException as e:
-            if e.message != "Device disconnected" and \
-                e.message != "Failed to connect to peripheral":
-                    raise
+        sol = soldiers[tags[0]]
+        if sol[0] is None or sol[0].tag is None:
+            sol = connect(tags[0])
+
+        sol = soldiers[tags[1]]
+        if sol[0] is None or sol[0].tag is None:
+            sol = connect(tags[1])
+
+        time.sleep(5)
+
