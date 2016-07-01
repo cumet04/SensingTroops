@@ -151,16 +151,20 @@ if __name__ == "__main__":
     print(tags)
 
     soldiers = {
-        tags[0]: (None, None),
-        tags[1]: (None, None)
+        tags[0]: connect(tags[0]),
+        tags[1]: connect(tags[1])
     }
     while True:
         sol = soldiers[tags[0]]
         if sol[0] is None or sol[0].tag is None:
+            if sol[1] is not None:
+                sol[1].shutdown()
             sol = connect(tags[0])
 
         sol = soldiers[tags[1]]
         if sol[0] is None or sol[0].tag is None:
+            if sol[1] is not None:
+                sol[1].shutdown()
             sol = connect(tags[1])
 
         time.sleep(5)

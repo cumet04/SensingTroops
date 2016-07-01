@@ -70,11 +70,12 @@ class Soldier(object):
 
         if self.superior_ep == "":
             return True
-        url = "{0}subordinates/{1}".format(self.superior_ep, self.id)
-        res, err = rest.delete(url)
-        if err is not None:
-            logger.error("Removing soldier info from leader is failed.")
-            return False
+        # FIXME: SensorTag実験用
+        # url = "{0}subordinates/{1}".format(self.superior_ep, self.id)
+        # res, err = rest.delete(url)
+        # if err is not None:
+        #     logger.error("Removing soldier info from leader is failed.")
+        #     return False
         return True
 
     def awake(self, rec_ep: str, heartbeat_rate: int):
