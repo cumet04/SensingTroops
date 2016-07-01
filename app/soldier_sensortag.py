@@ -61,7 +61,7 @@ class ScanDelegate(DefaultDelegate):
         try:
             tag = SensorTag(dev.addr)
         except BTLEException as e:
-            if e.message == "Failed to connect to peripheral":
+            if "Failed to connect to peripheral" in e.message:
                 logger.info("connection failed: {0}".format(dev.addr))
                 return
             raise
