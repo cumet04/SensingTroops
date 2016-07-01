@@ -82,7 +82,7 @@ class ScanDelegate(DefaultDelegate):
 
         soldier = Soldier("CC2650-" + dev.addr, name)
         soldier.weapons.update(tag_weapons)
-        if not soldier.awake(rec_addr, 3):
+        if not soldier.awake(rec_addr, 10):
             soldier.shutdown()
 
 

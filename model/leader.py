@@ -175,7 +175,8 @@ class Leader(object):
         logger.debug('In accept_subordinate:')
         logger.debug('> sub_info:{0}'.format(sub_info))
         if self.check_subordinate(sub_info.id):
-            return False
+            # return False
+            return True  # SensorTagの不安定さの対策
         self.subordinates[sub_info.id] = sub_info
         self.sub_heart_waits[sub_info.id] = Event()
         Thread(target=self._heart_watch,
@@ -186,14 +187,13 @@ class Leader(object):
         return True
 
     def _heart_watch(self, sid):
-        while self.sub_heart_waits[sid].wait(timeout=10):
+        while self.sub_heart_waits[sid].wait(timeout=300):
             # timeoutまでにevent.setされたら待ち続行
             # timeoutしたらK.I.A.
             self.sub_heart_waits[sid].clear()
 
-        if self.remove_subordinate(sid):
-            # removeが失敗すれば（そもそも削除済であれば）実行しない
-            logger.error("へんじがない ただのしかばねのようだ :{0}".format(sid))
+        # 暫定的に明示的な削除をされている場合でも通知する
+        logger.error("へんじがない ただのしかばねのようだ :{0}".format(sid))
 
     def receive_heartbeat(self, sid):
         if not self.check_subordinate(sid):
