@@ -49,7 +49,7 @@ def show_values():
 
 @server.route('/troops-viewer/values/<purpose>/<place>/<type>', methods=['GET'])
 def values_data(purpose, place, type):
-    data = vl_viewer.get_values(purpose, place, type)
+    data = vl_viewer.get_values(purpose, place, type, 1000)
     return jsonify(values=data)
 
 

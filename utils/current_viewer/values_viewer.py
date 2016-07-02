@@ -7,7 +7,7 @@ def get_collection():
     # return pymongo.MongoClient("localhost")["troops"]["values"]
 
 
-def get_values(purpose, place, type):
+def get_values(purpose, place, type, max_count):
     now = datetime.datetime.now(datetime.timezone.utc)
     limit_time = now - datetime.timedelta(days=1)
 
@@ -23,11 +23,11 @@ def get_values(purpose, place, type):
     search.update(s_time)
 
     filter = {"_id": 0}
-    res = col.find(search, projection=filter)
+    res = col.find(search, projection=filter).sort("time", pymongo.DESCENDING)
+    res_list = list(res)
+    scaled_items = res_list[::len(res_list) // max_count + 1]
 
-    value_list = []
-    for item in res:
-        v = item["data"]["value"]
-        unit = item["data"]["unit"]
-        value_list.append([item["time"], v, unit])
-    return value_list
+    return [
+        [i["time"], i["data"]["value"], i["data"]["unit"]]
+        for i in scaled_items
+    ]
