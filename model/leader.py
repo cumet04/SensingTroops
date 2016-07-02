@@ -192,8 +192,9 @@ class Leader(object):
             # timeoutしたらK.I.A.
             self.sub_heart_waits[sid].clear()
 
-        # 暫定的に明示的な削除をされている場合でも通知する
-        logger.error("へんじがない ただのしかばねのようだ :{0}".format(sid))
+        if self.remove_subordinate(sid):
+            # removeが失敗すれば（そもそも削除済であれば）実行しない
+            logger.error("へんじがない ただのしかばねのようだ :{0}".format(sid))
 
     def receive_heartbeat(self, sid):
         if not self.check_subordinate(sid):

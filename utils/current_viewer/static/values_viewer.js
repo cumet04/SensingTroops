@@ -48,9 +48,9 @@ function draw_graph(dom, purpose, place, type) {
       title: place,
       hAxis: {title: '日時'},
       vAxis: {title: unit},
-      width: 700,
+      width: 1000,
       height: 250,
-      pointSize: 2
+      pointSize: 1
     };
 
     var chart = new google.visualization.LineChart(dom);
