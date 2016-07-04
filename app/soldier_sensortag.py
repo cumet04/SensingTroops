@@ -108,7 +108,9 @@ def connect(addr):
             logger.info("connection failed: {0}".format(addr))
             return None, None
         raise
+    logger.info("connected: {0}".format(addr))
 
+    time.sleep(3)
     tag.IRtemperature.enable()
     tag.humidity.enable()
     tag.barometer.enable()
@@ -116,7 +118,7 @@ def connect(addr):
     tag.magnetometer.enable()
     tag.gyroscope.enable()
     tag.lightmeter.enable()
-    time.sleep(2)
+    time.sleep(10)
     reader = TagValues(tag)
     tag_weapons = {
         "temperature":   reader.temperature,

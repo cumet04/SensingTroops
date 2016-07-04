@@ -148,6 +148,7 @@ class WorkingThread(Thread):
                 for type in self.order.values:
                     val, unit = self.soldier.weapons[type]()
                     if val is None:
+                        self.soldier.shutdown()
                         return
                     values.append({
                         "type": type,
@@ -162,8 +163,8 @@ class WorkingThread(Thread):
                     "subordinates/{0}/work".format(self.soldier.id))
                 res, err = rest.post(url, json=work.to_dict())
                 if err is not None:
-                    break
-            self.soldier.shutdown()
+                    self.soldier.shutdown()
+                    return
         else:
             pass
 
