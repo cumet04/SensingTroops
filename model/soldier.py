@@ -78,6 +78,10 @@ class Soldier(object):
         #     return False
         return True
 
+    def is_alive(self):
+        # sensortag版の再起動条件に必要
+        return self.heartbeat_thread.is_alive()
+
     def awake(self, rec_ep: str, heartbeat_rate: int):
         from model import LeaderInfo
 
@@ -156,8 +160,10 @@ class WorkingThread(Thread):
                 url = "{0}{1}".format(
                     self.soldier.superior_ep,
                     "subordinates/{0}/work".format(self.soldier.id))
-                rest.post(url, json=work.to_dict())
-                # TODO: エラー処理
+                res, err = rest.post(url, json=work.to_dict())
+                if err is not None:
+                    break
+            self.soldier.shutdown()
         else:
             pass
 
@@ -175,7 +181,7 @@ class HeartBeat(Thread):
             url = self.soldier.superior_ep + "subordinates/" + self.soldier.id
             res, err = rest.get(url, etag=self.etag)
             if err is not None:
-                return
+                break
             if res.status_code == 304:
                 continue
             self.etag = res.headers['ETag']
@@ -186,3 +192,4 @@ class HeartBeat(Thread):
             self.soldier.working_threads.clear()
             for m in info.orders:
                 self.soldier.accept_order(m)
+        self.soldier.shutdown()
