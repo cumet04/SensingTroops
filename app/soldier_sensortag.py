@@ -4,6 +4,7 @@ from bluepy.sensortag import SensorTag
 from bluepy.btle import Scanner, ScanEntry,DefaultDelegate, BTLEException
 from model.soldier import Soldier
 from logging import getLogger, StreamHandler, DEBUG
+from threading import Thread
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -15,86 +16,75 @@ logger.addHandler(handler)
 class TagValues():
     def __init__(self, tag: SensorTag):
         self.tag = tag
+        self.values = {
+            "brightness": None,
+            "temperature": None,
+            "target_temp": None,
+            "humidity": None,
+            "humi_temp": None,
+            "barometer": None,
+            "baro_temp": None,
+            "accelerometer": None,
+            "magnetometer": None,
+            "gyroscope": None,
+        }
+        Thread(target=self.get_values, daemon=True).start()
+
+    def get_values(self):
+        wait = 1
+        while True:
+            try:
+                time.sleep(wait)
+                self.values["brightness"] = self.tag.lightmeter.read()
+                time.sleep(wait)
+                self.values["temperature"], self.values["target_temp"] = \
+                    self.tag.IRtemperature.read()
+                time.sleep(wait)
+                self.values["humi_temp"], self.values["humidity"] = \
+                    self.tag.humidity.read()
+                time.sleep(wait)
+                self.values["baro_temp"], self.values["barometer"] = \
+                    self.tag.barometer.read()
+                time.sleep(wait)
+                self.values["accelerometer"] = self.tag.accelerometer.read()
+                time.sleep(wait)
+                self.values["magnetometer"] = self.tag.magnetometer.read()
+                time.sleep(wait)
+                self.values["gyroscope"] = self.tag.gyroscope.read()
+            except:
+                logger.info("Disconnected: {0}".format(self.tag.addr))
+                self.tag = None
+                return
 
     def brightness(self):
-        try:
-            return (self.tag.lightmeter.read(), "lux")
-        except:
-            logger.info("Disconnected: {0}".format(self.tag.addr))
-            self.tag = None
-            return (None, None)
+        return (self.values["brightness"], "lux")
 
     def temperature(self):
-        try:
-            return (self.tag.IRtemperature.read()[0], "degC")
-        except:
-            logger.info("Disconnected: {0}".format(self.tag.addr))
-            self.tag = None
-            return (None, None)
+        return (self.values["temperature"], "degC")
 
     def target_temp(self):
-        try:
-            return (self.tag.IRtemperature.read()[1], "degC")
-        except:
-            logger.info("Disconnected: {0}".format(self.tag.addr))
-            self.tag = None
-            return (None, None)
+        return (self.values["target_temp"], "degC")
 
     def humidity(self):
-        try:
-            return (self.tag.humidity.read()[1], "%")
-        except:
-            logger.info("Disconnected: {0}".format(self.tag.addr))
-            self.tag = None
-            return (None, None)
+        return (self.values["humidity"], "%")
 
     def humi_temp(self):
-        try:
-            return (self.tag.humidity.read()[0], "degC")
-        except:
-            logger.info("Disconnected: {0}".format(self.tag.addr))
-            self.tag = None
-            return (None, None)
+        return (self.values["humi_temp"], "degC")
 
     def barometer(self):
-        try:
-            return (self.tag.barometer.read()[1], "mbar")
-        except:
-            logger.info("Disconnected: {0}".format(self.tag.addr))
-            self.tag = None
-            return (None, None)
+        return (self.values["barometer"], "mbar")
 
     def baro_temp(self):
-        try:
-            return (self.tag.barometer.read()[0], "degC")
-        except:
-            logger.info("Disconnected: {0}".format(self.tag.addr))
-            self.tag = None
-            return (None, None)
+        return (self.values["baro_temp"], "degC")
 
     def accelerometer(self):
-        try:
-            return (self.tag.accelerometer.read(), "g")
-        except:
-            logger.info("Disconnected: {0}".format(self.tag.addr))
-            self.tag = None
-            return (None, None)
+        return (self.values["accelerometer"], "g")
 
     def magnetometer(self):
-        try:
-            return (self.tag.magnetometer.read(), "uT")
-        except:
-            logger.info("Disconnected: {0}".format(self.tag.addr))
-            self.tag = None
-            return (None, None)
+        return (self.values["magnetometer"], "uT")
 
     def gyroscope(self):
-        try:
-            return (self.tag.gyroscope.read(), "deg/sec")
-        except:
-            logger.info("Disconnected: {0}".format(self.tag.addr))
-            self.tag = None
-            return (None, None)
+        return (self.values["gyroscope"], "deg/sec")
 
 
 def connect(addr):
@@ -114,6 +104,7 @@ def connect(addr):
     tag.magnetometer.enable()
     tag.gyroscope.enable()
     tag.lightmeter.enable()
+    time.sleep(2)
     reader = TagValues(tag)
     tag_weapons = {
         "temperature":   reader.temperature,
