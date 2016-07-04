@@ -113,13 +113,19 @@ def connect(addr):
     logger.info("connected: {0}".format(addr))
 
     time.sleep(3)
-    tag.IRtemperature.enable()
-    tag.humidity.enable()
-    tag.barometer.enable()
-    tag.accelerometer.enable()
-    tag.magnetometer.enable()
-    tag.gyroscope.enable()
-    tag.lightmeter.enable()
+    try:
+        tag.IRtemperature.enable()
+        tag.humidity.enable()
+        tag.barometer.enable()
+        tag.accelerometer.enable()
+        tag.magnetometer.enable()
+        tag.gyroscope.enable()
+        tag.lightmeter.enable()
+    except BTLEException as e:
+        logger.info("Disconnected: {0} in enable".format(addr))
+        logger.error(traceback.format_exc())
+        return None, None
+
     time.sleep(10)
     reader = TagValues(tag)
     tag_weapons = {
