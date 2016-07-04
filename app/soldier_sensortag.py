@@ -54,6 +54,18 @@ class TagValues():
             except:
                 logger.info("Disconnected: {0}".format(self.tag.addr))
                 self.tag = None
+                self.values = {
+                    "brightness": None,
+                    "temperature": None,
+                    "target_temp": None,
+                    "humidity": None,
+                    "humi_temp": None,
+                    "barometer": None,
+                    "baro_temp": None,
+                    "accelerometer": None,
+                    "magnetometer": None,
+                    "gyroscope": None,
+                }
                 return
 
     def brightness(self):
