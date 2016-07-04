@@ -1,5 +1,6 @@
 import argparse
 import time
+import traceback
 from bluepy.sensortag import SensorTag
 from bluepy.btle import Scanner, ScanEntry,DefaultDelegate, BTLEException
 from model.soldier import Soldier
@@ -51,8 +52,9 @@ class TagValues():
                 self.values["magnetometer"] = self.tag.magnetometer.read()
                 time.sleep(wait)
                 self.values["gyroscope"] = self.tag.gyroscope.read()
-            except:
+            except BTLEException as e:
                 logger.info("Disconnected: {0}".format(self.tag.addr))
+                logger.error(traceback.format_exc())
                 self.tag = None
                 self.values = {
                     "brightness": None,
