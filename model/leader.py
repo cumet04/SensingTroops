@@ -1,6 +1,7 @@
 import copy
 import datetime
 import utils.rest as rest
+import threading
 from threading import Event, Thread
 from model.info_obj import InformationObject
 from model import SoldierInfo, Mission, Order, Report, Work
@@ -178,9 +179,13 @@ class Leader(object):
             # return False
             return True  # SensorTagの不安定さの対策
         self.subordinates[sub_info.id] = sub_info
-        self.sub_heart_waits[sub_info.id] = Event()
-        Thread(target=self._heart_watch,
-               args=(sub_info.id, ), daemon=True).start()
+
+        # heartbeat_watcherがすでに存在すれば使い回す
+        if sub_info.id not in self.sub_heart_waits:
+            self.sub_heart_waits[sub_info.id] = Event()
+            Thread(target=self._heart_watch,
+                   args=(sub_info.id, ), daemon=True).start()
+        self.sub_heart_waits[sub_info.id].set()
 
         old_missions = self.missions.values()
         [self.accept_mission(c) for c in old_missions]
@@ -205,6 +210,7 @@ class Leader(object):
         if not self.check_subordinate(sub_id):
             return False
         del self.subordinates[sub_id]
+        # FIXME: イベントをセットするだけだとスレッドが残る．timeout後にKIA確定
         self.sub_heart_waits[sub_id].set()
         del self.sub_heart_waits[sub_id]
         return True
