@@ -37,13 +37,23 @@ function draw_graph(dom, purpose, place, type) {
     console.log(res);
     var data = new google.visualization.DataTable();
     data.addColumn('datetime', '日時');
-    data.addColumn('number', '値');
 
     var unit = res.values[0][2];
-    data.addRows(res.values.map(function (elem) {
-      return [new Date(elem[0]), elem[1]]
-    }));
-    
+    values = res.values.map(function (elem) {
+      return [new Date(elem[0]), elem[1]];
+    });
+    if (values[0][1].length == undefined) {
+      data.addColumn('number', '値');
+    } else {
+      data.addColumn('number', 'x');
+      data.addColumn('number', 'y');
+      data.addColumn('number', 'z');
+      values = values.map(function (elem) {
+        return [elem[0]].concat(elem[1]);
+      });
+    }
+    data.addRows(values);
+
     var options = {
       title: place,
       hAxis: {title: '日時'},
