@@ -2,8 +2,8 @@ import pymongo
 import datetime
 
 
-def get_collection():
-    return pymongo.MongoClient("192.168.0.21")["test"]["troops"]
+def get_collection(col):
+    return pymongo.MongoClient("192.168.0.21")["troops"][col]
     # return pymongo.MongoClient("localhost")["troops"]["values"]
 
 
@@ -12,7 +12,7 @@ def get_values(purpose, place, type, max_count, days=1, hours=0, minutes=0):
     limit_time = now - datetime.timedelta(
         days=days, hours=hours, minutes=minutes)
 
-    col = get_collection()
+    col = get_collection(purpose.replace("sensing-", ""))
     s_purpose = {"purpose": purpose}
     s_place = {"place": place}
     s_type = {"data.type": type}
