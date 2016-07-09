@@ -65,7 +65,6 @@ squads:
         # tag-09
         place: east-side
   - leader: c0:3f:d5:6b:90:a5
-    # raspi-04
     place: "403"
     subordinates:
       - soldier: CC2650-a0:e6:f8:af:91:83
