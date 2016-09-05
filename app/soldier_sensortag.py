@@ -14,24 +14,69 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
-class TagValues():
-    def __init__(self, tag: SensorTag):
-        self.tag = tag
-        self.values = {
-            "brightness": None,
-            "temperature": None,
-            "target_temp": None,
-            "humidity": None,
-            "humi_temp": None,
-            "barometer": None,
-            "baro_temp": None,
-            "accelerometer": None,
-            "magnetometer": None,
-            "gyroscope": None,
-        }
-        Thread(target=self.get_values, daemon=True).start()
+class TagReader():
+    def __init__(self, addr):
+        self.addr = addr
+        Thread(target= self.sensing, daemon=True).start()
 
-    def get_values(self):
+    def sensing(self):
+        while True:
+            logger.info("a sensing is going to be tried in 5sec...")
+            time.sleep(5)
+
+            self.values = {
+                "brightness": 0,
+                "temperature": 0,
+                "target_temp": 0,
+                "humidity": 0,
+                "humi_temp": 0,
+                "barometer": 0,
+                "baro_temp": 0,
+                "accelerometer": [0, 0, 0],
+                "magnetometer": [0, 0, 0],
+                "gyroscope": [0, 0, 0],
+            }
+
+            try:
+                self.tag = self.connect()
+                if self.tag is None:
+                    continue
+
+                if not self.enable_sensors():
+                    continue
+
+                if not self.poll_values():
+                    continue
+            except:
+                logger.fatal("unknow error is occured")
+                logger.fatal(traceback.format_exc())
+
+    def connect(self):
+        try:
+            tag = SensorTag(self.addr)
+            return tag
+        except BTLEException as e:
+            if "Failed to connect to peripheral" in e.message:
+                logger.error("connection failed: {0}".format(self.addr))
+                return None
+            raise
+
+    def enable_sensors(self):
+        try:
+            self.tag.IRtemperature.enable()
+            self.tag.humidity.enable()
+            self.tag.barometer.enable()
+            self.tag.accelerometer.enable()
+            self.tag.magnetometer.enable()
+            self.tag.gyroscope.enable()
+            self.tag.lightmeter.enable()
+        except BTLEException as e:
+            logger.info("Disconnected: {0} in enable".format(self.addr))
+            logger.error(traceback.format_exc())
+            return False
+        return True
+
+    def poll_values(self):
         wait = 1
         while True:
             try:
@@ -52,23 +97,10 @@ class TagValues():
                 self.values["magnetometer"] = self.tag.magnetometer.read()
                 time.sleep(wait)
                 self.values["gyroscope"] = self.tag.gyroscope.read()
-            except BTLEException as e:
+            except BTLEException:
                 logger.info("Disconnected: {0}".format(self.tag.addr))
-                logger.error(traceback.format_exc())
-                self.tag = None
-                self.values = {
-                    "brightness": None,
-                    "temperature": None,
-                    "target_temp": None,
-                    "humidity": None,
-                    "humi_temp": None,
-                    "barometer": None,
-                    "baro_temp": None,
-                    "accelerometer": None,
-                    "magnetometer": None,
-                    "gyroscope": None,
-                }
-                return
+                break
+
 
     def brightness(self):
         return (self.values["brightness"], "lux")
@@ -102,32 +134,27 @@ class TagValues():
 
 
 def connect(addr):
-    logger.info("connecting: {0}".format(addr))
-    try:
-        tag = SensorTag(addr)
-    except BTLEException as e:
-        if "Failed to connect to peripheral" in e.message:
-            logger.info("connection failed: {0}".format(addr))
-            return None, None
-        raise
-    logger.info("connected: {0}".format(addr))
 
-    time.sleep(3)
-    try:
-        tag.IRtemperature.enable()
-        tag.humidity.enable()
-        tag.barometer.enable()
-        tag.accelerometer.enable()
-        tag.magnetometer.enable()
-        tag.gyroscope.enable()
-        tag.lightmeter.enable()
-    except BTLEException as e:
-        logger.info("Disconnected: {0} in enable".format(addr))
-        logger.error(traceback.format_exc())
-        return None, None
+    soldier = Soldier("CC2650-" + addr, "SensorTag")
+    soldier.weapons.update(tag_weapons)
+    if not soldier.awake(rec_addr, 10):
+        soldier.shutdown()
+    return reader, soldier
 
-    time.sleep(10)
-    reader = TagValues(tag)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-R', '--rec_addr', type=str, help="recruiter url",
+        default="http://localhost:50000/recruiter/")
+    parser.add_argument(
+        '-T', '--tag_addr', type=str, help="sensortag's MAC addr")
+    params = parser.parse_args()
+    rec_addr = params.rec_addr
+    tag_addr = params.tag_addr
+
+
+    reader = TagReader(tag_addr)
     tag_weapons = {
         "temperature":   reader.temperature,
         "humidity":      reader.humidity,
@@ -141,43 +168,7 @@ def connect(addr):
         "baro_temp":     reader.baro_temp,
     }
 
-    soldier = Soldier("CC2650-" + addr, "SensorTag")
+    soldier = Soldier("CC2650-" + tag_addr, "SensorTag")
     soldier.weapons.update(tag_weapons)
     if not soldier.awake(rec_addr, 10):
         soldier.shutdown()
-    return reader, soldier
-
-
-if __name__ == "__main__":
-    global tags
-    tags = []
-    global rec_addr
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-R', '--rec_addr', type=str, help="recruiter url",
-        default="http://localhost:50000/recruiter/")
-    params = parser.parse_args()
-    rec_addr = params.rec_addr
-
-    for line in open('/opt/tags.conf', 'r'):
-        tags.append(line[:-1])
-    print(tags)
-
-    soldiers = {
-        tags[0]: connect(tags[0]),
-        tags[1]: connect(tags[1])
-    }
-    while True:
-        sol = soldiers[tags[0]]
-        if sol == (None, None) or sol[0].tag is None or not sol[1].is_alive():
-            if sol[1] is not None:
-                sol[1].shutdown()
-            sol = connect(tags[0])
-
-        sol = soldiers[tags[1]]
-        if sol == (None, None) or sol[0].tag is None or not sol[1].is_alive():
-            if sol[1] is not None:
-                sol[1].shutdown()
-            sol = connect(tags[1])
-
-        time.sleep(10)
