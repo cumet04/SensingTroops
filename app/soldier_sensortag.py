@@ -171,4 +171,5 @@ if __name__ == "__main__":
     soldier = Soldier("CC2650-" + tag_addr, "SensorTag")
     soldier.weapons.update(tag_weapons)
     if not soldier.awake(rec_addr, 10):
+        logger.fatal("soldier.awake failed")
         soldier.shutdown()
