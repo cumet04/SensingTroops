@@ -59,7 +59,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-P', '--port', type=int, default=50010, help='port')
+    parser.add_argument(
+        '-R', '--rec_addr', type=str, help="recruiter url",
+        default="http://localhost:50000/recruiter/")
     params = parser.parse_args()
+
+    global rec_addr
+    rec_addr = params.rec_addr
 
     server.debug = True
     server.run(host='0.0.0.0', port=params.port, use_reloader=False)
