@@ -1,0 +1,27 @@
+viewer:
+  build: .
+  command: python -m utils.current_viewer.viewer
+  volumes:
+    - .:/app
+  links:
+    - recruiter
+  ports:
+    - "50010:50010"
+
+commander:
+  build: .
+  command: python -m app.commander -R "http://192.168.0.9/recruiter/" -E "http://192.168.0.9/commander/"
+  volumes:
+    - .:/app
+  links:
+    - recruiter
+  ports:
+    - "50001:50001"
+
+recruiter:
+  build: .
+  command: python -m app.recruiter
+  volumes:
+    - .:/app
+  ports:
+    - "50000:50000"
