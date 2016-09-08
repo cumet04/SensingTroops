@@ -173,3 +173,6 @@ if __name__ == "__main__":
     if not soldier.awake(rec_addr, 10):
         logger.fatal("soldier.awake failed")
         soldier.shutdown()
+
+    while True:
+        pass
