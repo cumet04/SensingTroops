@@ -42,8 +42,8 @@ class TagReader():
                 if self.tag is None:
                     continue
 
-                if not self.enable_sensors():
-                    continue
+                # if not self.enable_sensors():
+                    # continue
 
                 if not self.poll_values():
                     continue
@@ -77,26 +77,55 @@ class TagReader():
         return True
 
     def poll_values(self):
-        wait = 1
+        wait = 15
+        enable_wait = 2
         while True:
             try:
-                time.sleep(wait)
+                time.sleep(wait - enable_wait)
+                self.tag.lightmeter.enable()
+                time.sleep(enable_wait)
                 self.values["brightness"] = self.tag.lightmeter.read()
-                time.sleep(wait)
+                self.tag.lightmeter.disable()
+
+                time.sleep(wait - enable_wait)
+                self.tag.IRtemperature.enable()
+                time.sleep(enable_wait)
                 self.values["temperature"], self.values["target_temp"] = \
                     self.tag.IRtemperature.read()
-                time.sleep(wait)
+                self.tag.IRtemperature.disable()
+
+                time.sleep(wait - enable_wait)
+                self.tag.humidity.enable()
+                time.sleep(enable_wait)
                 self.values["humi_temp"], self.values["humidity"] = \
                     self.tag.humidity.read()
-                time.sleep(wait)
+                self.tag.humidity.disable()
+
+                time.sleep(wait - enable_wait)
+                self.tag.barometer.enable()
+                time.sleep(enable_wait)
                 self.values["baro_temp"], self.values["barometer"] = \
                     self.tag.barometer.read()
-                time.sleep(wait)
+                self.tag.barometer.disable()
+
+                time.sleep(wait - enable_wait)
+                self.tag.accelerometer.enable()
+                time.sleep(enable_wait)
                 self.values["accelerometer"] = self.tag.accelerometer.read()
-                time.sleep(wait)
+                self.tag.accelerometer.disable()
+
+                time.sleep(wait - enable_wait)
+                self.tag.magnetometer.enable()
+                time.sleep(enable_wait)
                 self.values["magnetometer"] = self.tag.magnetometer.read()
-                time.sleep(wait)
+                self.tag.magnetometer.disable()
+
+                time.sleep(wait - enable_wait)
+                self.tag.gyroscope.enable()
+                time.sleep(enable_wait)
                 self.values["gyroscope"] = self.tag.gyroscope.read()
+                self.tag.gyroscope.disable()
+
             except BTLEException:
                 logger.info("Disconnected: {0}".format(self.tag.addr))
                 break
