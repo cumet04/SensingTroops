@@ -199,9 +199,17 @@ if __name__ == "__main__":
 
     soldier = Soldier("CC2650-" + tag_addr, "SensorTag")
     soldier.weapons.update(tag_weapons)
-    if not soldier.awake(rec_addr, 10):
-        logger.fatal("soldier.awake failed")
-        soldier.shutdown()
 
-    while True:
-        pass
+    retry = 10
+    for i in range(retry):
+        if not soldier.awake(rec_addr, 10):
+            logger.error("soldier.awake failed. retry after 10 seconds.")
+            sleep(10)
+            continue
+        
+        # soldier is working
+        while True:
+            pass
+        break
+
+    soldier.shutdown()
