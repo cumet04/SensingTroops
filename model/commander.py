@@ -161,7 +161,7 @@ class Commander(object):
         return sub_info
 
     def _heart_watch(self, sid):
-        while self.sub_heart_waits[sid].wait(timeout=30):
+        while self.sub_heart_waits[sid].wait(timeout=180):
             # timeoutまでにevent.setされたら待ち続行
             # timeoutしたらK.I.A.
             self.sub_heart_waits[sid].clear()
@@ -237,6 +237,10 @@ class MongoPush(object):
         self.col = pymongo.MongoClient(host)[db_name][col_name]
 
     def push_values(self, values):
+        import dateutil.parser
         if len(values) == 0:
             return
+        # timeの値を文字列からdatetime型に変換する
+        [v.update({"time": dateutil.parser.parse(v["time"])}) for v in values]
+
         self.col.insert_many(values)

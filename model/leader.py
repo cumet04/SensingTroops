@@ -1,6 +1,7 @@
 import copy
 import datetime
 import utils.rest as rest
+import threading
 from threading import Event, Thread
 from model.info_obj import InformationObject
 from model import SoldierInfo, Mission, Order, Report, Work
@@ -177,16 +178,20 @@ class Leader(object):
         if self.check_subordinate(sub_info.id):
             return False
         self.subordinates[sub_info.id] = sub_info
-        self.sub_heart_waits[sub_info.id] = Event()
-        Thread(target=self._heart_watch,
-               args=(sub_info.id, ), daemon=True).start()
+
+        # heartbeat_watcherがすでに存在すれば使い回す
+        if sub_info.id not in self.sub_heart_waits:
+            self.sub_heart_waits[sub_info.id] = Event()
+            Thread(target=self._heart_watch,
+                   args=(sub_info.id, ), daemon=True).start()
+        self.sub_heart_waits[sub_info.id].set()
 
         old_missions = self.missions.values()
         [self.accept_mission(c) for c in old_missions]
         return True
 
     def _heart_watch(self, sid):
-        while self.sub_heart_waits[sid].wait(timeout=10):
+        while self.sub_heart_waits[sid].wait(timeout=120):
             # timeoutまでにevent.setされたら待ち続行
             # timeoutしたらK.I.A.
             self.sub_heart_waits[sid].clear()
@@ -204,6 +209,7 @@ class Leader(object):
         if not self.check_subordinate(sub_id):
             return False
         del self.subordinates[sub_id]
+        # FIXME: イベントをセットするだけだとスレッドが残る．timeout後にKIA確定
         self.sub_heart_waits[sub_id].set()
         del self.sub_heart_waits[sub_id]
         return True
@@ -215,7 +221,7 @@ class Leader(object):
         return True
 
     def submit_error(self, msg):
-        time = datetime.datetime.utcnow().isoformat()
+        time = datetime.datetime.now(datetime.timezone.utc).isoformat()
         report = Report(time=time,
                         place="internal",
                         purpose="_error",
@@ -237,7 +243,7 @@ class WorkingThread(Thread):
             interval = self.mission.trigger['timer']
             while not self.lock.wait(timeout=interval):
                 m_id = self.mission.get_id()
-                time = datetime.datetime.utcnow().isoformat()
+                time = datetime.datetime.now(datetime.timezone.utc).isoformat()
                 works = []
                 for sid, w in self.leader.work_cache:
                     if w.purpose != m_id:

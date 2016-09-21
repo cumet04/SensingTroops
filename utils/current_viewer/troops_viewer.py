@@ -37,6 +37,8 @@ def gen_commander_data(com_addr):
     subs = res.json()["subordinates"]
     sub_addr_list = [sub["endpoint"] for sub in subs]
 
+    leaders = [gen_leader_data(addr) for addr in sub_addr_list]
+    leaders = [l for l in leaders if len(l) != 0]
     return {
         "text": "Commander: {0}({1}) at {2}".
             format(info.name, info.id, info.place),
@@ -49,7 +51,7 @@ def gen_commander_data(com_addr):
             },
             {
                 "text": "subordinates",
-                "nodes": [gen_leader_data(addr) for addr in sub_addr_list]
+                "nodes": leaders
             },
         ]
     }

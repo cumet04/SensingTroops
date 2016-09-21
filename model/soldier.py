@@ -56,8 +56,8 @@ class Soldier(object):
         self.name = name
         self.place = ""
         self.weapons = {
-            "zero": lambda: 0,
-            "random": random.random
+            "zero": lambda: (0, "-"),
+            "random": lambda: (random.random(), "-")
         }
         self.orders = {}  # type:Dict[str, Order]
         self.superior_ep = ""  # type: str
@@ -139,20 +139,28 @@ class WorkingThread(Thread):
         if 'timer' in self.order.trigger.keys():
             interval = self.order.trigger['timer']
             while not self.lock.wait(timeout=interval):
-                values = [
-                    {
-                        "type": w,
-                        "value": self.soldier.weapons[w](),
-                        "unit": "-"
-                    } for w in self.order.values]
-                time = datetime.datetime.utcnow().isoformat()
+                values = []
+                for type in self.order.values:
+                    val, unit = self.soldier.weapons[type]()
+                    if val is None:
+                        self.soldier.shutdown()
+                        return
+                    values.append({
+                        "type": type,
+                        "value": val,
+                        "unit": unit
+                    })
+                time = datetime.datetime.now(datetime.timezone.utc).isoformat()
                 work = Work(time, self.order.purpose, values)
 
                 url = "{0}{1}".format(
                     self.soldier.superior_ep,
                     "subordinates/{0}/work".format(self.soldier.id))
-                rest.post(url, json=work.to_dict())
-                # TODO: エラー処理
+                res, err = rest.post(url, json=work.to_dict())
+                if err is not None:
+                    self.soldier.shutdown()
+                    logger.fatal('in WorkingThread, failed to post work: {0}', err)
+                    return
         else:
             pass
 
@@ -170,7 +178,7 @@ class HeartBeat(Thread):
             url = self.soldier.superior_ep + "subordinates/" + self.soldier.id
             res, err = rest.get(url, etag=self.etag)
             if err is not None:
-                return
+                break
             if res.status_code == 304:
                 continue
             self.etag = res.headers['ETag']
@@ -181,3 +189,4 @@ class HeartBeat(Thread):
             self.soldier.working_threads.clear()
             for m in info.orders:
                 self.soldier.accept_order(m)
+        self.soldier.shutdown()

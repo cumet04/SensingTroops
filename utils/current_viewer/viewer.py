@@ -12,16 +12,16 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
-server = Flask(__name__)
+server = Flask(__name__, static_url_path="/troops-viewer" + "/static")
 rec_addr = "http://localhost:50000/recruiter/"
 
 
-@server.route('/troops.html', methods=['GET'])
+@server.route('/troops-viewer/troops.html', methods=['GET'])
 def show_troops():
     return render_template('troops_viewer.html')
 
 
-@server.route('/troops.json', methods=['GET'])
+@server.route('/troops-viewer/troops.json', methods=['GET'])
 def troops_json():
     data = tr_viewer.generate_data(rec_addr)
 
@@ -37,7 +37,7 @@ def troops_json():
     return response
 
 
-@server.route('/values.html', methods=['GET'])
+@server.route('/troops-viewer/values.html', methods=['GET'])
 def show_values():
     params = {
         "purpose": request.args.get("purpose", default="", type=str),
@@ -47,9 +47,10 @@ def show_values():
     return render_template('values_viewer.html', params=params)
 
 
-@server.route('/values/<purpose>/<place>/<type>', methods=['GET'])
+@server.route('/troops-viewer/values/<purpose>/<place>/<type>', methods=['GET'])
 def values_data(purpose, place, type):
-    data = vl_viewer.get_values(purpose, place, type)
+    data = vl_viewer.get_values(purpose, place, type, 1000, days=1)
+    # data = vl_viewer.get_values(purpose, place, type, 1000, days=0, minutes=10)
     return jsonify(values=data)
 
 
@@ -58,7 +59,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-P', '--port', type=int, default=50010, help='port')
+    parser.add_argument(
+        '-R', '--rec_addr', type=str, help="recruiter url",
+        default="http://localhost:50000/recruiter/")
     params = parser.parse_args()
+
+    global rec_addr
+    rec_addr = params.rec_addr
 
     server.debug = True
     server.run(host='0.0.0.0', port=params.port, use_reloader=False)

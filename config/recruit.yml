@@ -12,6 +12,7 @@ troops:
       - b8:27:eb:0e:09:08
       - b8:27:eb:2b:d5:2a
       - b8:27:eb:ff:39:fc
+      - c0:3f:d5:6b:90:a5
 squads:
   - leader: b8:27:eb:be:d9:3c
     # raspi-00
@@ -63,6 +64,13 @@ squads:
       - soldier: CC2650-24:71:89:06:9b:00
         # tag-09
         place: east-side
+  - leader: c0:3f:d5:6b:90:a5
+    place: "403"
+    subordinates:
+      - soldier: CC2650-a0:e6:f8:af:91:83
+        place: door
+      - soldier: CC2650-a0:e6:f8:c2:06:86
+        place: southwest
   - leader: lxxx0
     place: desk1
     subordinates:
