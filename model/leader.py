@@ -176,8 +176,7 @@ class Leader(object):
         logger.debug('In accept_subordinate:')
         logger.debug('> sub_info:{0}'.format(sub_info))
         if self.check_subordinate(sub_info.id):
-            # return False
-            return True  # SensorTagの不安定さの対策
+            return False
         self.subordinates[sub_info.id] = sub_info
 
         # heartbeat_watcherがすでに存在すれば使い回す

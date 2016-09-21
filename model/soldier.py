@@ -70,17 +70,12 @@ class Soldier(object):
 
         if self.superior_ep == "":
             return True
-        # FIXME: SensorTag実験用
-        # url = "{0}subordinates/{1}".format(self.superior_ep, self.id)
-        # res, err = rest.delete(url)
-        # if err is not None:
-        #     logger.error("Removing soldier info from leader is failed.")
-        #     return False
+        url = "{0}subordinates/{1}".format(self.superior_ep, self.id)
+        res, err = rest.delete(url)
+        if err is not None:
+            logger.error("Removing soldier info from leader is failed.")
+            return False
         return True
-
-    def is_alive(self):
-        # sensortag版の再起動条件に必要
-        return self.heartbeat_thread.is_alive()
 
     def awake(self, rec_ep: str, heartbeat_rate: int):
         from model import LeaderInfo
@@ -164,6 +159,7 @@ class WorkingThread(Thread):
                 res, err = rest.post(url, json=work.to_dict())
                 if err is not None:
                     self.soldier.shutdown()
+                    logger.fatal('in WorkingThread, failed to post work: {0}', err)
                     return
         else:
             pass
