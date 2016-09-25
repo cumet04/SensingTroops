@@ -178,6 +178,9 @@ class HeartBeat(Thread):
             url = self.soldier.superior_ep + "subordinates/" + self.soldier.id
             res, err = rest.get(url, etag=self.etag)
             if err is not None:
+                # TODO: エラー処理ちゃんとやる
+                logger.error('In HeartBeat, failed to post report')
+                logger.error('> err: {0}', err)
                 break
             if res.status_code == 304:
                 continue
