@@ -206,6 +206,11 @@ class Order(InformationObject):
         except KeyError:
             raise TypeError
 
+    def get_id(self):
+        source = self.purpose
+        m = hashlib.md5()
+        m.update(str(source).encode())
+        return m.hexdigest()
 
 definitions['Report'] = {
     'type': 'object',

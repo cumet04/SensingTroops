@@ -114,14 +114,21 @@ class Soldier(object):
             orders=list(self.orders.values()))
 
     def accept_order(self, order: Order):
-        for th in self.working_threads:
-            if order.purpose == th.order.purpose:
-                th.lock.set()
-                self.working_threads.remove(th)
+        if order.get_id() in self.orders:
+            self.remove_order(order.get_id())
+
         th = WorkingThread(self, order)
         self.working_threads.append(th)
         th.start()
-        self.orders[order.purpose] = order
+        self.orders[order.get_id()] = order
+
+    def remove_order(self, oid):
+        del self.orders[oid]
+        for th in self.working_threads:
+            if oid == th.order.get_id():
+                th.lock.set()
+                self.working_threads.remove(th)
+
 
     def start_heartbeat(self, interval):
         self.heartbeat_thread.interval = interval
@@ -188,8 +195,14 @@ class HeartBeat(Thread):
             info = SoldierInfo.make(res.json()['info'])
 
             logger.info([str(m) for m in info.orders])
-            [w.lock.set() for w in self.soldier.working_threads]
-            self.soldier.working_threads.clear()
+
+            # 以前に受理されているorderにはあるが新規のorderリストには無い
+            # （消された）orderを消す
+            oid_list = [o.get_id() for o in info.orders]
+            for old_oid in self.soldier.orders.keys():
+                if old_oid not in oid_list:
+                    self.soldier.remove_order(old_oid)
+
             for m in info.orders:
                 self.soldier.accept_order(m)
         self.soldier.shutdown()

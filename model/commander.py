@@ -119,10 +119,7 @@ class Commander(object):
     def accept_campaign(self, campaign: Campaign):
         # Campaignの更新であれば（=IDが同じであれば）既存のものを消す
         if campaign.get_id() in self.campaigns:
-            old_cam = self.campaigns[campaign.get_id()]
-            for sub in self.subordinates.values():
-                [sub.missions.remove(m) for m in sub.missions
-                 if m.purpose == old_cam.get_id()]
+            self.remove_campaign(campaign.get_id())
 
         # 部下のMissionを生成・割り当てる
         target_subs = []
@@ -142,6 +139,12 @@ class Commander(object):
         logger.info(json.dumps(campaign.to_dict(), sort_keys=True, indent=2))
         self.campaigns[campaign.get_id()] = campaign
         return campaign
+
+    def remove_campaign(self, cid):
+        del self.campaigns[cid]
+        # 対象idに紐づくミッションを消す
+        for sub in self.subordinates.values():
+            [sub.missions.remove(m) for m in sub.missions if m.purpose == cid]
 
     def accept_subordinate(self, sub_info):
         """
