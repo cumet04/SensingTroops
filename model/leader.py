@@ -258,8 +258,12 @@ class WorkingThread(Thread):
 
                 url = "{0}subordinates/{1}/report".\
                     format(self.leader.superior_ep, self.leader.id)
-                rest.post(url, json=report.to_dict())
-                # TODO: エラー処理
+                res, err = rest.post(url, json=report.to_dict())
+                if err is not None:
+                    # TODO: エラー処理ちゃんとやる
+                    # 本当に接続先がダウンしてる場合、ただのDoSになってしまう
+                    logger.error('In WorkingThread, failed to post report')
+                    logger.error('> err: {0}', err)
 
                 self.leader.work_cache = \
                     [(sid, w) for sid, w in self.leader.work_cache
@@ -281,7 +285,10 @@ class HeartBeat(Thread):
             url = self.leader.superior_ep + "subordinates/" + self.leader.id
             res, err = rest.get(url, etag=self.etag)
             if err is not None:
-                return
+                # TODO: エラー処理ちゃんとやる
+                logger.error('In HeartBeat, failed to post report')
+                logger.error('> err: {0}', err)
+                break
             if res.status_code == 304:
                 continue
             self.etag = res.headers['ETag']
