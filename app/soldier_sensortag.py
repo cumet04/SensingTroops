@@ -1,8 +1,9 @@
 import argparse
 import time
 import traceback
+import struct
 from bluepy.sensortag import SensorTag
-from bluepy.btle import Scanner, ScanEntry,DefaultDelegate, BTLEException
+from bluepy.btle import Scanner, ScanEntry,DefaultDelegate, BTLEException, AssignedNumbers
 from model.soldier import Soldier
 from logging import getLogger, StreamHandler, DEBUG
 from threading import Thread
@@ -35,6 +36,7 @@ class TagReader():
                 "accelerometer": [0, 0, 0],
                 "magnetometer": [0, 0, 0],
                 "gyroscope": [0, 0, 0],
+                "battery": 0,
             }
 
             try:
@@ -126,6 +128,11 @@ class TagReader():
                 self.values["gyroscope"] = self.tag.gyroscope.read()
                 self.tag.gyroscope.disable()
 
+                time.sleep(wait)
+                b_uuid = AssignedNumbers.battery_level
+                chara = self.tag.getCharacteristics(uuid=b_uuid)[0]
+                self.values["battery"] = struct.unpack('b', chara.read())[0]
+
             except BTLEException:
                 logger.info("Disconnected: {0}".format(self.tag.addr))
                 break
@@ -161,6 +168,9 @@ class TagReader():
     def gyroscope(self):
         return (self.values["gyroscope"], "deg/sec")
 
+    def battery(self):
+        return (self.values["battery"], "%")
+
 
 def connect(addr):
 
@@ -195,6 +205,7 @@ if __name__ == "__main__":
         "target_temp":   reader.target_temp,
         "humi_temp":     reader.humi_temp,
         "baro_temp":     reader.baro_temp,
+        "battery":       reader.battery,
     }
 
     soldier = Soldier("CC2650-" + tag_addr, "SensorTag")
