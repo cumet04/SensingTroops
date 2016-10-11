@@ -50,7 +50,17 @@ if __name__ == "__main__":
     host_addr = get_ip()
     ep = 'http://{0}:{1}{2}/'.format(host_addr, params.port, params.prefix)
     leader = Leader(params.id, params.name, ep)
-    leader.awake(params.rec_addr, 30)
+
+    retry = 10
+    for i in range(retry):
+        if leader.awake(params.rec_addr, 30):
+            logger.info('leader.awake succeeded.')
+            break
+        else:
+            logger.error("leader.awake failed. retry after 20 seconds.")
+            sleep(20)
+    # FIXME: 全部失敗しても普通に処理が進行する
+    
     LeaderServer.set_model(leader)
 
     @server.route(params.prefix + '/spec.json')

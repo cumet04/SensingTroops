@@ -92,40 +92,37 @@ class Soldier(object):
 
         # 分隊に加入する
         url = self.superior_ep + "subordinates"
-        res, err = rest.post(url, json=self.generate_info().to_dict())
-        if err is not None:
-            return False
-        logger.info("joined to squad: leader_id: {0}".format(superior.id))
-
-        # orderを取得する
-        self.start_heartbeat(heartbeat_rate)
-        return True
-
-    def generate_info(self) -> SoldierInfo:
-        """
-        自身のパラメータ群からSoldierInfoオブジェクトを生成する
-        :return SoldierInfo: 生成したSoldierInfo
-        """
-        return SoldierInfo(
+        info = SoldierInfo(
             id=self.id,
             name=self.name,
             place=self.place,
             weapons=list(self.weapons.keys()),
             orders=list(self.orders.values()))
+        res, err = rest.post(url, json=info.to_dict())
+        if err is not None:
+            return False
+        logger.info("joined to squad: leader_id: {0}".format(superior.id))
+
+        # orderを取得する
+        self.heartbeat_thread.interval = heartbeat_rate
+        self.heartbeat_thread.start()
+        return True
 
     def accept_order(self, order: Order):
-        for th in self.working_threads:
-            if order.purpose == th.order.purpose:
-                th.lock.set()
-                self.working_threads.remove(th)
+        if order.get_id() in self.orders:
+            self.remove_order(order.get_id())
+
         th = WorkingThread(self, order)
         self.working_threads.append(th)
         th.start()
-        self.orders[order.purpose] = order
+        self.orders[order.get_id()] = order
 
-    def start_heartbeat(self, interval):
-        self.heartbeat_thread.interval = interval
-        self.heartbeat_thread.start()
+    def remove_order(self, oid):
+        del self.orders[oid]
+        for th in self.working_threads:
+            if oid == th.order.get_id():
+                th.lock.set()
+                self.working_threads.remove(th)
 
 
 class WorkingThread(Thread):
@@ -145,17 +142,12 @@ class WorkingThread(Thread):
                     if val is None:
                         self.soldier.shutdown()
                         return
-                    values.append({
-                        "type": type,
-                        "value": val,
-                        "unit": unit
-                    })
+                    values.append({"type": type, "value": val, "unit": unit})
                 time = datetime.datetime.now(datetime.timezone.utc).isoformat()
                 work = Work(time, self.order.purpose, values)
 
-                url = "{0}{1}".format(
-                    self.soldier.superior_ep,
-                    "subordinates/{0}/work".format(self.soldier.id))
+                url = "{0}subordinates/{1}/work".format(
+                    self.soldier.superior_ep, self.soldier.id)
                 res, err = rest.post(url, json=work.to_dict())
                 if err is not None:
                     self.soldier.shutdown()
@@ -188,8 +180,14 @@ class HeartBeat(Thread):
             info = SoldierInfo.make(res.json()['info'])
 
             logger.info([str(m) for m in info.orders])
-            [w.lock.set() for w in self.soldier.working_threads]
-            self.soldier.working_threads.clear()
+
+            # 以前に受理されているorderにはあるが新規のorderリストには無い
+            # （消された）orderを消す
+            oid_list = [o.get_id() for o in info.orders]
+            for old_oid in self.soldier.orders.keys():
+                if old_oid not in oid_list:
+                    self.soldier.remove_order(old_oid)
+
             for m in info.orders:
                 self.soldier.accept_order(m)
         self.soldier.shutdown()

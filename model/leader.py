@@ -1,12 +1,11 @@
-import copy
 import datetime
-import utils.rest as rest
-import threading
 from threading import Event, Thread
-from model.info_obj import InformationObject
-from model import SoldierInfo, Mission, Order, Report, Work
 from typing import List, Dict
+
+import utils.rest as rest
+from model import SoldierInfo, Mission, Order, Report, Work
 from model import logger
+from model.info_obj import InformationObject
 
 definition = {
     'type': 'object',
@@ -134,14 +133,7 @@ class Leader(object):
     def accept_mission(self, mission: Mission) -> Mission:
         # Missionの更新であれば（=IDが同じであれば）既存のものを消す
         if mission.get_id() in self.missions:
-            old_mis = self.missions[mission.get_id()]
-            for sub in self.subordinates.values():
-                [sub.orders.remove(o) for o in sub.orders
-                 if o.purpose == old_mis.get_id()]
-        for th in self.working_threads:
-            if mission.get_id() == th.mission.get_id():
-                th.lock.set()
-                self.working_threads.remove(th)
+            self.remove_mission(mission.get_id())
 
         # 部下のOrderを生成・割り当てる
         target_subs = []
@@ -163,6 +155,17 @@ class Leader(object):
 
         self.missions[mission.get_id()] = mission
         return mission
+
+    def remove_mission(self, mid):
+        del self.missions[mid]
+
+        for sub in self.subordinates.values():
+            [sub.orders.remove(o) for o in sub.orders if o.purpose == mid]
+
+        for th in self.working_threads:
+            if mid == th.mission.get_id():
+                th.lock.set()
+                self.working_threads.remove(th)
 
     def get_sub_info(self, sub_id):
         return self.subordinates[sub_id]
@@ -295,5 +298,13 @@ class HeartBeat(Thread):
             info = LeaderInfo.make(res.json()['info'])
 
             logger.info([str(m) for m in info.missions])
+
+            # 以前に受理されているmissionにはあるが新規のmissionリストには無い
+            # （消された）missionを消す
+            mid_list = [m.get_id() for m in info.missions]
+            for old_mid in self.leader.missions.keys():
+                if old_mid not in mid_list:
+                    self.leader.remove_mission(old_mid)
+
             for m in info.missions:
                 self.leader.accept_mission(m)
