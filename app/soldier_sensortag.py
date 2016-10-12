@@ -1,12 +1,12 @@
 import argparse
 import time
-import traceback
 import struct
+import os
+import asyncio
 from bluepy.sensortag import SensorTag
-from bluepy.btle import Scanner, ScanEntry,DefaultDelegate, BTLEException, AssignedNumbers
+from bluepy.btle import BTLEException, AssignedNumbers
 from model.soldier import Soldier
 from logging import getLogger, StreamHandler, DEBUG
-from threading import Thread
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -15,170 +15,158 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 
 
-class TagReader():
+class TagReader:
     def __init__(self, addr):
+        self.enable_wait = 1  # wait seconds for enable sensor to read value
         self.addr = addr
-        Thread(target= self.sensing, daemon=True).start()
-
-    def sensing(self):
-        while True:
-            logger.info("a sensing is going to be tried in 5sec...")
-            time.sleep(5)
-
-            self.values = {
-                "brightness": 0,
-                "temperature": 0,
-                "target_temp": 0,
-                "humidity": 0,
-                "humi_temp": 0,
-                "barometer": 0,
-                "baro_temp": 0,
-                "accelerometer": [0, 0, 0],
-                "magnetometer": [0, 0, 0],
-                "gyroscope": [0, 0, 0],
-                "battery": 0,
-            }
-
-            try:
-                self.tag = self.connect()
-                if self.tag is None:
-                    continue
-
-                # if not self.enable_sensors():
-                    # continue
-
-                if not self.poll_values():
-                    continue
-            except:
-                logger.fatal("unknow error is occured")
-                logger.fatal(traceback.format_exc())
+        self.tag = None
 
     def connect(self):
         try:
-            tag = SensorTag(self.addr)
-            return tag
+            self.tag = SensorTag(self.addr)
+            return self.tag
         except BTLEException as e:
             if "Failed to connect to peripheral" in e.message:
                 logger.error("connection failed: {0}".format(self.addr))
                 return None
+            if "Device disconnected" in e.message:
+                logger.error("Device disconnected: {0}".format(self.addr))
+                return None
             raise
 
-    def enable_sensors(self):
+    def get_values(self, vals):
+        loop = asyncio.get_event_loop()
+        tasks = [
+            asyncio.ensure_future(self.brightness()),
+            asyncio.ensure_future(self.temperature()),
+            asyncio.ensure_future(self.humidity()),
+        ]
+        loop.run_until_complete(asyncio.gather(*tasks))
+        loop.close()
+
+        print(tasks[0].result())
+        print(tasks[1].result())
+        print(tasks[2].result())
+
+    async def brightness(self):
+        try:
+            self.tag.lightmeter.enable()
+            await asyncio.sleep(self.enable_wait)
+            val = self.tag.lightmeter.read()
+            self.tag.lightmeter.disable()
+        except BTLEException:
+            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            return None, None
+        return val, "lux"
+
+    async def temperature(self):
         try:
             self.tag.IRtemperature.enable()
+            await asyncio.sleep(self.enable_wait)
+            val = self.tag.IRtemperature.read()[0]
+            self.tag.IRtemperature.disable()
+        except BTLEException:
+            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            return None, None
+        return val, "degC"
+
+    async def target_temp(self):
+        try:
+            self.tag.IRtemperature.enable()
+            await asyncio.sleep(self.enable_wait)
+            val = self.tag.IRtemperature.read()[1]
+            self.tag.IRtemperature.disable()
+        except BTLEException:
+            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            return None, None
+        return val, "degC"
+
+    async def humidity(self):
+        try:
             self.tag.humidity.enable()
+            await asyncio.sleep(1)
+            val = self.tag.humidity.read()[1]
+            self.tag.humidity.disable()
+        except BTLEException:
+            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            return None, None
+        return val, "%"
+
+    async def humi_temp(self):
+        try:
+            self.tag.humidity.enable()
+            await asyncio.sleep(1)
+            val = self.tag.humidity.read()[0]
+            self.tag.humidity.disable()
+        except BTLEException:
+            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            return None, None
+        return val, "degC"
+
+    async def barometer(self):
+        try:
             self.tag.barometer.enable()
+            await asyncio.sleep(1)
+            val = self.tag.barometer.read()[1]
+            self.tag.barometer.disable()
+        except BTLEException:
+            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            return None, None
+        return val, "mbar"
+
+    async def baro_temp(self):
+        try:
+            self.tag.barometer.enable()
+            await asyncio.sleep(1)
+            val = self.tag.barometer.read()[0]
+            self.tag.barometer.disable()
+        except BTLEException:
+            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            return None, None
+        return val, "degC"
+
+    async def accelerometer(self):
+        try:
             self.tag.accelerometer.enable()
+            await asyncio.sleep(1)
+            val = self.tag.accelerometer.read()
+            self.tag.accelerometer.disable()
+        except BTLEException:
+            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            return None, None
+        return val, "g"
+
+    async def magnetometer(self):
+        try:
             self.tag.magnetometer.enable()
+            await asyncio.sleep(1)
+            val = self.tag.magnetometer.read()
+            self.tag.magnetometer.disable()
+        except BTLEException:
+            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            return None, None
+        return val, "uT"
+
+    async def gyroscope(self):
+        try:
             self.tag.gyroscope.enable()
-            self.tag.lightmeter.enable()
-        except BTLEException as e:
-            logger.info("Disconnected: {0} in enable".format(self.addr))
-            logger.error(traceback.format_exc())
-            return False
-        return True
+            await asyncio.sleep(1)
+            val = self.tag.gyroscope.read()
+            self.tag.gyroscope.disable()
+        except BTLEException:
+            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            return None, None
+        return val, "deg/sec"
 
-    def poll_values(self):
-        wait = 15
-        enable_wait = 2
-        while True:
-            try:
-                time.sleep(wait - enable_wait)
-                self.tag.lightmeter.enable()
-                time.sleep(enable_wait)
-                self.values["brightness"] = self.tag.lightmeter.read()
-                self.tag.lightmeter.disable()
-
-                time.sleep(wait - enable_wait)
-                self.tag.IRtemperature.enable()
-                time.sleep(enable_wait)
-                self.values["temperature"], self.values["target_temp"] = \
-                    self.tag.IRtemperature.read()
-                self.tag.IRtemperature.disable()
-
-                time.sleep(wait - enable_wait)
-                self.tag.humidity.enable()
-                time.sleep(enable_wait)
-                self.values["humi_temp"], self.values["humidity"] = \
-                    self.tag.humidity.read()
-                self.tag.humidity.disable()
-
-                time.sleep(wait - enable_wait)
-                self.tag.barometer.enable()
-                time.sleep(enable_wait)
-                self.values["baro_temp"], self.values["barometer"] = \
-                    self.tag.barometer.read()
-                self.tag.barometer.disable()
-
-                time.sleep(wait - enable_wait)
-                self.tag.accelerometer.enable()
-                time.sleep(enable_wait)
-                self.values["accelerometer"] = self.tag.accelerometer.read()
-                self.tag.accelerometer.disable()
-
-                time.sleep(wait - enable_wait)
-                self.tag.magnetometer.enable()
-                time.sleep(enable_wait)
-                self.values["magnetometer"] = self.tag.magnetometer.read()
-                self.tag.magnetometer.disable()
-
-                time.sleep(wait - enable_wait)
-                self.tag.gyroscope.enable()
-                time.sleep(enable_wait)
-                self.values["gyroscope"] = self.tag.gyroscope.read()
-                self.tag.gyroscope.disable()
-
-                time.sleep(wait)
-                b_uuid = AssignedNumbers.battery_level
-                chara = self.tag.getCharacteristics(uuid=b_uuid)[0]
-                self.values["battery"] = struct.unpack('b', chara.read())[0]
-
-            except BTLEException:
-                logger.info("Disconnected: {0}".format(self.tag.addr))
-                break
-
-
-    def brightness(self):
-        return (self.values["brightness"], "lux")
-
-    def temperature(self):
-        return (self.values["temperature"], "degC")
-
-    def target_temp(self):
-        return (self.values["target_temp"], "degC")
-
-    def humidity(self):
-        return (self.values["humidity"], "%")
-
-    def humi_temp(self):
-        return (self.values["humi_temp"], "degC")
-
-    def barometer(self):
-        return (self.values["barometer"], "mbar")
-
-    def baro_temp(self):
-        return (self.values["baro_temp"], "degC")
-
-    def accelerometer(self):
-        return (self.values["accelerometer"], "g")
-
-    def magnetometer(self):
-        return (self.values["magnetometer"], "uT")
-
-    def gyroscope(self):
-        return (self.values["gyroscope"], "deg/sec")
-
-    def battery(self):
-        return (self.values["battery"], "%")
-
-
-def connect(addr):
-
-    soldier = Soldier("CC2650-" + addr, "SensorTag")
-    soldier.weapons.update(tag_weapons)
-    if not soldier.awake(rec_addr, 10):
-        soldier.shutdown()
-    return reader, soldier
+    async def battery(self):
+        try:
+            b_uuid = AssignedNumbers.battery_level
+            chara = self.tag.getCharacteristics(uuid=b_uuid)[0]
+            val = struct.unpack('b', chara.read())[0]
+        except BTLEException:
+            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            return None, None
+        return val, "%"
 
 
 if __name__ == "__main__":
@@ -192,20 +180,26 @@ if __name__ == "__main__":
     rec_addr = params.rec_addr
     tag_addr = params.tag_addr
 
-
     reader = TagReader(tag_addr)
+    if reader.connect() is None:
+        os._exit(1)
+    print("aa")
+    reader.get_values([])
+
+    os._exit(0)
+    # SensorTag専用に改造する措置
     tag_weapons = {
-        "temperature":   reader.temperature,
-        "humidity":      reader.humidity,
-        "barometer":     reader.barometer,
-        "accelerometer": reader.accelerometer,
-        "magnetometer":  reader.magnetometer,
-        "gyroscope":     reader.gyroscope,
-        "brightness":    reader.brightness,
-        "target_temp":   reader.target_temp,
-        "humi_temp":     reader.humi_temp,
-        "baro_temp":     reader.baro_temp,
-        "battery":       reader.battery,
+        "temperature":   None,
+        "humidity":      None,
+        "barometer":     None,
+        "accelerometer": None,
+        "magnetometer":  None,
+        "gyroscope":     None,
+        "brightness":    None,
+        "target_temp":   None,
+        "humi_temp":     None,
+        "baro_temp":     None,
+        "battery":       None,
     }
 
     soldier = Soldier("CC2650-" + tag_addr, "SensorTag")
@@ -215,7 +209,7 @@ if __name__ == "__main__":
     for i in range(retry):
         if not soldier.awake(rec_addr, 10):
             logger.error("soldier.awake failed. retry after 10 seconds.")
-            sleep(10)
+            time.sleep(10)
             continue
         
         # soldier is working
