@@ -36,17 +36,15 @@ class TagReader:
 
     def get_values(self, vals):
         loop = asyncio.get_event_loop()
-        tasks = [
-            asyncio.ensure_future(self.brightness()),
-            asyncio.ensure_future(self.temperature()),
-            asyncio.ensure_future(self.humidity()),
-        ]
+        # tasks = [
+        #     asyncio.ensure_future(self.brightness()),
+        #     asyncio.ensure_future(self.temperature()),
+        #     ... ]
+        tasks = [asyncio.ensure_future(getattr(self, v)()) for v in vals]
         loop.run_until_complete(asyncio.gather(*tasks))
         loop.close()
 
-        print(tasks[0].result())
-        print(tasks[1].result())
-        print(tasks[2].result())
+        return {vals[i]:tasks[i].result() for i in range(len(vals))}
 
     async def brightness(self):
         try:
@@ -183,8 +181,7 @@ if __name__ == "__main__":
     reader = TagReader(tag_addr)
     if reader.connect() is None:
         os._exit(1)
-    print("aa")
-    reader.get_values([])
+    reader.get_values(["temperature", "humidity", "barometer"])
 
     os._exit(0)
     # SensorTag専用に改造する措置
