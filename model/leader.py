@@ -179,7 +179,11 @@ class Leader(object):
         logger.debug('In accept_subordinate:')
         logger.debug('> sub_info:{0}'.format(sub_info))
         if self.check_subordinate(sub_info.id):
-            return False
+            # return False
+            pass
+            # （少なくともSensorTagの）Soldierはしょっちゅう再接続するので
+            # 重複接続はスルー
+
         self.subordinates[sub_info.id] = sub_info
 
         # heartbeat_watcherがすでに存在すれば使い回す

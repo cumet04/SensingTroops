@@ -201,6 +201,7 @@ if __name__ == "__main__":
 
     soldier = Soldier("CC2650-" + tag_addr, "SensorTag")
     soldier.weapons.update(tag_weapons)
+    soldier.tag = reader
 
     retry = 10
     for i in range(retry):

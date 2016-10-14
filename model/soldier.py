@@ -1,5 +1,6 @@
 import random
 import datetime
+import os
 import utils.rest as rest
 from model import Order, Work, logger
 from typing import List, Dict
@@ -63,6 +64,7 @@ class Soldier(object):
         self.superior_ep = ""  # type: str
         self.heartbeat_thread = HeartBeat(self, 0)
         self.working_threads = []  # type: List[WorkingThread]
+        self.tag = None
 
     def shutdown(self):
         self.heartbeat_thread.lock.set()
@@ -136,13 +138,14 @@ class WorkingThread(Thread):
         if 'timer' in self.order.trigger.keys():
             interval = self.order.trigger['timer']
             while not self.lock.wait(timeout=interval):
-                values = []
-                for type in self.order.values:
-                    val, unit = self.soldier.weapons[type]()
-                    if val is None:
-                        self.soldier.shutdown()
-                        return
-                    values.append({"type": type, "value": val, "unit": unit})
+                raw = self.soldier.tag.get_values(self.order.values)
+                if (None, None) in raw:
+                    os._exit(1)
+                    # 通信失敗していたらプロセスをkill
+                    # やり方が酷いし、leaderのacceptに工夫が居る
+                values = [{"type": type, "value": v[0], "unit": v[1]}
+                          for type, v in raw.iteritems()]
+
                 time = datetime.datetime.now(datetime.timezone.utc).isoformat()
                 work = Work(time, self.order.purpose, values)
 
