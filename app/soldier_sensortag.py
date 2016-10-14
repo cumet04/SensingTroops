@@ -180,10 +180,10 @@ if __name__ == "__main__":
 
     reader = TagReader(tag_addr)
     if reader.connect() is None:
+        logger.error("failed to connect to SensorTag. retry after 10 seconds.")
+        time.sleep(10)
         os._exit(1)
-    reader.get_values(["temperature", "humidity", "barometer"])
 
-    os._exit(0)
     # SensorTag専用に改造する措置
     tag_weapons = {
         "temperature":   None,
