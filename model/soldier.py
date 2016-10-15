@@ -144,7 +144,7 @@ class WorkingThread(Thread):
                     # 通信失敗していたらプロセスをkill
                     # やり方が酷いし、leaderのacceptに工夫が居る
                 values = [{"type": type, "value": v[0], "unit": v[1]}
-                          for type, v in raw.iteritems()]
+                          for type, v in raw.items()]
 
                 time = datetime.datetime.now(datetime.timezone.utc).isoformat()
                 work = Work(time, self.order.purpose, values)
