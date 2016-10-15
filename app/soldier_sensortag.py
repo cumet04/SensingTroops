@@ -53,7 +53,7 @@ class TagReader:
             val = self.tag.lightmeter.read()
             self.tag.lightmeter.disable()
         except BTLEException:
-            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            logger.warn("failed to read value: {0}".format(self.addr))
             return None, None
         return val, "lux"
 
@@ -64,7 +64,7 @@ class TagReader:
             val = self.tag.IRtemperature.read()[0]
             self.tag.IRtemperature.disable()
         except BTLEException:
-            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            logger.warn("failed to read value: {0}".format(self.addr))
             return None, None
         return val, "degC"
 
@@ -75,7 +75,7 @@ class TagReader:
             val = self.tag.IRtemperature.read()[1]
             self.tag.IRtemperature.disable()
         except BTLEException:
-            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            logger.warn("failed to read value: {0}".format(self.addr))
             return None, None
         return val, "degC"
 
@@ -86,7 +86,7 @@ class TagReader:
             val = self.tag.humidity.read()[1]
             self.tag.humidity.disable()
         except BTLEException:
-            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            logger.warn("failed to read value: {0}".format(self.addr))
             return None, None
         return val, "%"
 
@@ -97,7 +97,7 @@ class TagReader:
             val = self.tag.humidity.read()[0]
             self.tag.humidity.disable()
         except BTLEException:
-            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            logger.warn("failed to read value: {0}".format(self.addr))
             return None, None
         return val, "degC"
 
@@ -108,7 +108,7 @@ class TagReader:
             val = self.tag.barometer.read()[1]
             self.tag.barometer.disable()
         except BTLEException:
-            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            logger.warn("failed to read value: {0}".format(self.addr))
             return None, None
         return val, "mbar"
 
@@ -119,7 +119,7 @@ class TagReader:
             val = self.tag.barometer.read()[0]
             self.tag.barometer.disable()
         except BTLEException:
-            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            logger.warn("failed to read value: {0}".format(self.addr))
             return None, None
         return val, "degC"
 
@@ -130,7 +130,7 @@ class TagReader:
             val = self.tag.accelerometer.read()
             self.tag.accelerometer.disable()
         except BTLEException:
-            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            logger.warn("failed to read value: {0}".format(self.addr))
             return None, None
         return val, "g"
 
@@ -141,7 +141,7 @@ class TagReader:
             val = self.tag.magnetometer.read()
             self.tag.magnetometer.disable()
         except BTLEException:
-            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            logger.warn("failed to read value: {0}".format(self.addr))
             return None, None
         return val, "uT"
 
@@ -152,7 +152,7 @@ class TagReader:
             val = self.tag.gyroscope.read()
             self.tag.gyroscope.disable()
         except BTLEException:
-            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            logger.warn("failed to read value: {0}".format(self.addr))
             return None, None
         return val, "deg/sec"
 
@@ -162,7 +162,7 @@ class TagReader:
             chara = self.tag.getCharacteristics(uuid=b_uuid)[0]
             val = struct.unpack('b', chara.read())[0]
         except BTLEException:
-            logger.warn("failed to read value: {0}".format(self.tag.addr))
+            logger.warn("failed to read value: {0}".format(self.addr))
             return None, None
         return val, "%"
 

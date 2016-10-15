@@ -139,10 +139,11 @@ class WorkingThread(Thread):
             interval = self.order.trigger['timer']
             while not self.lock.wait(timeout=interval):
                 raw = self.soldier.tag.get_values(self.order.values)
-                if (None, None) in raw:
-                    os._exit(1)
-                    # 通信失敗していたらプロセスをkill
-                    # やり方が酷いし、leaderのacceptに工夫が居る
+                for k, v in raw.items():
+                    if v == (None, None):
+                        os._exit(1)
+                        # 通信失敗していたらプロセスをkill
+                        # やり方が酷いし、leaderのacceptに工夫が居る
                 values = [{"type": type, "value": v[0], "unit": v[1]}
                           for type, v in raw.items()]
 
