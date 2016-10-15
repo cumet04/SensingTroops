@@ -16,10 +16,11 @@ logger.addHandler(handler)
 
 
 class TagReader:
-    def __init__(self, addr):
+    def __init__(self, addr, loop):
         self.enable_wait = 1  # wait seconds for enable sensor to read value
         self.addr = addr
         self.tag = None
+        self.loop = loop
 
     def connect(self):
         try:
@@ -35,21 +36,20 @@ class TagReader:
             raise
 
     def get_values(self, vals):
-        loop = asyncio.get_event_loop()
         # tasks = [
         #     asyncio.ensure_future(self.brightness()),
         #     asyncio.ensure_future(self.temperature()),
         #     ... ]
-        tasks = [asyncio.ensure_future(getattr(self, v)()) for v in vals]
+        tasks = [asyncio.ensure_future(getattr(self, v)(), loop=self.loop)
+                 for v in vals]
         loop.run_until_complete(asyncio.gather(*tasks))
-        loop.close()
 
         return {vals[i]:tasks[i].result() for i in range(len(vals))}
 
     async def brightness(self):
         try:
             self.tag.lightmeter.enable()
-            await asyncio.sleep(self.enable_wait)
+            await asyncio.sleep(self.enable_wait, loop=self.loop)
             val = self.tag.lightmeter.read()
             self.tag.lightmeter.disable()
         except BTLEException:
@@ -60,7 +60,7 @@ class TagReader:
     async def temperature(self):
         try:
             self.tag.IRtemperature.enable()
-            await asyncio.sleep(self.enable_wait)
+            await asyncio.sleep(self.enable_wait, loop=self.loop)
             val = self.tag.IRtemperature.read()[0]
             self.tag.IRtemperature.disable()
         except BTLEException:
@@ -71,7 +71,7 @@ class TagReader:
     async def target_temp(self):
         try:
             self.tag.IRtemperature.enable()
-            await asyncio.sleep(self.enable_wait)
+            await asyncio.sleep(self.enable_wait, loop=self.loop)
             val = self.tag.IRtemperature.read()[1]
             self.tag.IRtemperature.disable()
         except BTLEException:
@@ -82,7 +82,7 @@ class TagReader:
     async def humidity(self):
         try:
             self.tag.humidity.enable()
-            await asyncio.sleep(1)
+            await asyncio.sleep(self.enable_wait, loop=self.loop)
             val = self.tag.humidity.read()[1]
             self.tag.humidity.disable()
         except BTLEException:
@@ -93,7 +93,7 @@ class TagReader:
     async def humi_temp(self):
         try:
             self.tag.humidity.enable()
-            await asyncio.sleep(1)
+            await asyncio.sleep(self.enable_wait, loop=self.loop)
             val = self.tag.humidity.read()[0]
             self.tag.humidity.disable()
         except BTLEException:
@@ -104,7 +104,7 @@ class TagReader:
     async def barometer(self):
         try:
             self.tag.barometer.enable()
-            await asyncio.sleep(1)
+            await asyncio.sleep(self.enable_wait, loop=self.loop)
             val = self.tag.barometer.read()[1]
             self.tag.barometer.disable()
         except BTLEException:
@@ -115,7 +115,7 @@ class TagReader:
     async def baro_temp(self):
         try:
             self.tag.barometer.enable()
-            await asyncio.sleep(1)
+            await asyncio.sleep(self.enable_wait, loop=self.loop)
             val = self.tag.barometer.read()[0]
             self.tag.barometer.disable()
         except BTLEException:
@@ -126,7 +126,7 @@ class TagReader:
     async def accelerometer(self):
         try:
             self.tag.accelerometer.enable()
-            await asyncio.sleep(1)
+            await asyncio.sleep(self.enable_wait, loop=self.loop)
             val = self.tag.accelerometer.read()
             self.tag.accelerometer.disable()
         except BTLEException:
@@ -137,7 +137,7 @@ class TagReader:
     async def magnetometer(self):
         try:
             self.tag.magnetometer.enable()
-            await asyncio.sleep(1)
+            await asyncio.sleep(self.enable_wait, loop=self.loop)
             val = self.tag.magnetometer.read()
             self.tag.magnetometer.disable()
         except BTLEException:
@@ -148,7 +148,7 @@ class TagReader:
     async def gyroscope(self):
         try:
             self.tag.gyroscope.enable()
-            await asyncio.sleep(1)
+            await asyncio.sleep(self.enable_wait, loop=self.loop)
             val = self.tag.gyroscope.read()
             self.tag.gyroscope.disable()
         except BTLEException:
@@ -178,7 +178,8 @@ if __name__ == "__main__":
     rec_addr = params.rec_addr
     tag_addr = params.tag_addr
 
-    reader = TagReader(tag_addr)
+    loop = asyncio.get_event_loop()
+    reader = TagReader(tag_addr, loop)
     if reader.connect() is None:
         logger.error("failed to connect to SensorTag. retry after 10 seconds.")
         time.sleep(10)
@@ -216,3 +217,4 @@ if __name__ == "__main__":
         break
 
     soldier.shutdown()
+    loop.close()
