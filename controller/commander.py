@@ -108,7 +108,7 @@ def accept_campaigns():
     return jsonify(_status=ResponseStatus.Success, accepted=accepted), 200
 
 
-@server.route('/campaigns/<cid>', method=['DELETE'])
+@server.route('/campaigns/<cid>', methods=['DELETE'])
 def remove_campaign(cid):
     commander.remove_campaign(cid)
 
