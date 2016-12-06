@@ -11,7 +11,7 @@ LOOP = asyncio.get_event_loop()
 class SoldierBase(object):
 
     def __init__(self):
-        self.orders = []
+        self.orders = {}
         self.weapons = {
             "zero": lambda: 0,
             "random": random.random
@@ -22,12 +22,19 @@ class SoldierBase(object):
         return list(self.weapons.keys())
 
     def add_order(self, order):
-        self.orders.append(order)
-        asyncio.ensure_future(self.working(
-            order["requirements"], order["trigger"]), loop=LOOP)
+        print('got order: {0}'.format(order))
+        if order['purpose'] in self.orders:
+            self.orders[order['purpose']]['event'].set()
+            del self.orders[order['purpose']]
 
-    async def working(self, reqs, interval):
-        while True:
+        event = asyncio.Event(loop=LOOP)
+        asyncio.ensure_future(self.working(
+            event, order['requirements'], order['trigger']), loop=LOOP)
+        order['event'] = event
+        self.orders[order['purpose']] = order
+
+    async def working(self, event, reqs, interval):
+        while not event.is_set():
             vals = []
             for k in reqs:
                 vals.append({
