@@ -1,5 +1,4 @@
 import random
-import signal
 import asyncio
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
@@ -48,18 +47,6 @@ class SoldierBase(object):
 def main():
     soldier = SoldierBase()
 
-    async def join():
-        await asyncio.sleep(0.1)
-        client = xmlrpc_client.ServerProxy('http://127.0.0.1:3001')
-        client.add_subordinate({
-            'name': 'soldier01',
-            'endpoint': 'http://127.0.0.1:3000'
-        })
-        soldier.superior = {
-            'rpcc': client
-        }
-    asyncio.ensure_future(join(), loop=LOOP)
-
     # webサーバのループとasyncioのループをうまく共存させる方法がわからないため
     # スレッドを立てる方法でなんとかしている。
     # もっとスッキリできるといいのだが...
@@ -67,6 +54,17 @@ def main():
         ('127.0.0.1', 3000), allow_none=True)
     server.register_instance(soldier)
     threading.Thread(target=server.serve_forever, daemon=True).start()
+
+    # join
+    client = xmlrpc_client.ServerProxy('http://127.0.0.1:3001')
+    client.add_subordinate({
+        'name': 'soldier01',
+        'endpoint': 'http://127.0.0.1:3000'
+    })
+    soldier.superior = {
+        'rpcc': client
+    }
+
     try:
         LOOP.run_forever()
     except KeyboardInterrupt:

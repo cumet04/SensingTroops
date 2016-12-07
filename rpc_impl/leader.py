@@ -1,5 +1,4 @@
 import asyncio
-import signal
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
 import threading
@@ -12,6 +11,7 @@ class LeaderBase(object):
     def __init__(self):
         self.operations = {}
         self.subordinates = []
+        self.superior = None
 
     def add_operation(self, op):
         print('got operation: {0}'.format(op))
@@ -43,6 +43,7 @@ class LeaderBase(object):
 
     def accept_data(self, data):
         print('got data: {0}'.format(data))
+        self.superior['rpcc'].accept_data(data)
 
 
 def main():
@@ -58,6 +59,17 @@ def main():
         ('127.0.0.1', 3001), allow_none=True)
     server.register_instance(leader)
     threading.Thread(target=server.serve_forever, daemon=True).start()
+
+    # join
+    client = xmlrpc_client.ServerProxy('http://127.0.0.1:3002')
+    client.add_subordinate({
+        'name': 'leader01',
+        'endpoint': 'http://127.0.0.1:3001'
+    })
+    leader.superior = {
+        'rpcc': client
+    }
+
     try:
         LOOP.run_forever()
     except KeyboardInterrupt:
