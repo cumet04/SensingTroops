@@ -1,0 +1,69 @@
+troops:
+  - commander: Commander_00
+    id: C_51000
+    place: S101
+    subordinates:
+      - leader: Leader_00
+        id: L_52000
+        place: desk_0
+        subs:
+          - soldier: Soldier_00
+            id: S_53000
+            place: left
+          - soldier: Soldier_01
+            id: S_53001
+            place: right
+      - leader: Leader_01
+        id: L_52001
+        place: desk_1
+        subs:
+          - soldier: Soldier_02
+            id: S_53002
+            place: left
+          - soldier: Soldier_03
+            id: S_53003
+            place: right
+      - leader: Leader_02
+        id: L_52002
+        place: desk_2
+        subs:
+          - soldier: Soldier_04
+            id: S_53004
+            place: left
+          - soldier: Soldier_05
+            id: S_53005
+            place: right
+  - commander: Commander_01
+    id: C_51001
+    place: S102
+    subordinates:
+      - leader: Leader_03
+        id: L_52003
+        place: desk_3
+        subs:
+          - soldier: Soldier_06
+            id: S_53006
+            place: left
+          - soldier: Soldier_07
+            id: S_53007
+            place: right
+      - leader: Leader_04
+        id: L_52004
+        place: desk_4
+        subs:
+          - soldier: Soldier_08
+            id: S_53008
+            place: left
+          - soldier: Soldier_09
+            id: S_53009
+            place: right
+      - leader: Leader_05
+        id: L_52005
+        place: desk_5
+        subs:
+          - soldier: Soldier_10
+            id: S_53010
+            place: left
+          - soldier: Soldier_11
+            id: S_53011
+            place: right
