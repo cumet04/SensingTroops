@@ -2,7 +2,7 @@ troops:
   - commander: Commander_00
     id: C_51000
     place: S101
-    subordinates:
+    subs:
       - leader: Leader_00
         id: L_52000
         place: desk_0
@@ -36,7 +36,7 @@ troops:
   - commander: Commander_01
     id: C_51001
     place: S102
-    subordinates:
+    subs:
       - leader: Leader_03
         id: L_52003
         place: desk_3
