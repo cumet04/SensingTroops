@@ -1,4 +1,5 @@
 import asyncio
+import argparse
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
 import threading
@@ -47,10 +48,23 @@ class CommanderBase(object):
 
 
 def main():
-    port = 51000
-    self_id = 'C_' + str(port)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-I', '--id', type=str, default='', help='Target id of app')
+    parser.add_argument(
+        '-P', '--port', type=int, default=51000, help="rpc-server's port num")
+    parser.add_argument(
+        '-R', '--rec_addr', type=str, help="recruiter url",
+        default="http://localhost:50000/")
+    params = parser.parse_args()
+
+    port = params.port
+    self_id = params.id
+    if self_id == '':
+        self_id = 'C_' + str(port)
     ip = '127.0.0.1'
     endpoint = 'http://{0}:{1}'.format(ip, port)
+    recruiter_ep = params.rec_addr
 
     commander = CommanderBase()
     commander.add_mission({
@@ -66,7 +80,7 @@ def main():
     threading.Thread(target=server.serve_forever, daemon=True).start()
 
     # get self info
-    recruiter = xmlrpc_client.ServerProxy('http://127.0.0.1:50000')
+    recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
     resolved = recruiter.get_commander(self_id)
     info = {
         'id': resolved['id'],  # same as self_id

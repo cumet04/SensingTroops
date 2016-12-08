@@ -1,4 +1,5 @@
 import yaml
+import argparse
 import json
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
@@ -50,7 +51,6 @@ class Recruiter(object):
         for com in self.recruit.values():
             if l_id in com['subs']:
                 raw = com['subs'][l_id]
-                print(com)
                 ep = com['endpoint'] if 'endpoint' in com else ''
                 return {
                     'id': raw['id'],
@@ -99,10 +99,16 @@ class Recruiter(object):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-P', '--port', type=int, default=50000, help="rpc-server's port num")
+    params = parser.parse_args()
+    port = params.port
+
     recruiter = Recruiter()
 
     server = xmlrpc_server.SimpleXMLRPCServer(
-        ('127.0.0.1', 50000), allow_none=True, logRequests=False)
+        ('127.0.0.1', port), allow_none=True, logRequests=False)
     server.register_instance(recruiter)
     try:
         server.serve_forever()
