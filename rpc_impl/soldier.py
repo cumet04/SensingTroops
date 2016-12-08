@@ -17,9 +17,6 @@ class SoldierBase(object):
         }
         self.superior = None
 
-    def list_weapons(self):
-        return list(self.weapons.keys())
-
     def add_order(self, order):
         print('got order: {0}'.format(order))
         if order['purpose'] in self.orders:
@@ -45,22 +42,35 @@ class SoldierBase(object):
 
 
 def main():
+    port = 53000
+    self_id = 'S_' + str(port)
+    ip = '127.0.0.1'
+    endpoint = 'http://{0}:{1}'.format(ip, port)
+
     soldier = SoldierBase()
 
     # webサーバのループとasyncioのループをうまく共存させる方法がわからないため
     # スレッドを立てる方法でなんとかしている。
     # もっとスッキリできるといいのだが...
-    server = xmlrpc_server.SimpleXMLRPCServer(
-        ('127.0.0.1', 3000), allow_none=True)
+    server = xmlrpc_server.SimpleXMLRPCServer((ip, port), allow_none=True)
     server.register_instance(soldier)
     threading.Thread(target=server.serve_forever, daemon=True).start()
 
+    # get self info
+    recruiter = xmlrpc_client.ServerProxy('http://127.0.0.1:50000')
+    resolved = recruiter.get_soldier(self_id)
+    superior_ep = resolved['superior_ep']
+    info = {
+        'id': resolved['id'],  # same as self_id
+        'name': resolved['name'],
+        'place': resolved['place'],
+        'weapons': list(soldier.weapons.keys()),
+        'endpoint': endpoint
+    }
+
     # join
-    client = xmlrpc_client.ServerProxy('http://127.0.0.1:3001')
-    client.add_subordinate({
-        'name': 'soldier01',
-        'endpoint': 'http://127.0.0.1:3000'
-    })
+    client = xmlrpc_client.ServerProxy(superior_ep)
+    client.add_subordinate(info)
     soldier.superior = {
         'rpcc': client
     }

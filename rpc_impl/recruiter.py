@@ -33,6 +33,7 @@ class Recruiter(object):
             return False
         client = xmlrpc_client.ServerProxy(endpoint)
         self.recruit[c_id]['rpcc'] = client
+        self.recruit[c_id]['endpoint'] = endpoint
         return True
 
     def get_commander(self, c_id):
@@ -40,7 +41,7 @@ class Recruiter(object):
             raw = self.recruit[c_id]
             return {
                 'id': raw['id'],
-                'name': raw['name'],
+                'name': raw['commander'],
                 'place': raw['place'],
             }
         return None
@@ -49,10 +50,11 @@ class Recruiter(object):
         for com in self.recruit.values():
             if l_id in com['subs']:
                 raw = com['subs'][l_id]
+                print(com)
                 ep = com['endpoint'] if 'endpoint' in com else ''
                 return {
                     'id': raw['id'],
-                    'name': raw['name'],
+                    'name': raw['leader'],
                     'place': raw['place'],
                     'superior_ep': ep
                 }
@@ -67,7 +69,7 @@ class Recruiter(object):
                     ep = l_data['endpoint'] if l_data is not None else ''
                     return {
                         'id': raw['id'],
-                        'name': raw['name'],
+                        'name': raw['soldier'],
                         'place': raw['place'],
                         'superior_ep': ep
                     }

@@ -10,17 +10,17 @@ class LeaderBase(object):
 
     def __init__(self):
         self.operations = {}
-        self.subordinates = []
+        self.subordinates = {}
         self.superior = None
 
     def add_operation(self, op):
         print('got operation: {0}'.format(op))
         self.operations[op['purpose']] = op
 
-        target_subs = []
+        target_subs = {}
         if op['place'] == "All":
             target_subs = self.subordinates
-        for sub in target_subs:
+        for sub in target_subs.values():
             m_req = op['requirements']
             reqs = list(set(m_req).intersection(sub['weapons']))
             sub['rpcc'].add_order({
@@ -30,12 +30,8 @@ class LeaderBase(object):
             })
 
     def add_subordinate(self, info):
-        sub = {
-            "name": info["name"],
-            "rpcc": xmlrpc_client.ServerProxy(info["endpoint"])
-        }
-        sub['weapons'] = sub['rpcc'].list_weapons()
-        self.subordinates.append(sub)
+        info['rpcc'] = xmlrpc_client.ServerProxy(info["endpoint"])
+        self.subordinates[info['id']] = info
 
         for op in self.operations.values():
             # TODO: 必要に応じてdelete opすべき
@@ -47,25 +43,31 @@ class LeaderBase(object):
 
 
 def main():
-    leader = LeaderBase()
-    leader.add_operation({
-        'place': 'All',
-        'requirements': ['zero', 'random'],
-        'trigger': 2,
-        'purpose': 'purp'
-    })
+    port = 52000
+    self_id = 'L_' + str(port)
+    ip = '127.0.0.1'
+    endpoint = 'http://{0}:{1}'.format(ip, port)
 
-    server = xmlrpc_server.SimpleXMLRPCServer(
-        ('127.0.0.1', 3001), allow_none=True)
+    leader = LeaderBase()
+
+    server = xmlrpc_server.SimpleXMLRPCServer((ip, port), allow_none=True)
     server.register_instance(leader)
     threading.Thread(target=server.serve_forever, daemon=True).start()
 
+    # get self info
+    recruiter = xmlrpc_client.ServerProxy('http://127.0.0.1:50000')
+    resolved = recruiter.get_leader(self_id)
+    superior_ep = resolved['superior_ep']
+    info = {
+        'id': resolved['id'],  # same as self_id
+        'name': resolved['name'],
+        'place': resolved['place'],
+        'endpoint': endpoint
+    }
+
     # join
-    client = xmlrpc_client.ServerProxy('http://127.0.0.1:3002')
-    client.add_subordinate({
-        'name': 'leader01',
-        'endpoint': 'http://127.0.0.1:3001'
-    })
+    client = xmlrpc_client.ServerProxy(superior_ep)
+    client.add_subordinate(info)
     leader.superior = {
         'rpcc': client
     }
