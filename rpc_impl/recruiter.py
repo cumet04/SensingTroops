@@ -102,7 +102,7 @@ def main():
     recruiter = Recruiter()
 
     server = xmlrpc_server.SimpleXMLRPCServer(
-        ('127.0.0.1', 50000), allow_none=True)
+        ('127.0.0.1', 50000), allow_none=True, logRequests=False)
     server.register_instance(recruiter)
     try:
         server.serve_forever()

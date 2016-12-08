@@ -60,7 +60,8 @@ def main():
         'trigger': 2,
         'purpose': 'purp'
     })
-    server = xmlrpc_server.SimpleXMLRPCServer((ip, port), allow_none=True)
+    server = xmlrpc_server.SimpleXMLRPCServer(
+        (ip, port), allow_none=True, logRequests=False)
     server.register_instance(commander)
     threading.Thread(target=server.serve_forever, daemon=True).start()
 
