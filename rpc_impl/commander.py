@@ -1,4 +1,7 @@
 import asyncio
+import traceback
+import sys
+import copy
 import argparse
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
@@ -14,12 +17,25 @@ logger.addHandler(handler)
 LOOP = asyncio.get_event_loop()
 
 
+def trace_error(func):
+    import functools
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except:
+            print(traceback.format_exc(), file=sys.stderr)
+    return wrapper
+
+
 class CommanderBase(object):
 
     def __init__(self):
         self.missions = {}
         self.subordinates = {}
 
+    @trace_error
     def add_mission(self, mission):
         print('got mission: {0}'.format(mission))
         self.missions[mission['purpose']] = mission
@@ -35,6 +51,7 @@ class CommanderBase(object):
                 'purpose': mission['purpose']
             })
 
+    @trace_error
     def add_subordinate(self, info):
         info['rpcc'] = xmlrpc_client.ServerProxy(info["endpoint"])
         self.subordinates[info['id']] = info
@@ -43,13 +60,16 @@ class CommanderBase(object):
             # TODO: 必要に応じてdelete opすべき
             self.add_mission(m)
 
+    @trace_error
     def get_subordinate(self, sub_id):
         if sub_id not in self.subordinates:
             return None
-        res = self.subordinates[sub_id]
-        del res['rpcc']
+        # rpc clientはRPCのレスポンスで返せないので消してから返す
+        res = copy.copy(self.subordinates[sub_id])
+        res.pop('rpcc', None)
         return res
 
+    @trace_error
     def accept_data(self, data):
         print('got data: {0}'.format(data))
 
@@ -93,7 +113,9 @@ def main():
         logger.info("Commander not found: ID = %s", self_id)
         return
 
-    recruiter.register_commander(self_id, endpoint)
+    if not recruiter.register_commander(self_id, endpoint):
+        logger.info("Failed to register commander info")
+        return
 
     try:
         LOOP.run_forever()

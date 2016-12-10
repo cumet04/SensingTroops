@@ -1,10 +1,24 @@
 import argparse
+import sys
+import traceback
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
 import yaml
 
 # 全体的に検索がゴリ押しで効率悪いが、検索が実行される回数自体が少ないので
 # 問題ないと判断。ただ、時間があるならORMしたほうがいい。
+
+
+def trace_error(func):
+    import functools
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except:
+            print(traceback.format_exc(), file=sys.stderr)
+    return wrapper
 
 
 class Recruiter(object):
@@ -28,6 +42,7 @@ class Recruiter(object):
                 for sol in sols:
                     lea['subs'][sol['id']] = sol
 
+    @trace_error
     def register_commander(self, c_id, endpoint):
         if c_id not in self.recruit:
             return False
@@ -36,6 +51,7 @@ class Recruiter(object):
         self.recruit[c_id]['endpoint'] = endpoint
         return True
 
+    @trace_error
     def get_commander(self, c_id):
         if c_id in self.recruit:
             raw = self.recruit[c_id]
@@ -46,6 +62,7 @@ class Recruiter(object):
             }
         return None
 
+    @trace_error
     def get_leader(self, l_id):
         for com in self.recruit.values():
             if l_id in com['subs']:
@@ -59,6 +76,7 @@ class Recruiter(object):
                 }
         return None
 
+    @trace_error
     def get_soldier(self, s_id):
         for com in self.recruit.values():
             for lea in com['subs'].values():
@@ -74,6 +92,7 @@ class Recruiter(object):
                     }
         return None
 
+    @trace_error
     def resolve_superior(self, sub_id):
         for com in self.recruit.values():
             if sub_id in com['subs']:
@@ -87,6 +106,7 @@ class Recruiter(object):
                     return lea
         return None
 
+    @trace_error
     def _resolve_leader(self, l_id):
         com = self.resolve_superior(l_id)
         if com is None or 'rpcc' not in com:

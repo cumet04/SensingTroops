@@ -1,4 +1,6 @@
 import asyncio
+import traceback
+import sys
 import argparse
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
@@ -14,6 +16,18 @@ logger.addHandler(handler)
 LOOP = asyncio.get_event_loop()
 
 
+def trace_error(func):
+    import functools
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except:
+            print(traceback.format_exc(), file=sys.stderr)
+    return wrapper
+
+
 class LeaderBase(object):
 
     def __init__(self):
@@ -21,6 +35,7 @@ class LeaderBase(object):
         self.subordinates = {}
         self.superior = None
 
+    @trace_error
     def add_operation(self, op):
         print('got operation: {0}'.format(op))
         self.operations[op['purpose']] = op
@@ -37,6 +52,7 @@ class LeaderBase(object):
                 'purpose': op['purpose']
             })
 
+    @trace_error
     def add_subordinate(self, info):
         info['rpcc'] = xmlrpc_client.ServerProxy(info["endpoint"])
         self.subordinates[info['id']] = info
@@ -46,7 +62,6 @@ class LeaderBase(object):
             self.add_operation(op)
 
     def accept_data(self, data):
-        print('got data: {0}'.format(data))
         self.superior['rpcc'].accept_data(data)
 
 

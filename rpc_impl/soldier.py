@@ -1,5 +1,8 @@
 import random
+import traceback
+import sys
 import argparse
+import datetime
 import asyncio
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
@@ -15,6 +18,18 @@ logger.addHandler(handler)
 LOOP = asyncio.get_event_loop()
 
 
+def trace_error(func):
+    import functools
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except:
+            print(traceback.format_exc(), file=sys.stderr)
+    return wrapper
+
+
 class SoldierBase(object):
 
     def __init__(self):
@@ -25,6 +40,7 @@ class SoldierBase(object):
         }
         self.superior = None
 
+    @trace_error
     def add_order(self, order):
         print('got order: {0}'.format(order))
         if order['purpose'] in self.orders:
@@ -41,9 +57,12 @@ class SoldierBase(object):
         while not event.is_set():
             vals = []
             for k in reqs:
+                time = datetime.datetime.now(datetime.timezone.utc).isoformat()
                 vals.append({
-                    "type": k,
-                    "value": self.weapons[k]()
+                    'id': self.id,
+                    'type': k,
+                    'value': self.weapons[k](),
+                    'time': time
                 })
             self.superior['rpcc'].accept_data(vals)
             await asyncio.sleep(interval, loop=LOOP)
@@ -95,6 +114,8 @@ def main():
         'weapons': list(soldier.weapons.keys()),
         'endpoint': endpoint
     }
+    soldier.id = info['id']
+    soldier.name = info['name']
 
     # join
     client = xmlrpc_client.ServerProxy(superior_ep)
