@@ -2,7 +2,14 @@ import asyncio
 import argparse
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
+from logging import getLogger, StreamHandler, DEBUG
 import threading
+
+logger = getLogger(__name__)
+handler = StreamHandler()
+handler.setLevel(DEBUG)
+logger.setLevel(DEBUG)
+logger.addHandler(handler)
 
 LOOP = asyncio.get_event_loop()
 
@@ -17,7 +24,7 @@ class CommanderBase(object):
         print('got mission: {0}'.format(mission))
         self.missions[mission['purpose']] = mission
 
-        target_subs = []
+        target_subs = {}
         if mission['place'] == "All":
             target_subs = self.subordinates
         for sub in target_subs.values():

@@ -3,7 +3,14 @@ import argparse
 import asyncio
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
+from logging import getLogger, StreamHandler, DEBUG
 import threading
+
+logger = getLogger(__name__)
+handler = StreamHandler()
+handler.setLevel(DEBUG)
+logger.setLevel(DEBUG)
+logger.addHandler(handler)
 
 LOOP = asyncio.get_event_loop()
 
@@ -74,7 +81,13 @@ def main():
     # get self info
     recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
     resolved = recruiter.get_soldier(self_id)
+    if resolved is None:
+        logger.info("Soldier not found: ID = %d", self_id)
+        return
     superior_ep = resolved['superior_ep']
+    if superior_ep == '':
+        logger.info("The superior's instance don't exist")
+        return
     info = {
         'id': resolved['id'],  # same as self_id
         'name': resolved['name'],
