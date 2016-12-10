@@ -1,8 +1,7 @@
-import yaml
 import argparse
-import json
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
+import yaml
 
 # 全体的に検索がゴリ押しで効率悪いが、検索が実行される回数自体が少ないので
 # 問題ないと判断。ただ、時間があるならORMしたほうがいい。

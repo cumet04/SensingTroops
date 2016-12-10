@@ -79,7 +79,7 @@ def main():
     recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
     resolved = recruiter.get_leader(self_id)
     if resolved is None:
-        logger.info("Leader not found: ID = %d", self_id)
+        logger.info("Leader not found: ID = %s", self_id)
         return
     superior_ep = resolved['superior_ep']
     if superior_ep == '':

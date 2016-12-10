@@ -89,12 +89,9 @@ def main():
     # get self info
     recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
     resolved = recruiter.get_commander(self_id)
-    info = {
-        'id': resolved['id'],  # same as self_id
-        'name': resolved['name'],
-        'place': resolved['place'],
-        'endpoint': endpoint
-    }
+    if resolved is None:
+        logger.info("Commander not found: ID = %s", self_id)
+        return
 
     recruiter.register_commander(self_id, endpoint)
 
