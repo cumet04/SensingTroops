@@ -48,12 +48,12 @@ class SoldierBase(object):
             del self.orders[order['purpose']]
 
         event = asyncio.Event(loop=LOOP)
-        asyncio.ensure_future(self.working(
+        asyncio.ensure_future(self._working(
             event, order['requirements'], order['trigger']), loop=LOOP)
         order['event'] = event
         self.orders[order['purpose']] = order
 
-    async def working(self, event, reqs, interval):
+    async def _working(self, event, reqs, interval):
         while not event.is_set():
             vals = []
             for k in reqs:
