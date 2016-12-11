@@ -1,11 +1,8 @@
 import argparse
 import asyncio
-import threading
-import traceback
-import sys
-import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
 from logging import getLogger, StreamHandler, DEBUG
+from utils.utils import trace_error, run_rpc
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -92,10 +89,9 @@ def main():
     recruiter_ep = params.rec_addr
 
     leader = LeaderBase()
-    server = xmlrpc_server.SimpleXMLRPCServer(
-        (ip, port), allow_none=True, logRequests=False)
-    server.register_instance(leader)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
+    if not run_rpc(ip, port, leader):
+        logger.info('Address already in use')
+        return
 
     # get self info
     recruiter = xmlrpc_client.ServerProxy(recruiter_ep)

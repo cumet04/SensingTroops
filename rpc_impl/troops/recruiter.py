@@ -1,24 +1,17 @@
 import argparse
-import traceback
-import sys
-import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
+from logging import getLogger, StreamHandler, DEBUG
+from utils.utils import trace_error, run_rpc
 import yaml
+
+logger = getLogger(__name__)
+handler = StreamHandler()
+handler.setLevel(DEBUG)
+logger.setLevel(DEBUG)
+logger.addHandler(handler)
 
 # 全体的に検索がゴリ押しで効率悪いが、検索が実行される回数自体が少ないので
 # 問題ないと判断。ただ、時間があるならORMしたほうがいい。
-
-
-def trace_error(func):
-    import functools
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except:
-            print(traceback.format_exc(), file=sys.stderr)
-    return wrapper
 
 
 class Recruiter(object):
@@ -130,13 +123,13 @@ def main():
     port = params.port
 
     recruiter = Recruiter()
+    if not run_rpc('127.0.0.1', port, recruiter):
+        logger.info('Address already in use')
+        return
 
-    server = xmlrpc_server.SimpleXMLRPCServer(
-        ('127.0.0.1', port), allow_none=True, logRequests=False)
-    server.register_instance(recruiter)
-    server.register_introspection_functions()
     try:
-        server.serve_forever()
+        while True:
+            pass
     except KeyboardInterrupt:
         pass
 

@@ -1,13 +1,11 @@
 import argparse
 import asyncio
 import datetime
-import threading
-import traceback
 import random
-import sys
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
 from logging import getLogger, StreamHandler, DEBUG
+from utils.utils import trace_error, run_rpc
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -31,6 +29,18 @@ class SoldierBase(object):
             "random": random.random
         }
         self.superior = None
+
+    @trace_error
+    def show_info(self):
+        return {
+            'type': 'Soldier',
+            'id': self.id,
+            'name': self.name,
+            'place': self.place,
+            'endpoint': self.endpoint,
+            'weapons': list(self.weapons.keys()),
+            'orders': self.orders
+        }
 
     @trace_error
     def add_order(self, order):
@@ -83,14 +93,9 @@ def main():
     recruiter_ep = params.rec_addr
 
     soldier = SoldierBase()
-
-    # webサーバのループとasyncioのループをうまく共存させる方法がわからないため
-    # スレッドを立てる方法でなんとかしている。
-    # もっとスッキリできるといいのだが...
-    server = xmlrpc_server.SimpleXMLRPCServer(
-        (ip, port), allow_none=True, logRequests=False)
-    server.register_instance(soldier)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
+    if not run_rpc(ip, port, soldier):
+        logger.info('Address already in use')
+        return
 
     # get self info
     recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
