@@ -17,23 +17,26 @@ logger.addHandler(handler)
 LOOP = asyncio.get_event_loop()
 
 
-def trace_error(func):
-    import functools
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except:
-            print(traceback.format_exc(), file=sys.stderr)
-    return wrapper
-
-
 class CommanderBase(object):
 
     def __init__(self):
+        self.id = ''
+        self.name = ''
+        self.place = ''
+        self.endpoint = ''
         self.missions = {}
         self.subordinates = {}
+
+    @trace_error
+    def show_info(self):
+        return {
+            'type': 'Commander',
+            'id': self.id,
+            'name': self.name,
+            'place': self.place,
+            'endpoint': self.endpoint,
+            'missions': self.missions
+        }
 
     @trace_error
     def add_mission(self, mission):
@@ -116,10 +119,13 @@ def main():
     if resolved is None:
         logger.info("Commander not found: ID = %s", self_id)
         return
-
     if not recruiter.register_commander(self_id, endpoint):
         logger.info("Failed to register commander info")
         return
+    commander.id = resolved['id']
+    commander.name = resolved['name']
+    commander.place = resolved['place']
+    commander.endpoint = endpoint
 
     try:
         LOOP.run_forever()

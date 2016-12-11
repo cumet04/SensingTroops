@@ -18,21 +18,13 @@ logger.addHandler(handler)
 LOOP = asyncio.get_event_loop()
 
 
-def trace_error(func):
-    import functools
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except:
-            print(traceback.format_exc(), file=sys.stderr)
-    return wrapper
-
-
 class SoldierBase(object):
 
     def __init__(self):
+        self.id = ''
+        self.name = ''
+        self.place = ''
+        self.endpoint = ''
         self.orders = {}
         self.weapons = {
             "zero": lambda: 0,
@@ -70,6 +62,7 @@ class SoldierBase(object):
 
 
 def main():
+    # read args
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-I', '--id', type=str, default='', help='Target id of app')
@@ -80,6 +73,7 @@ def main():
         default="http://localhost:50000/")
     params = parser.parse_args()
 
+    # set params
     port = params.port
     self_id = params.id
     if self_id == '':
@@ -108,19 +102,14 @@ def main():
     if superior_ep == '':
         logger.info("The superior's instance don't exist")
         return
-    info = {
-        'id': resolved['id'],  # same as self_id
-        'name': resolved['name'],
-        'place': resolved['place'],
-        'weapons': list(soldier.weapons.keys()),
-        'endpoint': endpoint
-    }
-    soldier.id = info['id']
-    soldier.name = info['name']
+    soldier.id = resolved['id']
+    soldier.name = resolved['name']
+    soldier.place = resolved['place']
+    soldier.endpoint = endpoint
 
     # join
     client = xmlrpc_client.ServerProxy(superior_ep)
-    client.add_subordinate(info)
+    client.add_subordinate(soldier.show_info())
     soldier.superior = {
         'rpcc': client
     }

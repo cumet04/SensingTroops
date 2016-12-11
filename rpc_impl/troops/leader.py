@@ -16,24 +16,27 @@ logger.addHandler(handler)
 LOOP = asyncio.get_event_loop()
 
 
-def trace_error(func):
-    import functools
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except:
-            print(traceback.format_exc(), file=sys.stderr)
-    return wrapper
-
-
 class LeaderBase(object):
 
     def __init__(self):
+        self.id = ''
+        self.name = ''
+        self.place = ''
+        self.endpoint = ''
         self.operations = {}
         self.subordinates = {}
         self.superior = None
+
+    @trace_error
+    def show_info(self):
+        return {
+            'type': 'Leader',
+            'id': self.id,
+            'name': self.name,
+            'place': self.place,
+            'endpoint': self.endpoint,
+            'operations': self.operations
+        }
 
     @trace_error
     def add_operation(self, op):
@@ -104,16 +107,14 @@ def main():
     if superior_ep == '':
         logger.info("The superior's instance don't exist")
         return
-    info = {
-        'id': resolved['id'],  # same as self_id
-        'name': resolved['name'],
-        'place': resolved['place'],
-        'endpoint': endpoint
-    }
+    leader.id = resolved['id']
+    leader.name = resolved['name']
+    leader.place = resolved['place']
+    leader.endpoint = endpoint
 
     # join
     client = xmlrpc_client.ServerProxy(superior_ep)
-    client.add_subordinate(info)
+    client.add_subordinate(leader.show_info())
     leader.superior = {
         'rpcc': client
     }
