@@ -44,6 +44,7 @@ class Recruiter(object):
 
     @trace_error
     def register_commander(self, c_id, endpoint):
+        """register_commander(c_id: str, endpoint: str) => bool"""
         if c_id not in self.recruit:
             return False
         client = xmlrpc_client.ServerProxy(endpoint)
@@ -53,6 +54,7 @@ class Recruiter(object):
 
     @trace_error
     def get_commander(self, c_id):
+        """get_commander(c_id: str) => {commander info}"""
         if c_id in self.recruit:
             raw = self.recruit[c_id]
             return {
@@ -64,6 +66,7 @@ class Recruiter(object):
 
     @trace_error
     def get_leader(self, l_id):
+        """get_leader(l_id: str) => {leader info}"""
         for com in self.recruit.values():
             if l_id in com['subs']:
                 raw = com['subs'][l_id]
@@ -78,6 +81,7 @@ class Recruiter(object):
 
     @trace_error
     def get_soldier(self, s_id):
+        """get_solier(s_id: str) => {soldier info}"""
         for com in self.recruit.values():
             for lea in com['subs'].values():
                 if s_id in lea['subs']:
@@ -94,6 +98,7 @@ class Recruiter(object):
 
     @trace_error
     def resolve_superior(self, sub_id):
+        """resolve_superior(sub_id: str) => {superior info}"""
         for com in self.recruit.values():
             if sub_id in com['subs']:
                 return com
@@ -129,6 +134,7 @@ def main():
     server = xmlrpc_server.SimpleXMLRPCServer(
         ('127.0.0.1', port), allow_none=True, logRequests=False)
     server.register_instance(recruiter)
+    server.register_introspection_functions()
     try:
         server.serve_forever()
     except KeyboardInterrupt:

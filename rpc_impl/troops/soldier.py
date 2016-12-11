@@ -42,6 +42,7 @@ class SoldierBase(object):
 
     @trace_error
     def add_order(self, order):
+        """add_order(order: {order}) => None"""
         print('got order: {0}'.format(order))
         if order['purpose'] in self.orders:
             self.orders[order['purpose']]['event'].set()

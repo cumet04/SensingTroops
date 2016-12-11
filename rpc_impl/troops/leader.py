@@ -37,6 +37,7 @@ class LeaderBase(object):
 
     @trace_error
     def add_operation(self, op):
+        """add_operation(op: {operation}) => None"""
         print('got operation: {0}'.format(op))
         self.operations[op['purpose']] = op
 
@@ -54,6 +55,7 @@ class LeaderBase(object):
 
     @trace_error
     def add_subordinate(self, info):
+        """add_subordinate(info: {soldier info}) => None"""
         info['rpcc'] = xmlrpc_client.ServerProxy(info["endpoint"])
         self.subordinates[info['id']] = info
 
@@ -61,7 +63,9 @@ class LeaderBase(object):
             # TODO: 必要に応じてdelete opすべき
             self.add_operation(op)
 
+    @trace_error
     def accept_data(self, data):
+        """accept_data(data: {collected data}) => None"""
         self.superior['rpcc'].accept_data(data)
 
 

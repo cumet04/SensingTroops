@@ -37,6 +37,7 @@ class CommanderBase(object):
 
     @trace_error
     def add_mission(self, mission):
+        """add_mission(mission: {mission}) => None"""
         print('got mission: {0}'.format(mission))
         self.missions[mission['purpose']] = mission
 
@@ -53,6 +54,7 @@ class CommanderBase(object):
 
     @trace_error
     def add_subordinate(self, info):
+        """add_subordinate(info: {leader info}) => None"""
         info['rpcc'] = xmlrpc_client.ServerProxy(info["endpoint"])
         self.subordinates[info['id']] = info
 
@@ -62,6 +64,7 @@ class CommanderBase(object):
 
     @trace_error
     def get_subordinate(self, sub_id):
+        """get_subordinate(sub_id: str) => {leader info}"""
         if sub_id not in self.subordinates:
             return None
         # rpc clientはRPCのレスポンスで返せないので消してから返す
@@ -71,6 +74,7 @@ class CommanderBase(object):
 
     @trace_error
     def accept_data(self, data):
+        """accept_data(data: {collected data}) => None"""
         print('got data: {0}'.format(data))
 
 
