@@ -2,7 +2,6 @@ import argparse
 import asyncio
 import datetime
 import random
-import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
 from logging import getLogger, StreamHandler, DEBUG
 from utils.utils import trace_error, run_rpc
