@@ -1,11 +1,11 @@
+import argparse
 import asyncio
+import threading
 import traceback
 import sys
-import argparse
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
 from logging import getLogger, StreamHandler, DEBUG
-import threading
 
 logger = getLogger(__name__)
 handler = StreamHandler()

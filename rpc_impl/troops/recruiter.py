@@ -1,6 +1,6 @@
 import argparse
-import sys
 import traceback
+import sys
 import xmlrpc.server as xmlrpc_server
 import xmlrpc.client as xmlrpc_client
 import yaml
