@@ -26,6 +26,7 @@ class LeaderBase(object):
 
     @trace_error
     def show_info(self):
+        """show_info() => {leader info}"""
         return {
             'type': 'Leader',
             'id': self.id,

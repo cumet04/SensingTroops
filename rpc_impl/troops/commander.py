@@ -26,6 +26,7 @@ class CommanderBase(object):
 
     @trace_error
     def show_info(self):
+        """show_info() => {commander info}"""
         return {
             'type': 'Commander',
             'id': self.id,

@@ -31,6 +31,7 @@ class SoldierBase(object):
 
     @trace_error
     def show_info(self):
+        """show_info() => {soldier info}"""
         return {
             'type': 'Soldier',
             'id': self.id,
