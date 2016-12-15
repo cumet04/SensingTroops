@@ -1,7 +1,7 @@
 import argparse
 import asyncio
 import xmlrpc.client as xmlrpc_client
-import sys
+from time import sleep
 from logging import getLogger, StreamHandler, DEBUG
 from utils.utils import trace_error, run_rpc
 
@@ -78,6 +78,30 @@ class LeaderBase(object):
         self.superior['rpcc'].accept_data(data)
 
 
+def get_self_info(recruiter_ep, self_id, retry_count):
+    recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
+    resolved = None
+    retry_sleep = 2
+    for i in range(retry_count):
+        try:
+            resolved = recruiter.get_leader(self_id)
+        except ConnectionRefusedError:
+            logger.info(
+                "failed to connect to recruiter. retry %d sec after", retry_sleep)
+            sleep(retry_sleep)
+            retry_sleep = retry_sleep * 2
+            continue
+        break
+    if retry_sleep == 2 * (2 ** retry_count):
+        return "Couldn't connect to recruiter"
+
+    if resolved is None:
+        return "Leader not found: ID = %s" % self_id
+    if resolved['superior_ep'] == '':
+        return "The superior's instance don't exist"
+    return resolved
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -99,26 +123,18 @@ def main():
 
     leader = LeaderBase()
     if not run_rpc(ip, port, leader):
-        logger.info('Address already in use')
-        return
+        return 'Address already in use'
 
-    # get self info
-    recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
-    resolved = recruiter.get_leader(self_id)
-    if resolved is None:
-        logger.info("Leader not found: ID = %s", self_id)
-        return
-    superior_ep = resolved['superior_ep']
-    if superior_ep == '':
-        logger.info("The superior's instance don't exist")
-        return
-    leader.id = resolved['id']
-    leader.name = resolved['name']
-    leader.place = resolved['place']
+    info = get_self_info(recruiter_ep, self_id, 3)
+    if isinstance(info, str):
+        return info
+    leader.id = info['id']
+    leader.name = info['name']
+    leader.place = info['place']
     leader.endpoint = endpoint
 
     # join
-    client = xmlrpc_client.ServerProxy(superior_ep)
+    client = xmlrpc_client.ServerProxy(info['superior_ep'])
     client.add_subordinate(leader.show_info())
     leader.superior = {
         'rpcc': client
@@ -130,4 +146,6 @@ def main():
         pass
 
 if __name__ == "__main__":
-    main()
+    res = main()
+    if res is not None:
+        logger.error(res)
