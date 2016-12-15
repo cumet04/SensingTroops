@@ -37,6 +37,24 @@ class CommanderBase(object):
         }
 
     @trace_error
+    def retrieve_troop_info(self):
+        """retrieve_troop_info() => {troop info}"""
+        leaders = self.get_subordinates()
+        for k, v in leaders.items():
+            subs = self.subordinates[k]['rpcc'].get_subordinates()
+            v['subs'] = subs
+        hierarchy = self.show_info()
+        hierarchy['subs'] = leaders
+        return hierarchy
+
+    @trace_error
+    def get_subordinates(self):
+        subs = {}
+        for k, v in self.subordinates.items():
+            subs[k] = v['rpcc'].show_info()
+        return subs
+
+    @trace_error
     def add_mission(self, mission):
         """add_mission(mission: {mission}) => None"""
         print('got mission: {0}'.format(mission))

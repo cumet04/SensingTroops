@@ -17,3 +17,7 @@ for i in $(seq 53000 53011)
 do
     python -m troops.soldier --port $i > /tmp/soldier_${i:3:2}.log &
 done
+
+python -m viewer.viewer
+
+pkill python

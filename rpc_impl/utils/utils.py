@@ -12,6 +12,7 @@ def trace_error(func):
         try:
             return func(*args, **kwargs)
         except:
+            print('[ERROR] tracing error...', file=sys.stderr)
             print(traceback.format_exc(), file=sys.stderr)
     return wrapper
 

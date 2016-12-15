@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import xmlrpc.client as xmlrpc_client
+import sys
 from logging import getLogger, StreamHandler, DEBUG
 from utils.utils import trace_error, run_rpc
 
@@ -35,6 +36,13 @@ class LeaderBase(object):
             'endpoint': self.endpoint,
             'operations': self.operations
         }
+
+    @trace_error
+    def get_subordinates(self):
+        subs = {}
+        for k, v in self.subordinates.items():
+            subs[k] = v['rpcc'].show_info()
+        return subs
 
     @trace_error
     def add_operation(self, op):

@@ -1,7 +1,9 @@
 import argparse
 import asyncio
+import copy
 import datetime
 import random
+import sys
 import xmlrpc.client as xmlrpc_client
 from logging import getLogger, StreamHandler, DEBUG
 from utils.utils import trace_error, run_rpc
@@ -32,15 +34,23 @@ class SoldierBase(object):
     @trace_error
     def show_info(self):
         """show_info() => {soldier info}"""
-        return {
+        info = {
             'type': 'Soldier',
             'id': self.id,
             'name': self.name,
             'place': self.place,
             'endpoint': self.endpoint,
             'weapons': list(self.weapons.keys()),
-            'orders': self.orders
+            'orders': self.get_orders()
         }
+        return info
+
+    @trace_error
+    def get_orders(self):
+        res = copy.copy(self.orders)
+        for o in res.values():
+            o.pop('event')
+        return res
 
     @trace_error
     def add_order(self, order):
@@ -105,7 +115,7 @@ def main():
         return
     superior_ep = resolved['superior_ep']
     if superior_ep == '':
-        logger.info("The superior's instance don't exist")
+        logger.info("The superior's instance don't exist")  # TODO:
         return
     soldier.id = resolved['id']
     soldier.name = resolved['name']
