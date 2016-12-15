@@ -3,8 +3,8 @@ import asyncio
 import copy
 import datetime
 import random
-import sys
 import xmlrpc.client as xmlrpc_client
+from time import sleep
 from logging import getLogger, StreamHandler, DEBUG
 from utils.utils import trace_error, run_rpc
 
@@ -81,6 +81,30 @@ class SoldierBase(object):
             await asyncio.sleep(interval, loop=LOOP)
 
 
+def get_self_info(recruiter_ep, self_id, retry_count):
+    recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
+    resolved = None
+    retry_sleep = 2
+    for i in range(retry_count):
+        try:
+            resolved = recruiter.get_soldier(self_id)
+        except ConnectionRefusedError:
+            logger.info(
+                "failed to connect to recruiter. retry %d sec after", retry_sleep)
+            sleep(retry_sleep)
+            retry_sleep = retry_sleep * 2
+            continue
+        break
+    if retry_sleep == 2 * (2 ** retry_count):
+        return "Couldn't connect to recruiter"
+
+    if resolved is None:
+        return "Soldier not found: ID = %s" % self_id
+    if resolved['superior_ep'] == '':
+        return "The superior's instance don't exist"
+    return resolved
+
+
 def main():
     # read args
     parser = argparse.ArgumentParser()
@@ -104,27 +128,32 @@ def main():
 
     soldier = SoldierBase()
     if not run_rpc(ip, port, soldier):
-        logger.info('Address already in use')
-        return
+        return "Address already in use"
 
-    # get self info
-    recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
-    resolved = recruiter.get_soldier(self_id)
-    if resolved is None:
-        logger.info("Soldier not found: ID = %s", self_id)
-        return
-    superior_ep = resolved['superior_ep']
-    if superior_ep == '':
-        logger.info("The superior's instance don't exist")  # TODO:
-        return
-    soldier.id = resolved['id']
-    soldier.name = resolved['name']
-    soldier.place = resolved['place']
+    info = get_self_info(recruiter_ep, self_id, 3)
+    if isinstance(info, str):
+        return info
+    soldier.id = info['id']
+    soldier.name = info['name']
+    soldier.place = info['place']
     soldier.endpoint = endpoint
 
     # join
-    client = xmlrpc_client.ServerProxy(superior_ep)
-    client.add_subordinate(soldier.show_info())
+    client = xmlrpc_client.ServerProxy(info['superior_ep'])
+    retry_sleep = 2
+    for i in range(5):
+        try:
+            client.add_subordinate(soldier.show_info())
+        except ConnectionRefusedError:
+            logger.info(
+                "failed to connect to superior. retry %d sec after", retry_sleep)
+            sleep(retry_sleep)
+            retry_sleep = retry_sleep * 2
+            continue
+        break
+    if retry_sleep == 2 * (2 ** 5):
+        return "Couldn't connect to commander"
+
     soldier.superior = {
         'rpcc': client
     }
@@ -133,6 +162,10 @@ def main():
         LOOP.run_forever()
     except KeyboardInterrupt:
         pass
+    return None
+
 
 if __name__ == "__main__":
-    main()
+    res = main()
+    if res is not None:
+        logger.error(res)
