@@ -97,7 +97,7 @@ class CommanderBase(object):
         print('got data: {0}'.format(data))
 
 
-def main():
+def main(commander):
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-I', '--id', type=str, default='', help='Target id of app')
@@ -116,7 +116,6 @@ def main():
     endpoint = 'http://{0}:{1}'.format(ip, port)
     recruiter_ep = params.rec_addr
 
-    commander = CommanderBase()
     commander.add_mission({
         'destination': 'mongodb://192.168.0.21:27017/troops/test',
         'place': 'All',
@@ -148,4 +147,7 @@ def main():
         pass
 
 if __name__ == "__main__":
-    main()
+    commander = CommanderBase()
+    res = main(commander)
+    if res is not None:
+        logger.error(res)

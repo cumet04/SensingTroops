@@ -105,7 +105,7 @@ def get_self_info(recruiter_ep, self_id, retry_count):
     return resolved
 
 
-def main():
+def main(soldier):
     # read args
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -126,7 +126,6 @@ def main():
     endpoint = 'http://{0}:{1}'.format(ip, port)
     recruiter_ep = params.rec_addr
 
-    soldier = SoldierBase()
     if not run_rpc(ip, port, soldier):
         return "Address already in use"
 
@@ -166,6 +165,7 @@ def main():
 
 
 if __name__ == "__main__":
-    res = main()
+    soldier = SoldierBase()
+    res = main(soldier)
     if res is not None:
         logger.error(res)

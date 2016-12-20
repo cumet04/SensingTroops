@@ -102,7 +102,7 @@ def get_self_info(recruiter_ep, self_id, retry_count):
     return resolved
 
 
-def main():
+def main(leader):
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-I', '--id', type=str, default='', help='Target id of app')
@@ -121,7 +121,6 @@ def main():
     endpoint = 'http://{0}:{1}'.format(ip, port)
     recruiter_ep = params.rec_addr
 
-    leader = LeaderBase()
     if not run_rpc(ip, port, leader):
         return 'Address already in use'
 
@@ -146,6 +145,7 @@ def main():
         pass
 
 if __name__ == "__main__":
-    res = main()
+    leader = LeaderBase()
+    res = main(leader)
     if res is not None:
         logger.error(res)
