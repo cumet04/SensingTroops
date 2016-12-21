@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import copy
+from time import sleep
 import xmlrpc.client as xmlrpc_client
 from logging import getLogger, StreamHandler, DEBUG
 from utils.utils import trace_error, run_rpc
@@ -96,8 +97,35 @@ class CommanderBase(object):
         """accept_data(data: {collected data}) => None"""
         print('got data: {0}'.format(data))
 
+    def _identify(self, recruiter_ep, self_id, retry_count):
+        recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
+        resolved = None
+        retry_sleep = 2
+        for i in range(retry_count):
+            try:
+                resolved = recruiter.get_commander(self_id)
+            except ConnectionRefusedError:
+                logger.info(
+                    "failed to connect to recruiter. retry %d sec after", retry_sleep)
+                sleep(retry_sleep)
+                retry_sleep = retry_sleep * 2
+                continue
+            break
+        if retry_sleep == 2 * (2 ** retry_count):
+            return "Couldn't connect to recruiter"
+        if resolved is None:
+            return "Commander not found: ID = %s" % self_id
+        if not recruiter.register_commander(self_id, self.endpoint):
+            return "Failed to register commander info"
 
-def main(commander):
+        self.id = resolved['id']
+        self.name = resolved['name']
+        self.place = resolved['place']
+
+        return True
+
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-I', '--id', type=str, default='', help='Target id of app')
@@ -116,6 +144,7 @@ def main(commander):
     endpoint = 'http://{0}:{1}'.format(ip, port)
     recruiter_ep = params.rec_addr
 
+    commander = CommanderBase()
     commander.add_mission({
         'destination': 'mongodb://192.168.0.21:27017/troops/test',
         'place': 'All',
@@ -124,30 +153,20 @@ def main(commander):
         'purpose': 'purp'
     })
     if not run_rpc(ip, port, commander):
-        logger.info('Address already in use')
-        return
+        return "Address already in use"
 
-    # get self info
-    recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
-    resolved = recruiter.get_commander(self_id)
-    if resolved is None:
-        logger.info("Commander not found: ID = %s", self_id)
-        return
-    if not recruiter.register_commander(self_id, endpoint):
-        logger.info("Failed to register commander info")
-        return
-    commander.id = resolved['id']
-    commander.name = resolved['name']
-    commander.place = resolved['place']
     commander.endpoint = endpoint
+    ris_identified = commander._identify(recruiter_ep, self_id, 3)
+    if ris_identified != True:
+        return ris_identified
 
     try:
         LOOP.run_forever()
     except KeyboardInterrupt:
         pass
+    return None
 
 if __name__ == "__main__":
-    commander = CommanderBase()
-    res = main(commander)
+    res = main()
     if res is not None:
         logger.error(res)

@@ -24,6 +24,7 @@ class LeaderBase(object):
         self.operations = {}
         self.subordinates = {}
         self.superior = None
+        self.superior_ep = None
 
     @trace_error
     def show_info(self):
@@ -77,32 +78,36 @@ class LeaderBase(object):
         """accept_data(data: {collected data}) => None"""
         self.superior['rpcc'].accept_data(data)
 
+    def _identify(self, recruiter_ep, self_id, retry_count):
+        recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
+        resolved = None
+        retry_sleep = 2
+        for i in range(retry_count):
+            try:
+                resolved = recruiter.get_leader(self_id)
+            except ConnectionRefusedError:
+                logger.info(
+                    "failed to connect to recruiter. retry %d sec after", retry_sleep)
+                sleep(retry_sleep)
+                retry_sleep = retry_sleep * 2
+                continue
+            break
+        if retry_sleep == 2 * (2 ** retry_count):
+            return "Couldn't connect to recruiter"
+        if resolved is None:
+            return "Leader not found: ID = %s" % self_id
+        if resolved['superior_ep'] == '':
+            return "The superior's instance don't exist"
 
-def get_self_info(recruiter_ep, self_id, retry_count):
-    recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
-    resolved = None
-    retry_sleep = 2
-    for i in range(retry_count):
-        try:
-            resolved = recruiter.get_leader(self_id)
-        except ConnectionRefusedError:
-            logger.info(
-                "failed to connect to recruiter. retry %d sec after", retry_sleep)
-            sleep(retry_sleep)
-            retry_sleep = retry_sleep * 2
-            continue
-        break
-    if retry_sleep == 2 * (2 ** retry_count):
-        return "Couldn't connect to recruiter"
+        self.id = resolved['id']
+        self.name = resolved['name']
+        self.place = resolved['place']
+        self.superior_ep = resolved['superior_ep']
 
-    if resolved is None:
-        return "Leader not found: ID = %s" % self_id
-    if resolved['superior_ep'] == '':
-        return "The superior's instance don't exist"
-    return resolved
+        return True
 
 
-def main(leader):
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-I', '--id', type=str, default='', help='Target id of app')
@@ -121,19 +126,17 @@ def main(leader):
     endpoint = 'http://{0}:{1}'.format(ip, port)
     recruiter_ep = params.rec_addr
 
+    leader = LeaderBase()
     if not run_rpc(ip, port, leader):
         return 'Address already in use'
 
-    info = get_self_info(recruiter_ep, self_id, 3)
-    if isinstance(info, str):
-        return info
-    leader.id = info['id']
-    leader.name = info['name']
-    leader.place = info['place']
+    is_identified = leader._identify(recruiter_ep, self_id, 3)
+    if is_identified != True:
+        return is_identified
     leader.endpoint = endpoint
 
     # join
-    client = xmlrpc_client.ServerProxy(info['superior_ep'])
+    client = xmlrpc_client.ServerProxy(leader.superior_ep)
     client.add_subordinate(leader.show_info())
     leader.superior = {
         'rpcc': client
@@ -145,7 +148,6 @@ def main(leader):
         pass
 
 if __name__ == "__main__":
-    leader = LeaderBase()
-    res = main(leader)
+    res = main()
     if res is not None:
         logger.error(res)

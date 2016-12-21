@@ -30,6 +30,7 @@ class SoldierBase(object):
             "random": random.random
         }
         self.superior = None
+        self.superior_ep = None
 
     @trace_error
     def show_info(self):
@@ -66,6 +67,34 @@ class SoldierBase(object):
         order['event'] = event
         self.orders[order['purpose']] = order
 
+    def _identify(self, recruiter_ep, self_id, retry_count):
+        recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
+        resolved = None
+        retry_sleep = 2
+        for i in range(retry_count):
+            try:
+                resolved = recruiter.get_soldier(self_id)
+            except ConnectionRefusedError:
+                logger.info(
+                    "failed to connect to recruiter. retry %d sec after", retry_sleep)
+                sleep(retry_sleep)
+                retry_sleep = retry_sleep * 2
+                continue
+            break
+        if retry_sleep == 2 * (2 ** retry_count):
+            return "Couldn't connect to recruiter"
+        if resolved is None:
+            return "Soldier not found: ID = %s" % self_id
+        if resolved['superior_ep'] == '':
+            return "The superior's instance don't exist"
+
+        self.id = resolved['id']
+        self.name = resolved['name']
+        self.place = resolved['place']
+        self.superior_ep = resolved['superior_ep']
+
+        return True
+
     async def _working(self, event, reqs, interval):
         while not event.is_set():
             vals = []
@@ -79,30 +108,6 @@ class SoldierBase(object):
                 })
             self.superior['rpcc'].accept_data(vals)
             await asyncio.sleep(interval, loop=LOOP)
-
-
-def get_self_info(recruiter_ep, self_id, retry_count):
-    recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
-    resolved = None
-    retry_sleep = 2
-    for i in range(retry_count):
-        try:
-            resolved = recruiter.get_soldier(self_id)
-        except ConnectionRefusedError:
-            logger.info(
-                "failed to connect to recruiter. retry %d sec after", retry_sleep)
-            sleep(retry_sleep)
-            retry_sleep = retry_sleep * 2
-            continue
-        break
-    if retry_sleep == 2 * (2 ** retry_count):
-        return "Couldn't connect to recruiter"
-
-    if resolved is None:
-        return "Soldier not found: ID = %s" % self_id
-    if resolved['superior_ep'] == '':
-        return "The superior's instance don't exist"
-    return resolved
 
 
 def main(soldier):
@@ -129,16 +134,13 @@ def main(soldier):
     if not run_rpc(ip, port, soldier):
         return "Address already in use"
 
-    info = get_self_info(recruiter_ep, self_id, 3)
-    if isinstance(info, str):
-        return info
-    soldier.id = info['id']
-    soldier.name = info['name']
-    soldier.place = info['place']
+    is_identified = soldier._identify(recruiter_ep, self_id, 3)
+    if is_identified != True:
+        return is_identified
     soldier.endpoint = endpoint
 
     # join
-    client = xmlrpc_client.ServerProxy(info['superior_ep'])
+    client = xmlrpc_client.ServerProxy(soldier.superior_ep)
     retry_sleep = 2
     for i in range(5):
         try:
