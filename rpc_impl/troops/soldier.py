@@ -25,12 +25,18 @@ class SoldierBase(object):
         self.place = ''
         self.endpoint = ''
         self.orders = {}
-        self.weapons = {
-            "zero": lambda: 0,
-            "random": random.random
-        }
         self.superior = None
         self.superior_ep = None
+
+        async def get_zero():
+            return 0
+        async def get_random():
+            return random.random()
+
+        self.weapons = {
+            "zero": get_zero,
+            "random": get_random
+        }
 
     @trace_error
     def show_info(self):
@@ -95,17 +101,43 @@ class SoldierBase(object):
 
         return True
 
+    def _join(self):
+        client = xmlrpc_client.ServerProxy(self.superior_ep)
+        retry_sleep = 2
+        for i in range(5):
+            try:
+                client.add_subordinate(self.show_info())
+            except ConnectionRefusedError:
+                logger.info(
+                    "failed to connect to superior. retry %d sec after", retry_sleep)
+                sleep(retry_sleep)
+                retry_sleep = retry_sleep * 2
+                continue
+            break
+        if retry_sleep == 2 * (2 ** 5):
+            return "Couldn't connect to commander"
+
+        self.superior = {
+            'rpcc': client
+        }
+        return True
+
     async def _working(self, event, reqs, interval):
         while not event.is_set():
+            tasks = [asyncio.ensure_future(self.weapons[k](), loop=LOOP)
+                     for k in reqs]
+            await asyncio.wait(tasks, loop=LOOP)
+
             vals = []
-            for k in reqs:
-                time = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            time = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            for i in range(len(tasks)):
                 vals.append({
                     'id': self.id,
-                    'type': k,
-                    'value': self.weapons[k](),
+                    'type': reqs[i],
+                    'value': tasks[i].result(),
                     'time': time
                 })
+
             self.superior['rpcc'].accept_data(vals)
             await asyncio.sleep(interval, loop=LOOP)
 
@@ -139,25 +171,9 @@ def main(soldier):
         return is_identified
     soldier.endpoint = endpoint
 
-    # join
-    client = xmlrpc_client.ServerProxy(soldier.superior_ep)
-    retry_sleep = 2
-    for i in range(5):
-        try:
-            client.add_subordinate(soldier.show_info())
-        except ConnectionRefusedError:
-            logger.info(
-                "failed to connect to superior. retry %d sec after", retry_sleep)
-            sleep(retry_sleep)
-            retry_sleep = retry_sleep * 2
-            continue
-        break
-    if retry_sleep == 2 * (2 ** 5):
-        return "Couldn't connect to commander"
-
-    soldier.superior = {
-        'rpcc': client
-    }
+    is_joined = soldier._join()
+    if is_joined != True:
+        return is_joined
 
     try:
         LOOP.run_forever()
