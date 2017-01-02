@@ -183,7 +183,7 @@ def main(soldier):
 
 
 if __name__ == "__main__":
-    soldier = SoldierBase()
-    res = main(soldier)
-    if res is not None:
-        logger.error(res)
+    s = SoldierBase()
+    r = main(s)
+    if r is not None:
+        logger.error(r)

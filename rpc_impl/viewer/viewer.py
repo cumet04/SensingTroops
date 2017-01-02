@@ -5,8 +5,6 @@ from flask import Flask, request, jsonify
 server = Flask(__name__)
 
 
-
-
 @server.route('/xmlrpc/exec', methods=['GET', 'POST'])
 def exec_rpc():
     """

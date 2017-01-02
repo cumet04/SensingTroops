@@ -148,6 +148,6 @@ def main():
         pass
 
 if __name__ == "__main__":
-    res = main()
-    if res is not None:
-        logger.error(res)
+    r = main()
+    if r is not None:
+        logger.error(r)
