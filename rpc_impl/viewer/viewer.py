@@ -5,8 +5,24 @@ from flask import Flask, request, jsonify
 server = Flask(__name__)
 
 
+
+
 @server.route('/xmlrpc/exec', methods=['GET', 'POST'])
 def exec_rpc():
+    """
+    リモートホストの関数をxmlrpcで呼び出す
+    ---
+    parameters:
+      - name: endpoint
+        in: query
+        required: true
+      - name: method
+        in: query
+        required: true
+      - name: param*
+        description: リモートメソッドに渡すパラメータを指定する。param0=...&param1=...のようにする
+        in: query
+    """
     endpoint = ''
     method = ''
     params = []
@@ -20,7 +36,7 @@ def exec_rpc():
             # TODO: 必要に応じて数値へのキャスト
             params.append(v)
     elif request.method == 'POST':
-        # TODO:
+        # TODO: impl
         pass
     if endpoint == '' or method == '':
         return "lack of parameter", 400
@@ -31,6 +47,14 @@ def exec_rpc():
 
 @server.route('/xmlrpc/helps', methods=['GET'])
 def exec_help():
+    """
+    endpointで指定したノードのrpc関数のヘルプを表示する
+    ---
+    parameters:
+      - name: endpoint
+        in: query
+        required: true
+    """
     endpoint = request.args.get('endpoint', default='', type=str)
     if endpoint == '':
         return "lack of parameter", 400
