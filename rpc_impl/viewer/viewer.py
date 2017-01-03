@@ -28,45 +28,39 @@ def get_troops_json():
 
     root = {
         "text": "Commander: {0} at {1}".format(com['id'], com['place']),
-        "icon": "troops commander",
         "href": com['endpoint'],
         "nodes": [
-            { "text": 'missions', 'nodes': []},
-            { "text": "subs", 'nodes': []},
+            {
+                "text": 'missions',
+                'nodes': [{'text': str(m)} for m in com['missions'].values()]
+            },
+            {"text": "subs", 'nodes': []},
         ]
     }
-    for m in com['missions'].values():
-        root['nodes'][0]['nodes'].append({
-            'text': str(m)
-        })
     for lid, leader in com['subs'].items():
         l_node = {
             "text": "Leader: {0} at {1}".format(lid, leader['place']),
-            "icon": "troops leader",
             "href": leader['endpoint'],
             "nodes": [
-                { "text": "operations", 'nodes': []},
+                {
+                    "text": "operations",
+                    'nodes': [{'text': str(op)} for op in leader['operations'].values()]
+                },
                 { "text": "subs", 'nodes': []},
             ]
         }
-        for op in leader['operations'].values():
-            l_node['nodes'][0]['nodes'].append({
-                'text': str(op)
-            })
         for sid, soldier in leader['subs'].items():
             s_node = {
                 "text": "Soldier: {0} at {1}".format(sid, soldier['place']),
-                "icon": "troops soldier",
                 "href": soldier['endpoint'],
                 "nodes": [
-                    { "text": "orders", 'nodes': []},
+                    {
+                        "text": "orders",
+                        'nodes': [{'text': str(o)} for o in soldier['orders'].values()]
+                    },
                     { "text": 'weapons: {0}'.format(str(soldier['weapons']))},
                 ]
             }
-            for o in soldier['orders'].values():
-                s_node['nodes'][0]['nodes'].append({
-                    'text': str(o)
-                })
             l_node['nodes'][1]['nodes'].append(s_node)
         root['nodes'][1]['nodes'].append(l_node)
 
