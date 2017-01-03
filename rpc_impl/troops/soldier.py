@@ -56,7 +56,8 @@ class SoldierBase(object):
     def get_orders(self):
         res = copy.copy(self.orders)
         for o in res.values():
-            o.pop('event')
+            if 'event' in o:
+                o.pop('event')
         return res
 
     @trace_error
