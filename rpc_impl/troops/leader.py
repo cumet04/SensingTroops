@@ -76,6 +76,8 @@ class LeaderBase(object):
     @trace_error
     def accept_data(self, data):
         """accept_data(data: {collected data}) => None"""
+        data['id'] = '%s.%s' % (self.id, data['id'])
+        data['place'] = '%s.%s' % (self.place, data['place'])
         self.superior['rpcc'].accept_data(data)
 
     def _identify(self, recruiter_ep, self_id, retry_count):

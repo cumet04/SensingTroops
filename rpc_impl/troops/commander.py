@@ -59,6 +59,7 @@ class CommanderBase(object):
     def add_mission(self, mission):
         """add_mission(mission: {mission}) => None"""
         print('got mission: {0}'.format(mission))
+        mission['mongo'] = MongoPush(mission['destination'])
         self.missions[mission['purpose']] = mission
 
         target_subs = {}
@@ -95,7 +96,16 @@ class CommanderBase(object):
     @trace_error
     def accept_data(self, data):
         """accept_data(data: {collected data}) => None"""
-        print('got data: {0}'.format(data))
+        push_data = [{
+            'purpose': data['purpose'],
+            'place': data['place'],
+            'time': data['time'],
+            'data': v
+        } for v in data['values']]
+        self.missions[data['purpose']]['mongo'].push_values(push_data)
+
+        import json
+        print('push data: %s' % json.dumps(push_data))
 
     def _identify(self, recruiter_ep, self_id, retry_count):
         recruiter = xmlrpc_client.ServerProxy(recruiter_ep)
@@ -123,6 +133,35 @@ class CommanderBase(object):
         self.place = resolved['place']
 
         return True
+
+
+class MongoPush(object):
+
+    # rest_implからそのままコピー
+    def __init__(self, uri):
+        import pymongo
+        import re
+        match_result = re.match(r"mongodb://(.*?)/(.*?)/(.*)", uri)
+        if match_result is None:
+            logger.error("uri is not mongodb-uri: %s", uri)
+            return
+        host = match_result.group(1)
+        db_name = match_result.group(2)
+        col_name = match_result.group(3)
+        self.col = pymongo.MongoClient(host)[db_name][col_name]
+
+    def push_values(self, values):
+        import dateutil.parser
+        if len(values) == 0:
+            return
+
+        # time変換とinsert_manyがvaluesの影響をメソッド外に波及しないように
+        vals = copy.deepcopy(values)
+
+        # timeの値を文字列からdatetime型に変換する
+        [v.update({"time": dateutil.parser.parse(v["time"])}) for v in vals]
+
+        self.col.insert_many(vals)
 
 
 def main():

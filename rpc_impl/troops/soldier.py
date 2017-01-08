@@ -29,9 +29,9 @@ class SoldierBase(object):
         self.superior_ep = None
 
         async def get_zero():
-            return 0
+            return (0, '-')
         async def get_random():
-            return random.random()
+            return (random.random(), '-')
 
         self.weapons = {
             "zero": get_zero,
@@ -69,8 +69,7 @@ class SoldierBase(object):
             del self.orders[order['purpose']]
 
         event = asyncio.Event(loop=LOOP)
-        asyncio.ensure_future(self._working(
-            event, order['requirements'], order['trigger']), loop=LOOP)
+        asyncio.ensure_future(self._working(order), loop=LOOP)
         order['event'] = event
         self.orders[order['purpose']] = order
 
@@ -123,24 +122,25 @@ class SoldierBase(object):
         }
         return True
 
-    async def _working(self, event, reqs, interval):
-        while not event.is_set():
+    async def _working(self, order):
+        while not order['event'].is_set():
             tasks = [asyncio.ensure_future(self.weapons[k](), loop=LOOP)
-                     for k in reqs]
+                     for k in order['requirements']]
             await asyncio.wait(tasks, loop=LOOP)
 
-            vals = []
             time = datetime.datetime.now(datetime.timezone.utc).isoformat()
-            for i in range(len(tasks)):
-                vals.append({
-                    'id': self.id,
-                    'type': reqs[i],
-                    'value': tasks[i].result(),
-                    'time': time
-                })
-
-            self.superior['rpcc'].accept_data(vals)
-            await asyncio.sleep(interval, loop=LOOP)
+            self.superior['rpcc'].accept_data({
+                'purpose': order['purpose'],
+                'id': self.id,
+                'place': self.place,
+                'time': time,
+                'values': [{
+                    'type': order['requirements'][i],
+                    'value': tasks[i].result()[0],
+                    'unit': tasks[i].result()[1]
+                } for i in range(len(tasks))]
+            })
+            await asyncio.sleep(order['trigger'], loop=LOOP)
 
 
 def main(soldier):
