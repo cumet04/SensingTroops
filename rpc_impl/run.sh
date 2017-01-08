@@ -27,6 +27,14 @@ done
 # sleep 0.1
 # python -m troops.soldier --port 53000 > /tmp/soldier_00.log &
 
+function add_mission() {
+    sleep 2
+    uri='http://localhost:50001/xmlrpc/exec?endpoint=http://localhost:51000&method=add_mission'
+    uri=${uri}'&param0={"destination":"mongodb://localhost:27017/troops/test","place":"All","requirements":["zero","random"],"trigger":2,"purpose":"purp"}'
+    curl -g $uri
+}
+
+add_mission &
 
 python -m viewer.viewer
 

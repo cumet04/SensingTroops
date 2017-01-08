@@ -1,4 +1,5 @@
 import argparse
+import json
 import xmlrpc.client as xmlrpc_client
 from flask import Flask, request, jsonify, render_template
 
@@ -8,6 +9,7 @@ server = Flask(__name__)
 @server.route('/troop.html', methods=['GET'])
 def show_troops():
     return render_template('troops_viewer.html')
+
 
 @server.route('/troop.json', methods=['GET'])
 def get_troops_json():
@@ -46,7 +48,7 @@ def get_troops_json():
                     "text": "operations",
                     'nodes': [{'text': str(op)} for op in leader['operations'].values()]
                 },
-                { "text": "subs", 'nodes': []},
+                {"text": "subs", 'nodes': []},
             ]
         }
         for sid, soldier in leader['subs'].items():
@@ -58,13 +60,14 @@ def get_troops_json():
                         "text": "orders",
                         'nodes': [{'text': str(o)} for o in soldier['orders'].values()]
                     },
-                    { "text": 'weapons: {0}'.format(str(soldier['weapons']))},
+                    {"text": 'weapons: {0}'.format(str(soldier['weapons']))},
                 ]
             }
             l_node['nodes'][1]['nodes'].append(s_node)
         root['nodes'][1]['nodes'].append(l_node)
 
     return jsonify([root])
+
 
 @server.route('/xmlrpc/exec', methods=['GET', 'POST'])
 def exec_rpc():
@@ -89,11 +92,16 @@ def exec_rpc():
         endpoint = request.args.get('endpoint', default='', type=str)
         method = request.args.get('method', default='', type=str)
         for i in range(1000):
-            v = request.args.get('param%d' % i, default=None, type=str)
-            if v is None:
+            rawv = request.args.get('param%d' % i, default=None, type=str)
+            if rawv is None:
                 break
-            # TODO: 必要に応じて数値へのキャスト
-            params.append(v)
+
+            try:
+                v = json.loads(rawv)
+                params.append(v)
+            except json.JSONDecodeError:
+                params.append(rawv)
+
     elif request.method == 'POST':
         # TODO: impl
         pass

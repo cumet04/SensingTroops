@@ -69,7 +69,7 @@ class SoldierBase(object):
             del self.orders[order['purpose']]
 
         event = asyncio.Event(loop=LOOP)
-        asyncio.ensure_future(self._working(order), loop=LOOP)
+        asyncio.run_coroutine_threadsafe(self._working(order), LOOP)
         order['event'] = event
         self.orders[order['purpose']] = order
 
@@ -187,4 +187,4 @@ if __name__ == "__main__":
     s = SoldierBase()
     r = main(s)
     if r is not None:
-        logger.error(r)
+        logger.error('soldier failed: ' + r)

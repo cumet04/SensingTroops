@@ -59,7 +59,8 @@ class CommanderBase(object):
     def add_mission(self, mission):
         """add_mission(mission: {mission}) => None"""
         print('got mission: {0}'.format(mission))
-        mission['mongo'] = MongoPush(mission['destination'])
+        if 'mongo' not in mission:
+            mission['mongo'] = MongoPush(mission['destination'])
         self.missions[mission['purpose']] = mission
 
         target_subs = {}
@@ -184,13 +185,6 @@ def main():
     recruiter_ep = params.rec_addr
 
     commander = CommanderBase()
-    commander.add_mission({
-        'destination': 'mongodb://192.168.0.21:27017/troops/test',
-        'place': 'All',
-        'requirements': ['zero', 'random'],
-        'trigger': 2,
-        'purpose': 'purp'
-    })
     if not run_rpc(ip, port, commander):
         return "Address already in use"
 
@@ -208,4 +202,4 @@ def main():
 if __name__ == "__main__":
     r = main()
     if r is not None:
-        logger.error(r)
+        logger.error('commander failed: ' + r)

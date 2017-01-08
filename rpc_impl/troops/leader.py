@@ -152,4 +152,4 @@ def main():
 if __name__ == "__main__":
     r = main()
     if r is not None:
-        logger.error(r)
+        logger.error('leader failed: ' + r)
