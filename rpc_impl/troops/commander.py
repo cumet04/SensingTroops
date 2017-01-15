@@ -138,7 +138,6 @@ class CommanderBase(object):
 
 class MongoPush(object):
 
-    # rest_implからそのままコピー
     def __init__(self, uri):
         import pymongo
         import re
@@ -149,7 +148,13 @@ class MongoPush(object):
         host = match_result.group(1)
         db_name = match_result.group(2)
         col_name = match_result.group(3)
-        self.col = pymongo.MongoClient(host)[db_name][col_name]
+        client = pymongo.MongoClient(host)
+        try:
+            # The ismaster command is cheap and does not require auth.
+            client.admin.command('ismaster')
+        except pymongo.errors.ConnectionFailure:
+            logger.error("failed to connect to mongodb: %s", uri)
+        self.col = client[db_name][col_name]
 
     def push_values(self, values):
         import dateutil.parser
@@ -163,6 +168,8 @@ class MongoPush(object):
         [v.update({"time": dateutil.parser.parse(v["time"])}) for v in vals]
 
         self.col.insert_many(vals)
+        # FIXME: DB接続できてなかったり落ちてたら再接続するとかキャッシュするとか
+        # 必要だとは思う
 
 
 def main():
