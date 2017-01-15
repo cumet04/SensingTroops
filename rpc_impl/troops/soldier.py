@@ -143,26 +143,14 @@ class SoldierBase(object):
             await asyncio.sleep(order['trigger'], loop=LOOP)
 
 
-def main(soldier):
-    # read args
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-I', '--id', type=str, default='', help='Target id of app')
-    parser.add_argument(
-        '-P', '--port', type=int, default=53000, help="rpc-server's port num")
-    parser.add_argument(
-        '-R', '--rec_addr', type=str, help="recruiter url",
-        default="http://localhost:50000/")
-    params = parser.parse_args()
-
+def main(soldier, port, id, rec_addr):
     # set params
-    port = params.port
-    self_id = params.id
+    self_id = id
     if self_id == '':
         self_id = 'S_' + str(port)
     ip = '127.0.0.1'
     endpoint = 'http://{0}:{1}'.format(ip, port)
-    recruiter_ep = params.rec_addr
+    recruiter_ep = rec_addr
 
     if not run_rpc(ip, port, soldier):
         return "Address already in use"
@@ -184,7 +172,18 @@ def main(soldier):
 
 
 if __name__ == "__main__":
+    # read args
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-I', '--id', type=str, default='', help='Target id of app')
+    parser.add_argument(
+        '-P', '--port', type=int, default=53000, help="rpc-server's port num")
+    parser.add_argument(
+        '-R', '--rec_addr', type=str, help="recruiter url",
+        default="http://localhost:50000/")
+    params = parser.parse_args()
+
     s = SoldierBase()
-    r = main(s)
+    r = main(s, params.port, params.id, params.rec_addr)
     if r is not None:
         logger.error('soldier failed: ' + r)

@@ -15,7 +15,7 @@ sleep 0.1
 
 for i in $(seq 53000 53011)
 do
-    python -u -m troops.soldier --port $i > /tmp/soldier_${i:3:2}.log &
+    python -u -m troops.soldier_tag --port $i > /tmp/soldier_${i:3:2}.log &
 done
 
 
